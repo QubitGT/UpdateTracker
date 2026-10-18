@@ -1,0 +1,40 @@
+using UnityEngine;
+
+namespace SouthPointe.Serialization.MessagePack;
+
+public class QuaternionHandler : ITypeHandler
+{
+	private readonly SerializationContext context;
+
+	private ITypeHandler floatHandler;
+
+	public QuaternionHandler(SerializationContext context)
+	{
+		this.context = context;
+	}
+
+	public object Read(Format format, FormatReader reader)
+	{
+		if (format.IsArrayFamily)
+		{
+			floatHandler = floatHandler ?? context.TypeHandlers.Get<float>();
+			Quaternion quaternion = default(Quaternion);
+			quaternion.x = (float)floatHandler.Read(reader.ReadFormat(), reader);
+			quaternion.y = (float)floatHandler.Read(reader.ReadFormat(), reader);
+			quaternion.z = (float)floatHandler.Read(reader.ReadFormat(), reader);
+			quaternion.w = (float)floatHandler.Read(reader.ReadFormat(), reader);
+			return quaternion;
+		}
+		throw new FormatException(this, format, reader);
+	}
+
+	public void Write(object obj, FormatWriter writer)
+	{
+		Quaternion quaternion = (Quaternion)obj;
+		writer.WriteArrayHeader(4);
+		writer.Write(quaternion.x);
+		writer.Write(quaternion.y);
+		writer.Write(quaternion.z);
+		writer.Write(quaternion.w);
+	}
+}

@@ -1,0 +1,28 @@
+public enum SceneIndex
+{
+	GT,
+	Canyon,
+	Beach,
+	Cave,
+	Basement,
+	Mountain,
+	Skyjungle,
+	Rotating,
+	Metropolis,
+	Bayou,
+	TestBlank,
+	MonkeBlocks,
+	Arena,
+	Hoverboard,
+	Critters,
+	GhostReactor,
+	MonkeBlocksShared,
+	Ranked,
+	GhostReactorDrill,
+	City,
+	GTFC,
+	Rewind_2024_02_Forest,
+	VIMDig_Cave,
+	SpaceMap,
+	VIMGravityRush_Cave
+}

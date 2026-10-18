@@ -1,0 +1,35 @@
+{
+  "tool": {
+    "name": "ilspycmd",
+    "version": "8.2.0.7535",
+    "path": "ilspycmd"
+  },
+  "settings": {
+    "languageVersion": "Latest",
+    "nestedDirectories": false,
+    "removeDeadCode": false,
+    "tokenComments": "disabled (stripped after export)",
+    "solutionFiles": "excluded (removed after export)"
+  },
+  "input": {
+    "path": "Gorilla Tag_Data/Managed/Unity.TextMeshPro.dll",
+    "sha256": "af916d5acf866b20e1f02faf00065fa653dbac80d58816980c8e5f6343b0c13a",
+    "size": 445952
+  },
+  "event": {
+    "id": "7e105f9f-1f8d-44e7-bb68-f0e2c742216b",
+    "appId": 1533390,
+    "buildId": "25996962",
+    "manifestIds": {
+      "1533391": "6568145729038118915",
+      "1533392": "2848252615781833950"
+    }
+  },
+  "result": {
+    "csFiles": 130,
+    "csproj": 1,
+    "tokenCommentLinesStripped": 0,
+    "slnFilesRemoved": 0
+  },
+  "exportedAt": "2026-10-18T07:10:58.510Z"
+}

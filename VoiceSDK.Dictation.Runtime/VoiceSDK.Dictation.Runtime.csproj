@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>VoiceSDK.Dictation.Runtime</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>11.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="Meta.WitAi">
+      <HintPath>Meta.WitAi.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Meta.Wit.Dictation">
+      <HintPath>Meta.Wit.Dictation.dll</HintPath>
+    </Reference>
+    <Reference Include="AssistantCoreSDKRuntime">
+      <HintPath>AssistantCoreSDKRuntime.dll</HintPath>
+    </Reference>
+    <Reference Include="Meta.WitAi.Lib">
+      <HintPath>Meta.WitAi.Lib.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AndroidJNIModule">
+      <HintPath>UnityEngine.AndroidJNIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="VoiceSDK.Runtime">
+      <HintPath>VoiceSDK.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

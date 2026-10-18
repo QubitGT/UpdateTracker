@@ -1,0 +1,10 @@
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Security;
+using System.Security.Permissions;
+
+[assembly: InternalsVisibleTo("Oculus.Interaction.Editor")]
+[assembly: InternalsVisibleTo("Oculus.Interaction.UnityXR")]
+[assembly: InternalsVisibleTo("Oculus.Interaction.Tests")]
+[assembly: AssemblyVersion("0.0.0.0")]

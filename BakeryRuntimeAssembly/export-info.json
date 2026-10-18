@@ -1,0 +1,35 @@
+{
+  "tool": {
+    "name": "ilspycmd",
+    "version": "8.2.0.7535",
+    "path": "ilspycmd"
+  },
+  "settings": {
+    "languageVersion": "Latest",
+    "nestedDirectories": false,
+    "removeDeadCode": false,
+    "tokenComments": "disabled (stripped after export)",
+    "solutionFiles": "excluded (removed after export)"
+  },
+  "input": {
+    "path": "Gorilla Tag_Data/Managed/BakeryRuntimeAssembly.dll",
+    "sha256": "9b4691febfc34596a0cdb28f29bf8eab92f8e23312eead78cf711afa65ca795a",
+    "size": 26112
+  },
+  "event": {
+    "id": "7e105f9f-1f8d-44e7-bb68-f0e2c742216b",
+    "appId": 1533390,
+    "buildId": "25996962",
+    "manifestIds": {
+      "1533391": "6568145729038118915",
+      "1533392": "2848252615781833950"
+    }
+  },
+  "result": {
+    "csFiles": 23,
+    "csproj": 1,
+    "tokenCommentLinesStripped": 0,
+    "slnFilesRemoved": 0
+  },
+  "exportedAt": "2026-10-18T07:05:10.905Z"
+}

@@ -1,0 +1,286 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+[RequireComponent(typeof(Animation))]
+public class GorillaEventAnimationController : MonoBehaviour
+{
+	[Serializable]
+	public struct GTAnimationClip
+	{
+		public enum OnFinalFrame
+		{
+			Stop,
+			Repeat,
+			NextClip
+		}
+
+		public AnimationClip clip;
+
+		public OnFinalFrame onFinalFrame;
+	}
+
+	[Serializable]
+	public struct AnimToGEAKeyframeData
+	{
+		public AnimationClip clip;
+
+		public List<GEAKeyframeData> gEAKeyframeData;
+	}
+
+	[Serializable]
+	public struct GEAKeyframeData
+	{
+		public GorillaEventAnimation gEA;
+
+		public List<ControlledAnimationKeyframeData> keyframeData;
+	}
+
+	[Serializable]
+	public struct ControlledAnimationKeyframeData
+	{
+		public int animationClipIndex;
+
+		public float startTime;
+
+		public float startOffset;
+
+		public bool animEnabled;
+
+		public ControlledAnimationKeyframeData(int _index, float _time, float _startOffset, bool _animEnabled)
+		{
+			animationClipIndex = _index;
+			startTime = _time;
+			startOffset = _startOffset;
+			animEnabled = _animEnabled;
+		}
+	}
+
+	public Animation controllingAnimation;
+
+	private bool playAnimation;
+
+	private float lateStart;
+
+	private float animationTime;
+
+	private int animationClipIndex;
+
+	public List<GTAnimationClip> clips;
+
+	private AnimationClip currentClip;
+
+	private float totalTime;
+
+	private Dictionary<AnimationClip, Dictionary<GorillaEventAnimation, List<ControlledAnimationKeyframeData>>> bakedAnimationData;
+
+	[SerializeField]
+	[HideInInspector]
+	private List<AnimToGEAKeyframeData> bakedAnimKeyframeData;
+
+	[SerializeField]
+	private bool enableSuspensionHandling = true;
+
+	[SerializeField]
+	private bool autoIncrementClipOnLateStart = true;
+
+	private float suspended;
+
+	private void Awake()
+	{
+		totalTime = 0f;
+		bakedAnimationData = new Dictionary<AnimationClip, Dictionary<GorillaEventAnimation, List<ControlledAnimationKeyframeData>>>();
+		for (int i = 0; i < bakedAnimKeyframeData.Count; i++)
+		{
+			AnimationClip clip = bakedAnimKeyframeData[i].clip;
+			bakedAnimationData.Add(clip, new Dictionary<GorillaEventAnimation, List<ControlledAnimationKeyframeData>>());
+			for (int j = 0; j < bakedAnimKeyframeData[i].gEAKeyframeData.Count; j++)
+			{
+				bakedAnimationData[clip].Add(bakedAnimKeyframeData[i].gEAKeyframeData[j].gEA, bakedAnimKeyframeData[i].gEAKeyframeData[j].keyframeData);
+			}
+			totalTime += clip.length;
+		}
+	}
+
+	private void Update()
+	{
+		AnimationState animationState = null;
+		foreach (AnimationState item in controllingAnimation)
+		{
+			if (item.weight == 1f)
+			{
+				animationState = item;
+				currentClip = item.clip;
+				break;
+			}
+		}
+		if (!playAnimation)
+		{
+			if (controllingAnimation.isPlaying)
+			{
+				controllingAnimation.Stop();
+			}
+			return;
+		}
+		if (!controllingAnimation.enabled)
+		{
+			controllingAnimation.enabled = true;
+		}
+		if (lateStart > 0f || (currentClip != clips[animationClipIndex].clip && !controllingAnimation.isPlaying))
+		{
+			currentClip = clips[animationClipIndex].clip;
+			currentClip.legacy = true;
+			currentClip.wrapMode = WrapMode.Once;
+			if (autoIncrementClipOnLateStart)
+			{
+				while (lateStart > 0f && currentClip.length < lateStart && animationClipIndex < clips.Count - 1)
+				{
+					lateStart -= currentClip.length;
+					currentClip = clips[++animationClipIndex].clip;
+					currentClip.legacy = true;
+					currentClip.wrapMode = WrapMode.Once;
+				}
+			}
+			controllingAnimation.Play(currentClip.name);
+			animationState = controllingAnimation[currentClip.name];
+			animationState.time = Math.Min(lateStart, currentClip.length);
+			lateStart = 0f;
+		}
+		if (animationState == null)
+		{
+			switch (clips[animationClipIndex].onFinalFrame)
+			{
+			case GTAnimationClip.OnFinalFrame.Stop:
+				playAnimation = false;
+				return;
+			case GTAnimationClip.OnFinalFrame.NextClip:
+				if (animationClipIndex < clips.Count - 1)
+				{
+					currentClip = clips[++animationClipIndex].clip;
+					currentClip.legacy = true;
+					currentClip.wrapMode = WrapMode.Once;
+				}
+				controllingAnimation.Play(currentClip.name);
+				animationState = controllingAnimation[currentClip.name];
+				animationState.time = 0f;
+				break;
+			case GTAnimationClip.OnFinalFrame.Repeat:
+				controllingAnimation.Play(currentClip.name);
+				animationState = controllingAnimation[currentClip.name];
+				animationState.time = 0f;
+				break;
+			}
+		}
+		float time = animationState.time;
+		if (!bakedAnimationData.ContainsKey(currentClip))
+		{
+			return;
+		}
+		foreach (KeyValuePair<GorillaEventAnimation, List<ControlledAnimationKeyframeData>> item2 in bakedAnimationData[currentClip])
+		{
+			GorillaEventAnimation key = item2.Key;
+			List<ControlledAnimationKeyframeData> value = item2.Value;
+			for (int i = 0; i < value.Count; i++)
+			{
+				if (value.Count < 2 || i == value.Count - 1 || !(time >= value[i].startTime) || !(time >= value[i + 1].startTime))
+				{
+					bool flag = false;
+					int num = value[i].animationClipIndex;
+					float startTime = time - value[i].startTime + value[i].startOffset;
+					if (key.enabled != value[i].animEnabled)
+					{
+						key.enabled = value[i].animEnabled;
+						flag = value[i].animEnabled;
+					}
+					if (value[i].animEnabled && (key._clipIndex != value[i].animationClipIndex || !key._animation.IsPlaying(key.clips[num].name)))
+					{
+						flag = true;
+					}
+					if (flag)
+					{
+						key.PlayClipByIndex(value[i].animationClipIndex, startTime);
+					}
+					break;
+				}
+			}
+		}
+		if (animationTime < totalTime)
+		{
+			animationTime += Time.deltaTime;
+		}
+	}
+
+	public void StartPlaying(float secondsPast)
+	{
+		animationTime = (lateStart = secondsPast);
+		animationClipIndex = 0;
+		playAnimation = true;
+	}
+
+	public void StartPlaying()
+	{
+		StartPlaying(0f);
+	}
+
+	public void SetAnimationClip(int clip)
+	{
+		animationClipIndex = clip;
+	}
+
+	public void StartPlayingClip(float secondsPast)
+	{
+		animationTime = (lateStart = secondsPast);
+		playAnimation = true;
+	}
+
+	public void StartPlayingClip()
+	{
+		StartPlayingClip(0f);
+	}
+
+	private void OnEnable()
+	{
+		if (!(suspended <= 0f))
+		{
+			lateStart = animationTime + (Time.time - suspended);
+			animationClipIndex = 0;
+			playAnimation = true;
+			suspended = 0f;
+		}
+	}
+
+	private void OnDisable()
+	{
+		if (playAnimation)
+		{
+			if (enableSuspensionHandling)
+			{
+				suspended = Time.time;
+			}
+			playAnimation = false;
+			if (controllingAnimation.isPlaying)
+			{
+				controllingAnimation.Stop();
+			}
+		}
+	}
+
+	public bool BuildValidationCheck()
+	{
+		bool result = true;
+		for (int i = 0; i < clips.Count; i++)
+		{
+			if (clips[i].clip == null)
+			{
+				Debug.LogError($"Clip on {base.name} at index {i} is null.");
+				result = false;
+			}
+			else if (clips[i].clip.wrapMode != WrapMode.Once)
+			{
+				Debug.LogError("Clip " + clips[i].clip.name + "'s Wrap Mode is not set to 'Once'. This will likely break the animation flow.");
+				result = false;
+			}
+		}
+		return result;
+	}
+}

@@ -1,0 +1,35 @@
+{
+  "tool": {
+    "name": "ilspycmd",
+    "version": "8.2.0.7535",
+    "path": "ilspycmd"
+  },
+  "settings": {
+    "languageVersion": "Latest",
+    "nestedDirectories": false,
+    "removeDeadCode": false,
+    "tokenComments": "disabled (stripped after export)",
+    "solutionFiles": "excluded (removed after export)"
+  },
+  "input": {
+    "path": "Gorilla Tag_Data/Managed/Unity.RenderPipelines.Universal.Runtime.dll",
+    "sha256": "523fa8b8d148ea0082d4651be3b79b97c23d72e5c236fd572e04792ba6853297",
+    "size": 813568
+  },
+  "event": {
+    "id": "7e105f9f-1f8d-44e7-bb68-f0e2c742216b",
+    "appId": 1533390,
+    "buildId": "25996962",
+    "manifestIds": {
+      "1533391": "6568145729038118915",
+      "1533392": "2848252615781833950"
+    }
+  },
+  "result": {
+    "csFiles": 280,
+    "csproj": 1,
+    "tokenCommentLinesStripped": 0,
+    "slnFilesRemoved": 0
+  },
+  "exportedAt": "2026-10-18T07:10:43.866Z"
+}

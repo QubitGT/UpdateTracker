@@ -1,0 +1,14 @@
+namespace UnityEngine.ProBuilder.Poly2Tri;
+
+internal class DTSweepBasin
+{
+	public AdvancingFrontNode leftNode;
+
+	public AdvancingFrontNode bottomNode;
+
+	public AdvancingFrontNode rightNode;
+
+	public double width;
+
+	public bool leftHighest;
+}

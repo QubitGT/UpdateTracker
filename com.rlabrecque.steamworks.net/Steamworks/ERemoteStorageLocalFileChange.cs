@@ -1,0 +1,8 @@
+namespace Steamworks;
+
+public enum ERemoteStorageLocalFileChange
+{
+	k_ERemoteStorageLocalFileChange_Invalid,
+	k_ERemoteStorageLocalFileChange_FileUpdated,
+	k_ERemoteStorageLocalFileChange_FileDeleted
+}

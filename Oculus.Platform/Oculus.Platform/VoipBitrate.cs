@@ -1,0 +1,21 @@
+using System.ComponentModel;
+
+namespace Oculus.Platform;
+
+public enum VoipBitrate
+{
+	[Description("UNKNOWN")]
+	Unknown,
+	[Description("B16000")]
+	B16000,
+	[Description("B24000")]
+	B24000,
+	[Description("B32000")]
+	B32000,
+	[Description("B64000")]
+	B64000,
+	[Description("B96000")]
+	B96000,
+	[Description("B128000")]
+	B128000
+}

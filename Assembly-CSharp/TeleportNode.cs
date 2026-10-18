@@ -1,0 +1,100 @@
+using System.Collections;
+using GorillaLocomotion;
+using GorillaTagScripts;
+using UnityEngine;
+using UnityEngine.Events;
+
+public class TeleportNode : GorillaTriggerBox
+{
+	[SerializeField]
+	private XSceneRef teleportFromRef;
+
+	[SerializeField]
+	private XSceneRef teleportToRef;
+
+	[SerializeField]
+	private GTZone teleportToZone = GTZone.none;
+
+	[SerializeField]
+	private bool seamless = true;
+
+	[SerializeField]
+	private bool keepVelocity = true;
+
+	[SerializeField]
+	private bool subsOnly;
+
+	[SerializeField]
+	private UnityEvent beforeTeleport;
+
+	[SerializeField]
+	private UnityEvent onTeleport;
+
+	private float teleportTime;
+
+	private Transform destinationOverride;
+
+	public void SetDestinationOverride(Transform destination)
+	{
+		destinationOverride = destination;
+	}
+
+	public void ClearDestinationOverride()
+	{
+		destinationOverride = null;
+	}
+
+	public override void OnBoxTriggered()
+	{
+		if ((subsOnly && !SubscriptionManager.IsLocalSubscribed()) || Time.time - teleportTime < 0.1f)
+		{
+			return;
+		}
+		base.OnBoxTriggered();
+		if (!teleportFromRef.TryResolve(out Transform result))
+		{
+			Debug.LogError("[TeleportNode] Failed to resolve teleportFromRef.");
+			return;
+		}
+		Transform result2;
+		if (destinationOverride != null)
+		{
+			result2 = destinationOverride;
+		}
+		else if (!teleportToRef.TryResolve(out result2))
+		{
+			Debug.LogError("[TeleportNode] Failed to resolve teleportToRef.");
+			return;
+		}
+		Debug.LogWarning("[TeleportNode] '" + base.gameObject.name + "' fired -> destination '" + result2.name + "' " + $"(override={destinationOverride != null})");
+		GTPlayer instance = GTPlayer.Instance;
+		if (instance == null)
+		{
+			Debug.LogError("[TeleportNode] GTPlayer.Instance is null.");
+			return;
+		}
+		Physics.SyncTransforms();
+		Vector3 position = result2.transform.position;
+		if (seamless)
+		{
+			position = result2.TransformPoint(result.InverseTransformPoint(instance.transform.position));
+		}
+		Quaternion quaternion = Quaternion.Inverse(result.rotation) * instance.transform.rotation;
+		Quaternion rotation = result2.rotation * quaternion;
+		Quaternion rotationDelta = result2.rotation * Quaternion.Inverse(result.rotation);
+		StartCoroutine(DelayedTeleport(instance, position, rotation, rotationDelta));
+		teleportTime = Time.time;
+	}
+
+	private IEnumerator DelayedTeleport(GTPlayer p, Vector3 position, Quaternion rotation, Quaternion rotationDelta)
+	{
+		beforeTeleport?.Invoke();
+		yield return null;
+		p.TeleportTo(position, rotation, keepVelocity, !seamless);
+		if (teleportToZone != GTZone.none)
+		{
+			ZoneManagement.SetActiveZone(teleportToZone);
+		}
+		onTeleport?.Invoke();
+	}
+}

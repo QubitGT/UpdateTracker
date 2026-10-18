@@ -1,0 +1,36 @@
+{
+  "generator": "ManifestHound",
+  "eventId": "7e105f9f-1f8d-44e7-bb68-f0e2c742216b",
+  "appId": 1533390,
+  "gameName": "Gorilla Tag",
+  "buildId": "25996962",
+  "previousBuildId": null,
+  "manifestIds": {
+    "1533391": "6568145729038118915",
+    "1533392": "2848252615781833950"
+  },
+  "depots": [
+    {
+      "depotId": "1533391",
+      "change": "changed",
+      "from": null,
+      "to": "6568145729038118915",
+      "tracked": true
+    },
+    {
+      "depotId": "1533392",
+      "change": "changed",
+      "from": null,
+      "to": "2848252615781833950",
+      "tracked": true
+    }
+  ],
+  "updateTime": "2026-10-16T20:52:50.000Z",
+  "detectedAt": "2026-10-18T07:03:32.984Z",
+  "tools": {
+    "git": "git version 2.39.5",
+    "ilspycmd": "ilspycmd: 8.2.0.7535",
+    "node": "v24.22.0"
+  },
+  "filesChanged": 16962
+}

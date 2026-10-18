@@ -1,0 +1,35 @@
+using System;
+using GorillaGameModes;
+
+namespace GorillaNetworking;
+
+public class CustomMapNetworkJoinTrigger : GorillaNetworkJoinTrigger
+{
+	[OnEnterPlay_Set(false)]
+	public static bool SuppressJoins;
+
+	public override void OnBoxTriggered()
+	{
+		if (!SuppressJoins)
+		{
+			base.OnBoxTriggered();
+		}
+	}
+
+	public override string GetFullDesiredGameModeString()
+	{
+		return new GameModeString
+		{
+			zone = networkZone,
+			queue = GorillaComputer.instance.currentQueue,
+			gameType = GetDesiredGameType(),
+			modId = CustomMapLoader.LoadedMapModId.ToString(),
+			modFileId = CustomMapLoader.LoadedMapModFileId.ToString()
+		}.ToString();
+	}
+
+	public override byte GetRoomSize(bool subscribed)
+	{
+		return Math.Min(RoomSystem.GetRoomSizeFromSettings(zone, GetDesiredGameModeType(), privateRoom: false, subscribed), RoomSystem.GetVStumpPublicMapSize());
+	}
+}

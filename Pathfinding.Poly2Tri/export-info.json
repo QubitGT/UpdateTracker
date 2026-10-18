@@ -1,0 +1,35 @@
+{
+  "tool": {
+    "name": "ilspycmd",
+    "version": "8.2.0.7535",
+    "path": "ilspycmd"
+  },
+  "settings": {
+    "languageVersion": "Latest",
+    "nestedDirectories": false,
+    "removeDeadCode": false,
+    "tokenComments": "disabled (stripped after export)",
+    "solutionFiles": "excluded (removed after export)"
+  },
+  "input": {
+    "path": "Gorilla Tag_Data/Managed/Pathfinding.Poly2Tri.dll",
+    "sha256": "6d37c20001d050b2bfd5071d64ee19f7fd7415e021e8122f1e9070613e4d570b",
+    "size": 36352
+  },
+  "event": {
+    "id": "7e105f9f-1f8d-44e7-bb68-f0e2c742216b",
+    "appId": 1533390,
+    "buildId": "25996962",
+    "manifestIds": {
+      "1533391": "6568145729038118915",
+      "1533392": "2848252615781833950"
+    }
+  },
+  "result": {
+    "csFiles": 31,
+    "csproj": 1,
+    "tokenCommentLinesStripped": 0,
+    "slnFilesRemoved": 0
+  },
+  "exportedAt": "2026-10-18T07:07:57.831Z"
+}

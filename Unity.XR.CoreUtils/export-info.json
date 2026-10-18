@@ -1,0 +1,35 @@
+{
+  "tool": {
+    "name": "ilspycmd",
+    "version": "8.2.0.7535",
+    "path": "ilspycmd"
+  },
+  "settings": {
+    "languageVersion": "Latest",
+    "nestedDirectories": false,
+    "removeDeadCode": false,
+    "tokenComments": "disabled (stripped after export)",
+    "solutionFiles": "excluded (removed after export)"
+  },
+  "input": {
+    "path": "Gorilla Tag_Data/Managed/Unity.XR.CoreUtils.dll",
+    "sha256": "644c66e28389b2984db47e8903c54597da3a06f92310c1391f31535bfc07b6cf",
+    "size": 89600
+  },
+  "event": {
+    "id": "7e105f9f-1f8d-44e7-bb68-f0e2c742216b",
+    "appId": 1533390,
+    "buildId": "25996962",
+    "manifestIds": {
+      "1533391": "6568145729038118915",
+      "1533392": "2848252615781833950"
+    }
+  },
+  "result": {
+    "csFiles": 89,
+    "csproj": 1,
+    "tokenCommentLinesStripped": 0,
+    "slnFilesRemoved": 0
+  },
+  "exportedAt": "2026-10-18T07:11:04.188Z"
+}

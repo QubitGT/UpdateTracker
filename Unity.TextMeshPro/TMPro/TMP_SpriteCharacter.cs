@@ -1,0 +1,57 @@
+using System;
+using UnityEngine;
+
+namespace TMPro;
+
+[Serializable]
+public class TMP_SpriteCharacter : TMP_TextElement
+{
+	[SerializeField]
+	private string m_Name;
+
+	public string name
+	{
+		get
+		{
+			return m_Name;
+		}
+		set
+		{
+			m_Name = value;
+		}
+	}
+
+	public TMP_SpriteCharacter()
+	{
+		m_ElementType = TextElementType.Sprite;
+	}
+
+	public TMP_SpriteCharacter(uint unicode, TMP_SpriteGlyph glyph)
+	{
+		m_ElementType = TextElementType.Sprite;
+		base.unicode = unicode;
+		base.glyphIndex = glyph.index;
+		base.glyph = glyph;
+		base.scale = 1f;
+	}
+
+	public TMP_SpriteCharacter(uint unicode, TMP_SpriteAsset spriteAsset, TMP_SpriteGlyph glyph)
+	{
+		m_ElementType = TextElementType.Sprite;
+		base.unicode = unicode;
+		base.textAsset = spriteAsset;
+		base.glyph = glyph;
+		base.glyphIndex = glyph.index;
+		base.scale = 1f;
+	}
+
+	internal TMP_SpriteCharacter(uint unicode, uint glyphIndex)
+	{
+		m_ElementType = TextElementType.Sprite;
+		base.unicode = unicode;
+		base.textAsset = null;
+		base.glyph = null;
+		base.glyphIndex = glyphIndex;
+		base.scale = 1f;
+	}
+}

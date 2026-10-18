@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Meta.XR.MultiplayerBlocks.Shared</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>11.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Oculus.VR">
+      <HintPath>Oculus.VR.dll</HintPath>
+    </Reference>
+    <Reference Include="Meta.XR.BuildingBlocks">
+      <HintPath>Meta.XR.BuildingBlocks.dll</HintPath>
+    </Reference>
+    <Reference Include="meta.xr.mrutilitykit">
+      <HintPath>meta.xr.mrutilitykit.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AndroidJNIModule">
+      <HintPath>UnityEngine.AndroidJNIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Meta.XR.ImmersiveDebugger.Interface">
+      <HintPath>Meta.XR.ImmersiveDebugger.Interface.dll</HintPath>
+    </Reference>
+    <Reference Include="Oculus.Platform">
+      <HintPath>Oculus.Platform.dll</HintPath>
+    </Reference>
+    <Reference Include="Oculus.Interaction">
+      <HintPath>Oculus.Interaction.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

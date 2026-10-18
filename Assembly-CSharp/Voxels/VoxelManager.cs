@@ -1,0 +1,1207 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using Fusion;
+using GorillaExtensions;
+using K4os.Compression.LZ4;
+using Photon.Pun;
+using Unity.Collections;
+using Unity.Mathematics;
+using UnityEngine;
+using UnityEngine.Profiling;
+
+namespace Voxels;
+
+[NetworkBehaviourWeaved(0)]
+public class VoxelManager : NetworkComponent
+{
+	public class StateInitQueue
+	{
+		public NetPlayer player;
+
+		public List<ChunkInitState> chunks = new List<ChunkInitState>();
+
+		public List<VoxelMineOperation> mineOps = new List<VoxelMineOperation>();
+
+		public List<VoxelOperationResult> operations = new List<VoxelOperationResult>();
+
+		public ChunkInitState currentChunk;
+
+		public bool IsEmpty
+		{
+			get
+			{
+				if (currentChunk == null && chunks.Count == 0 && mineOps.Count == 0)
+				{
+					return operations.Count == 0;
+				}
+				return false;
+			}
+		}
+
+		public StateInitQueue()
+		{
+		}
+
+		public StateInitQueue(NetPlayer player)
+		{
+			this.player = player;
+		}
+
+		public int GetChunkIndex(int hash)
+		{
+			for (int i = 0; i < chunks.Count; i++)
+			{
+				if (chunks[i].hash == hash)
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
+
+		public ChunkInitState GetChunkState(int hash)
+		{
+			foreach (ChunkInitState chunk in chunks)
+			{
+				if (chunk.hash == hash)
+				{
+					return chunk;
+				}
+			}
+			return null;
+		}
+	}
+
+	public struct VoxelOperationResult
+	{
+		public int worldId;
+
+		public UnityEngine.BoundsInt bounds;
+
+		public byte[] data;
+	}
+
+	public struct VoxelMineOperation
+	{
+		public int worldId;
+
+		private half3 _hitOffset;
+
+		private byte _normX;
+
+		private byte _normY;
+
+		private byte _normZ;
+
+		public VoxelOperation op;
+
+		public Vector3 localHitPoint
+		{
+			get
+			{
+				return (float3)(op.origin / 256) + (float3)_hitOffset;
+			}
+			set
+			{
+				_hitOffset = (half3)((float3)value - (float3)(op.origin / 256));
+			}
+		}
+
+		public Vector3 hitNormal
+		{
+			get
+			{
+				return new Vector3((float)(int)_normX / 255f * 2f - 1f, (float)(int)_normY / 255f * 2f - 1f, (float)(int)_normZ / 255f * 2f - 1f);
+			}
+			set
+			{
+				(_normX, _normY, _normZ) = NormalToBytes(value);
+			}
+		}
+
+		public VoxelMineOperation(VoxelWorld world, Vector3 hitPoint, Vector3 hitNormal, Vector3 origin, VoxelAction action)
+		{
+			worldId = world.Id;
+			op = new VoxelOperation(origin, action);
+			_hitOffset = (half3)((float3)world.GetLocalPosition(hitPoint) - (float3)(op.origin / 256));
+			(_normX, _normY, _normZ) = NormalToBytes(hitNormal);
+			if (math.length(_hitOffset) >= 5f)
+			{
+				Debug.LogError($"[VOX] {hitPoint}-{world.GetWorldPosition(localHitPoint)}={hitPoint - world.GetWorldPosition(localHitPoint)} [{(hitPoint - world.GetWorldPosition(localHitPoint)).magnitude:F4}]");
+			}
+			Debug.Log($"[VOX] {hitPoint}-{world.GetWorldPosition(localHitPoint)}={hitPoint - world.GetWorldPosition(localHitPoint)} [{(hitPoint - world.GetWorldPosition(localHitPoint)).magnitude:F4}]");
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static (byte x, byte y, byte z) NormalToBytes(Vector3 hitNormal)
+		{
+			return (x: (byte)((hitNormal.x * 0.5f + 0.5f) * 255f), y: (byte)((hitNormal.y * 0.5f + 0.5f) * 255f), z: (byte)((hitNormal.z * 0.5f + 0.5f) * 255f));
+		}
+
+		public override string ToString()
+		{
+			return string.Join(", ", worldId, localHitPoint, hitNormal, op);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool IsValid()
+		{
+			Vector3 v = localHitPoint;
+			float maxVal = 10000f;
+			if (v.IsValid(in maxVal) && hitNormal.sqrMagnitude >= 0.5f)
+			{
+				return op.IsValid();
+			}
+			return false;
+		}
+	}
+
+	public class ChunkInitState
+	{
+		public int worldId;
+
+		public int3 chunkId;
+
+		public int hash;
+
+		public byte[] serializedChunkState;
+
+		public int numSerializedBytes;
+
+		public int totalSerializedBytes;
+	}
+
+	public enum RPC
+	{
+		WorldRequest,
+		OperationRequest,
+		MineRequest,
+		StartChunk,
+		StartEmptyChunk,
+		ContinueChunk,
+		SetDensity,
+		MineCommand,
+		Count
+	}
+
+	public const int OP_SCALE = 256;
+
+	private const int MAX_DATA_SIZE = 1000;
+
+	private static VoxelManager _instance;
+
+	private static Dictionary<int, VoxelWorld> _worlds = new Dictionary<int, VoxelWorld>();
+
+	private static StaticArrayBag<byte> _byteArrayBag = new StaticArrayBag<byte>();
+
+	private static StaticArrayBag<int> _intArrayBag = new StaticArrayBag<int>();
+
+	private NetPlayer _owner;
+
+	private static Dictionary<int, StateInitQueue> _initQueues = new Dictionary<int, StateInitQueue>();
+
+	private static StateInitQueue _localInitQueue = new StateInitQueue();
+
+	private static byte[] _packetData = new byte[1000];
+
+	private static bool _processInitQueus;
+
+	private static Queue<(float time, int bytes)> _sendHistory = new Queue<(float, int)>();
+
+	private static int _sendRate;
+
+	private const int MAX_DATA_RATE = 10000;
+
+	private static Dictionary<int, List<VoxelMineOperation>> _mineOpQueues = new Dictionary<int, List<VoxelMineOperation>>();
+
+	private const int _maxMineCommandLength = 20;
+
+	private static float _mineCommandInterval = 0.1f;
+
+	private static float _nextMineCommandTime;
+
+	private static bool _mineCommandsQueued;
+
+	private static List<(NetPlayer player, VoxelMineOperation op)> _localOperationQueue = new List<(NetPlayer, VoxelMineOperation)>();
+
+	private static float _localOpInterval = 0.1f;
+
+	private static float _nextLocalOpTime;
+
+	private const float LOW_MEMORY_COLLECT_COOLDOWN = 60f;
+
+	private static float _nextLowMemoryCollectTime;
+
+	private static VoxelMineOperation[] _mineOpArray;
+
+	private static Dictionary<int, CallLimiter[]> _spamChecks = new Dictionary<int, CallLimiter[]>();
+
+	public static bool HasAuthority
+	{
+		get
+		{
+			if (InRoom)
+			{
+				return _instance.IsLocallyOwned;
+			}
+			return true;
+		}
+	}
+
+	public static bool InRoom => NetworkSystem.Instance.InRoom;
+
+	protected override void Start()
+	{
+		base.Start();
+		_instance = this;
+	}
+
+	internal override void OnEnable()
+	{
+		NetworkBehaviourUtils.InternalOnEnable(this);
+		base.OnEnable();
+		RoomSystem.JoinedRoomEvent += new Action(OnNetworkJoinedRoom);
+		RoomSystem.LeftRoomEvent += new Action(OnNetworkLeftRoom);
+		NetworkSystem.Instance.OnPlayerLeft += new Action<NetPlayer>(OnPlayerLeft);
+		Application.lowMemory += OnLowMemory;
+	}
+
+	internal override void OnDisable()
+	{
+		NetworkBehaviourUtils.InternalOnDisable(this);
+		base.OnDisable();
+		RoomSystem.JoinedRoomEvent -= new Action(OnNetworkJoinedRoom);
+		RoomSystem.LeftRoomEvent -= new Action(OnNetworkLeftRoom);
+		NetworkSystem.Instance.OnPlayerLeft -= new Action<NetPlayer>(OnPlayerLeft);
+		Application.lowMemory -= OnLowMemory;
+	}
+
+	private void Update()
+	{
+		if (_processInitQueus)
+		{
+			_processInitQueus = false;
+			if (!PhotonNetwork.IsMasterClient)
+			{
+				_initQueues.Clear();
+				return;
+			}
+			if (_worlds.Count == 0)
+			{
+				return;
+			}
+			UpdateTransferLog();
+			foreach (NetPlayer item in RoomSystem.PlayersInRoom)
+			{
+				if (!item.IsLocal && _initQueues.TryGetValue(item.ActorNumber, out var value) && !value.IsEmpty)
+				{
+					if (_sendRate < 10000)
+					{
+						SendNextChunk(value);
+					}
+					if (!value.IsEmpty)
+					{
+						_processInitQueus = true;
+					}
+				}
+			}
+		}
+		if (_mineCommandsQueued && Time.realtimeSinceStartup >= _nextMineCommandTime)
+		{
+			if (!PhotonNetwork.IsMasterClient)
+			{
+				_mineCommandsQueued = false;
+				_mineOpQueues.Clear();
+			}
+			SendQueuedMineCommands();
+		}
+	}
+
+	private void LateUpdate()
+	{
+		if (_localOperationQueue.Count > 0 && Time.realtimeSinceStartup >= _nextLocalOpTime)
+		{
+			ExecuteQueuedLocalOperations();
+		}
+	}
+
+	private void OnLowMemory()
+	{
+		float realtimeSinceStartup = Time.realtimeSinceStartup;
+		if (!(realtimeSinceStartup < _nextLowMemoryCollectTime))
+		{
+			_nextLowMemoryCollectTime = realtimeSinceStartup + 60f;
+			long num = 1048576L;
+			long num2 = Profiler.GetMonoUsedSizeLong() / num;
+			GC.Collect();
+			long num3 = Profiler.GetMonoUsedSizeLong() / num;
+			PersistLog.Log($"Performing Memory Cleanup.  Used Memory: {num2}M->{num3}M ({num3 - num2}M)");
+		}
+	}
+
+	private static void UpdateTransferLog()
+	{
+		float num = Time.realtimeSinceStartup - 1f;
+		while (_sendHistory.Count > 0 && _sendHistory.Peek().time <= num)
+		{
+			int item = _sendHistory.Dequeue().bytes;
+			_sendRate -= item;
+		}
+	}
+
+	private static void EnqueueTransferLog(int bytes)
+	{
+		_sendHistory.Enqueue((Time.realtimeSinceStartup, bytes));
+		_sendRate += bytes;
+	}
+
+	public static int[] GetIntArray(int length)
+	{
+		int[] staticArray = _intArrayBag.GetStaticArray(length);
+		for (int i = 0; i < length; i++)
+		{
+			staticArray[i] = 0;
+		}
+		return staticArray;
+	}
+
+	public static void Register(VoxelWorld world)
+	{
+		_worlds[world.Id] = world;
+		Debug.Log($"Registered voxel world {world.name}[{world.Id}]", world);
+		if (!HasAuthority)
+		{
+			SendWorldStateRequest(world.Id);
+		}
+	}
+
+	public static void Unregister(VoxelWorld world)
+	{
+		_worlds.Remove(world.Id);
+		Debug.Log($"Unregistered voxel world {world.name}[{world.Id}]", world);
+	}
+
+	public static void ReplicateState(VoxelWorld world)
+	{
+		if (!InRoom || !HasAuthority)
+		{
+			return;
+		}
+		foreach (NetPlayer item in RoomSystem.PlayersInRoom)
+		{
+			if (!item.IsLocal)
+			{
+				SendWorldStateToPlayer(world, item);
+			}
+		}
+	}
+
+	private void OnNetworkJoinedRoom()
+	{
+		if (!HasAuthority)
+		{
+			RequestVoxelWorldStates();
+		}
+	}
+
+	private void OnNetworkLeftRoom()
+	{
+		_spamChecks.Clear();
+	}
+
+	private void OnPlayerLeft(NetPlayer player)
+	{
+		if (HasAuthority && InRoom)
+		{
+			ClearQueuesForPlayer(player);
+			_spamChecks.Remove(player.ActorNumber);
+		}
+	}
+
+	protected override void OnOwnerSwitched(NetPlayer newOwningPlayer)
+	{
+		_owner = newOwningPlayer;
+		_mineOpQueues.Clear();
+		_localOperationQueue.Clear();
+		if (!HasAuthority)
+		{
+			RequestVoxelWorldStates();
+		}
+	}
+
+	public override void WriteDataFusion()
+	{
+	}
+
+	public override void ReadDataFusion()
+	{
+	}
+
+	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
+	{
+	}
+
+	protected override void ReadDataPUN(PhotonStream stream, PhotonMessageInfo info)
+	{
+	}
+
+	private static void RequestVoxelWorldStates()
+	{
+		foreach (int key in _worlds.Keys)
+		{
+			SendWorldStateRequest(key);
+		}
+	}
+
+	public static void RequestWorldState(VoxelWorld world)
+	{
+		SendWorldStateRequest(world.Id);
+	}
+
+	private static void OnWorldStateRequestReceived(int worldId, PhotonMessageInfoWrapped info)
+	{
+		if (_worlds.TryGetValue(worldId, out var value))
+		{
+			SendWorldStateToPlayer(value, info.Sender);
+		}
+	}
+
+	private static void SendWorldStateToPlayer(VoxelWorld world, NetPlayer player)
+	{
+		if (_initQueues.TryGetValue(player.ActorNumber, out var value))
+		{
+			for (int i = 0; i < value.chunks.Count; i++)
+			{
+				if (value.chunks[i].worldId == world.Id)
+				{
+					value.chunks.RemoveAt(i--);
+				}
+			}
+		}
+		foreach (Chunk chunk in world.Chunks)
+		{
+			QueueChunkForPlayer(chunk, player);
+		}
+	}
+
+	private static bool WorldIsQueuedForPlayer(VoxelWorld world, NetPlayer player)
+	{
+		if (!_initQueues.TryGetValue(player.ActorNumber, out var value))
+		{
+			return false;
+		}
+		foreach (ChunkInitState chunk in value.chunks)
+		{
+			if (chunk.worldId == world.Id)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static void ClearQueuesForPlayer(NetPlayer player)
+	{
+		if (_initQueues.TryGetValue(player.ActorNumber, out var value))
+		{
+			value.chunks.Clear();
+			value.mineOps.Clear();
+			value.operations.Clear();
+		}
+		if (_mineOpQueues.TryGetValue(player.ActorNumber, out var value2))
+		{
+			value2.Clear();
+		}
+	}
+
+	private static StateInitQueue GetOrCreateQueueForPlayer(NetPlayer player)
+	{
+		if (!_initQueues.TryGetValue(player.ActorNumber, out var value))
+		{
+			value = new StateInitQueue(player);
+			_initQueues[player.ActorNumber] = value;
+		}
+		return value;
+	}
+
+	private static void QueueChunkForPlayer(Chunk chunk, NetPlayer player)
+	{
+		StateInitQueue orCreateQueueForPlayer = GetOrCreateQueueForPlayer(player);
+		byte[] array = null;
+		int totalSerializedBytes = 0;
+		if (chunk.IsDataChanged)
+		{
+			ChunkDTO chunk2 = new ChunkDTO(chunk);
+			array = ChunkIO.SerializeChunk(in chunk2);
+			totalSerializedBytes = array.Length;
+		}
+		ChunkInitState item = new ChunkInitState
+		{
+			numSerializedBytes = 0,
+			totalSerializedBytes = totalSerializedBytes,
+			worldId = chunk.World.Id,
+			chunkId = chunk.Id,
+			hash = (chunk.World.Id ^ chunk.Id.GetHashCode()),
+			serializedChunkState = array
+		};
+		orCreateQueueForPlayer.chunks.Add(item);
+		_processInitQueus = true;
+	}
+
+	private static void QueueOperationForPlayer(VoxelWorld world, NetPlayer player, UnityEngine.BoundsInt bounds, byte[] data)
+	{
+		if (!_initQueues.TryGetValue(player.ActorNumber, out var value))
+		{
+			value = new StateInitQueue();
+			_initQueues[player.ActorNumber] = value;
+		}
+		VoxelOperationResult voxelOperationResult = default(VoxelOperationResult);
+		voxelOperationResult.worldId = world.Id;
+		voxelOperationResult.bounds = bounds;
+		voxelOperationResult.data = data;
+		VoxelOperationResult item = voxelOperationResult;
+		value.operations.Add(item);
+		_processInitQueus = true;
+	}
+
+	private static void QueueMineOperationForPlayer(NetPlayer player, VoxelMineOperation op)
+	{
+		if (!_initQueues.TryGetValue(player.ActorNumber, out var value))
+		{
+			value = new StateInitQueue();
+			_initQueues[player.ActorNumber] = value;
+		}
+		value.mineOps.Add(op);
+		_processInitQueus = true;
+	}
+
+	private static void QueueMineCommand(NetPlayer player, VoxelMineOperation operation)
+	{
+		if (!_mineOpQueues.TryGetValue(player.ActorNumber, out var value))
+		{
+			value = new List<VoxelMineOperation>();
+			_mineOpQueues[player.ActorNumber] = value;
+		}
+		value.Add(operation);
+		_mineCommandsQueued = true;
+	}
+
+	private static void SendQueuedMineCommands()
+	{
+		int num = 0;
+		int num2 = 0;
+		_mineCommandsQueued = false;
+		foreach (NetPlayer item in RoomSystem.PlayersInRoom)
+		{
+			if (!item.IsLocal && _mineOpQueues.TryGetValue(item.ActorNumber, out var value) && value.Count != 0)
+			{
+				num += value.Count;
+				int count = Mathf.Min(20, value.Count);
+				SendMineCommand(item, GetSpanFor(value, 0, count));
+				value.RemoveRange(0, count);
+				num2 += value.Count;
+				if (value.Count > 0)
+				{
+					_mineCommandsQueued = true;
+				}
+			}
+		}
+		_nextMineCommandTime = Time.realtimeSinceStartup + _mineCommandInterval;
+	}
+
+	private static void QueueMineOperation(VoxelMineOperation op, NetPlayer sender)
+	{
+		_localOperationQueue.Add((sender, op));
+	}
+
+	private static void ExecuteQueuedLocalOperations()
+	{
+		bool hasAuthority = HasAuthority;
+		_nextLocalOpTime = Time.realtimeSinceStartup + _localOpInterval;
+		_ = _localOperationQueue.Count;
+		for (int i = 0; i < _localOperationQueue.Count; i++)
+		{
+			var (player, mineOp) = _localOperationQueue[i];
+			if (!_worlds.TryGetValue(mineOp.worldId, out var value))
+			{
+				Debug.LogError($"[VOX] Unable to perform queued local operation on invalid world {mineOp.worldId}");
+				_localOperationQueue.RemoveAtSwapBack(i--);
+				continue;
+			}
+			UnityEngine.BoundsInt bounds = value.GetBounds(mineOp.op.origin, mineOp.op.radius);
+			if (!value.ChunksHaveJobs(bounds))
+			{
+				int[] amounts = value.PerformLocalMiningOperation(mineOp, immediate: false);
+				if (hasAuthority)
+				{
+					ProcessMiningResult(player, value, amounts);
+				}
+				_localOperationQueue.RemoveAtSwapBack(i--);
+			}
+		}
+	}
+
+	private static void ProcessMiningResult(NetPlayer player, VoxelWorld world, int[] amounts)
+	{
+		for (int i = 0; i < amounts.Length; i++)
+		{
+			if (amounts[i] != 0)
+			{
+				VoxelEvents.HandleResourceMinedAuthority(player, world, amounts);
+				break;
+			}
+		}
+	}
+
+	private static void SendNextChunk(StateInitQueue queue)
+	{
+		NetPlayer player = queue.player;
+		if (queue.currentChunk != null)
+		{
+			ChunkInitState currentChunk = queue.currentChunk;
+			SendNextPacketForChunk(currentChunk, player);
+			if (currentChunk.numSerializedBytes == currentChunk.totalSerializedBytes)
+			{
+				queue.currentChunk = null;
+			}
+		}
+		else if (queue.chunks.Count > 0)
+		{
+			ChunkInitState chunkInitState = queue.chunks[0];
+			SendStartChunk(player, chunkInitState.worldId, chunkInitState.chunkId, chunkInitState.hash, chunkInitState.totalSerializedBytes);
+			if (chunkInitState.totalSerializedBytes > 0)
+			{
+				queue.currentChunk = chunkInitState;
+			}
+			queue.chunks.RemoveAt(0);
+		}
+		else if (queue.mineOps.Count > 0)
+		{
+			int count = Mathf.Min(20, queue.mineOps.Count);
+			SendMineCommand(player, GetSpanFor(queue.mineOps, 0, count));
+			queue.mineOps.RemoveRange(0, count);
+		}
+		else if (queue.operations.Count > 0)
+		{
+			VoxelOperationResult voxelOperationResult = queue.operations[0];
+			SendSetDensity(player, voxelOperationResult.worldId, voxelOperationResult.bounds, voxelOperationResult.data);
+			queue.operations.RemoveAt(0);
+		}
+	}
+
+	private static Span<VoxelMineOperation> GetSpanFor(List<VoxelMineOperation> ops, int start, int count)
+	{
+		if (_mineOpArray == null || _mineOpArray.Length < count)
+		{
+			_mineOpArray = new VoxelMineOperation[count * 2];
+		}
+		ops.CopyTo(start, _mineOpArray, 0, count);
+		return _mineOpArray.AsSpan(start, count);
+	}
+
+	private static void SendNextPacketForChunk(ChunkInitState chunkState, NetPlayer player)
+	{
+		int numSerializedBytes = chunkState.numSerializedBytes;
+		int num = Mathf.Min(chunkState.totalSerializedBytes - numSerializedBytes, 1000);
+		if (num > 0)
+		{
+			Array.Copy(chunkState.serializedChunkState, numSerializedBytes, _packetData, 0, num);
+			chunkState.numSerializedBytes += num;
+			SendContinueChunk(player, chunkState.hash, num, _packetData);
+			EnqueueTransferLog(num);
+			_ = chunkState.numSerializedBytes;
+			_ = chunkState.totalSerializedBytes;
+		}
+	}
+
+	private static void OnStartChunkReceived(int worldId, int3 chunkId, int hash, int size)
+	{
+		int chunkIndex = _localInitQueue.GetChunkIndex(hash);
+		if (chunkIndex >= 0)
+		{
+			_localInitQueue.chunks.RemoveAt(chunkIndex);
+		}
+		Chunk chunk;
+		if (!_worlds.TryGetValue(worldId, out var value))
+		{
+			Debug.LogError($"Failed to find world {worldId}");
+		}
+		else if (!value.TryGetChunk(chunkId, out chunk))
+		{
+			Debug.LogError($"Tried to receive a non-loaded chunk {chunkId}");
+		}
+		else if (size > 0)
+		{
+			ChunkInitState item = new ChunkInitState
+			{
+				worldId = worldId,
+				hash = hash,
+				serializedChunkState = new byte[size],
+				numSerializedBytes = 0,
+				totalSerializedBytes = size
+			};
+			_localInitQueue.chunks.Add(item);
+		}
+		else
+		{
+			value.ResetChunk(chunkId);
+		}
+	}
+
+	private static void OnChunkPacketReceived(int hash, int size, byte[] data)
+	{
+		if (size > data.Length)
+		{
+			Debug.LogError("Size value is is larger than data");
+			return;
+		}
+		int chunkIndex = _localInitQueue.GetChunkIndex(hash);
+		if (chunkIndex < 0)
+		{
+			Debug.LogError($"Couldn't fetch chunk state with hash {hash}");
+			return;
+		}
+		ChunkInitState chunkInitState = _localInitQueue.chunks[chunkIndex];
+		if (chunkInitState.numSerializedBytes + size > chunkInitState.totalSerializedBytes)
+		{
+			Debug.LogError($"Received data larger than {chunkInitState.totalSerializedBytes} bytes for chunk {hash}");
+			return;
+		}
+		Array.Copy(data, 0, chunkInitState.serializedChunkState, chunkInitState.numSerializedBytes, size);
+		chunkInitState.numSerializedBytes += size;
+		if (chunkInitState.numSerializedBytes != chunkInitState.totalSerializedBytes)
+		{
+			return;
+		}
+		if (ChunkIO.TryDeserializeChunk(in chunkInitState.serializedChunkState, out var dto))
+		{
+			if (_worlds.TryGetValue(dto.WorldId, out var value))
+			{
+				value.UpdateChunkFrom(dto);
+			}
+			else
+			{
+				Debug.LogError($"Deserialized chunk for nonexistent world {dto.WorldId}");
+			}
+		}
+		else
+		{
+			Debug.LogError($"Unable to deserialize chunk with hash {chunkInitState.hash}");
+		}
+		_localInitQueue.chunks.RemoveAt(chunkIndex);
+	}
+
+	private static void SendDensity(VoxelWorld world, UnityEngine.BoundsInt bounds)
+	{
+		GetDensityForBounds(world, bounds, out var voxels);
+		byte[] data = LZ4Pickler.Pickle(voxels);
+		foreach (NetPlayer item in RoomSystem.PlayersInRoom)
+		{
+			if (!item.IsLocal)
+			{
+				if (WorldIsQueuedForPlayer(world, item))
+				{
+					QueueOperationForPlayer(world, item, bounds, data);
+				}
+				else
+				{
+					SendSetDensity(item, world.Id, bounds, data);
+				}
+			}
+		}
+	}
+
+	public static void PerformOperation(VoxelWorld world, Vector3 position, VoxelAction action)
+	{
+		position = world.GetLocalPosition(position);
+		action.radius /= world.Scale;
+		if (InRoom)
+		{
+			if (HasAuthority)
+			{
+				OperateAuthority(world, position, action);
+				return;
+			}
+			world.PerformLocalOperation(position, action);
+			SendOperationRequest(world.Id, position, action);
+		}
+		else
+		{
+			world.PerformLocalOperation(position, action);
+		}
+	}
+
+	private static void OperateAuthority(VoxelWorld world, Vector3 localPosition, VoxelAction action)
+	{
+		world.PerformLocalOperation(localPosition, action);
+		UnityEngine.BoundsInt bounds = world.GetBounds(localPosition, action.radius);
+		SendDensity(world, bounds);
+	}
+
+	private static void OnOperationRequestReceived(int worldId, Vector3 localPosition, VoxelAction action, PhotonMessageInfoWrapped info)
+	{
+		if (!_worlds.TryGetValue(worldId, out var value))
+		{
+			Debug.LogError($"Couldn't find voxel world {worldId}");
+			return;
+		}
+		UnityEngine.BoundsInt bounds = value.GetBounds(localPosition, action.radius);
+		if (bounds.GetVoxelCount() > 1000)
+		{
+			GTDev.LogError($"Received voxel operation request was too large [{bounds} = {bounds.GetVoxelCount()} voxels]");
+		}
+		else
+		{
+			OperateAuthority(value, localPosition, action);
+		}
+	}
+
+	public static void Mine(VoxelWorld world, Vector3 hitPoint, Vector3 hitNormal, Vector3 origin, VoxelAction action)
+	{
+		VoxelMineOperation voxelMineOperation = new VoxelMineOperation(world, hitPoint, hitNormal, origin, action);
+		if (InRoom)
+		{
+			if (HasAuthority)
+			{
+				MineAuthority(world, voxelMineOperation);
+				return;
+			}
+			world.PerformLocalMiningOperation(voxelMineOperation);
+			SendMineOperationRequest(voxelMineOperation);
+		}
+		else
+		{
+			world.PerformLocalMiningOperation(voxelMineOperation);
+		}
+	}
+
+	private static void MineAuthority(VoxelWorld world, VoxelMineOperation op, NetPlayer sender = null)
+	{
+		if (sender == null)
+		{
+			sender = NetworkSystem.Instance.LocalPlayer;
+		}
+		if (sender.IsLocal)
+		{
+			int[] amounts = world.PerformLocalMiningOperation(op);
+			ProcessMiningResult(sender, world, amounts);
+		}
+		else
+		{
+			QueueMineOperation(op, sender);
+		}
+		foreach (NetPlayer item in RoomSystem.PlayersInRoom)
+		{
+			if (!item.IsLocal && item != sender)
+			{
+				if (WorldIsQueuedForPlayer(world, item))
+				{
+					QueueMineOperationForPlayer(item, op);
+				}
+				else
+				{
+					QueueMineCommand(item, op);
+				}
+			}
+		}
+	}
+
+	private static void OnMineRequestReceived(VoxelMineOperation op, PhotonMessageInfoWrapped info)
+	{
+		if (!_worlds.TryGetValue(op.worldId, out var value))
+		{
+			Debug.LogError($"Couldn't find voxel world {op.worldId}");
+		}
+		else
+		{
+			MineAuthority(value, op, info.Sender);
+		}
+	}
+
+	private static void GetVoxelsForBounds(VoxelWorld world, UnityEngine.BoundsInt bounds, out Voxel[] voxels)
+	{
+		int voxelCount = bounds.GetVoxelCount();
+		voxels = new Voxel[voxelCount];
+		int num = 0;
+		for (int i = bounds.min.x; i <= bounds.max.x; i++)
+		{
+			for (int j = bounds.min.y; j <= bounds.max.y; j++)
+			{
+				for (int k = bounds.min.z; k <= bounds.max.z; k++)
+				{
+					voxels[num++] = world.GetVoxelData(new int3(i, j, k));
+				}
+			}
+		}
+	}
+
+	private static void GetDensityForBounds(VoxelWorld world, UnityEngine.BoundsInt bounds, out byte[] voxels)
+	{
+		int voxelCount = bounds.GetVoxelCount();
+		voxels = _byteArrayBag.GetStaticArray(voxelCount);
+		int num = 0;
+		for (int i = bounds.min.x; i <= bounds.max.x; i++)
+		{
+			for (int j = bounds.min.y; j <= bounds.max.y; j++)
+			{
+				for (int k = bounds.min.z; k <= bounds.max.z; k++)
+				{
+					voxels[num++] = world.GetVoxelDensity(new int3(i, j, k));
+				}
+			}
+		}
+	}
+
+	private static void OnSetDensityReceived(int worldId, UnityEngine.BoundsInt bounds, byte[] data)
+	{
+		if (!_worlds.TryGetValue(worldId, out var value))
+		{
+			throw new InvalidOperationException($"Couldn't find voxel world {worldId}");
+		}
+		byte[] array = LZ4Pickler.Unpickle(data);
+		if (bounds.GetVoxelCount() != array.Length)
+		{
+			Debug.LogError($"Voxel count mismatch: {bounds.GetVoxelCount()} vs {array.Length}");
+		}
+		else
+		{
+			value.SetVoxelDensity(bounds, array, immediate: false);
+		}
+	}
+
+	private static void OnMineCommandReceived(VoxelMineOperation op)
+	{
+		QueueMineOperation(op, null);
+	}
+
+	internal static bool IsValidAuthorityRPC(PhotonMessageInfoWrapped info, RPC eventType)
+	{
+		if ((HasAuthority && InRoom) || info.Sender.IsLocal)
+		{
+			return !IsSpamming(info, eventType);
+		}
+		return false;
+	}
+
+	internal static bool IsValidClientRPC(PhotonMessageInfoWrapped info, RPC eventType)
+	{
+		if (info.Sender.IsMasterClient || info.Sender.IsLocal)
+		{
+			return !IsSpamming(info, eventType);
+		}
+		return false;
+	}
+
+	internal static bool IsSpamming(PhotonMessageInfoWrapped info, RPC eventType)
+	{
+		return !GetSpamChecksForUser(info.senderID)[(int)eventType].CheckCallTime(Time.unscaledTime);
+	}
+
+	internal static CallLimiter[] GetSpamChecksForUser(int userID)
+	{
+		if (!_spamChecks.TryGetValue(userID, out var value))
+		{
+			value = new CallLimiter[8]
+			{
+				new CallLimiter(10, 30f),
+				new CallLimiter(10, 1f),
+				new CallLimiter(20, 1f),
+				new CallLimiter(10, 1f),
+				new CallLimiter(100, 1f),
+				new CallLimiter(20, 1f),
+				new CallLimiter(50, 1f),
+				new CallLimiter(20, 1f)
+			};
+			_spamChecks[userID] = value;
+		}
+		return value;
+	}
+
+	internal static void RegisterNetEventCallbacks()
+	{
+		RoomSystem.netEventCallbacks[100] = DeserializeWorldStateRequest;
+		RoomSystem.netEventCallbacks[101] = DeserializeOperationRequest;
+		RoomSystem.netEventCallbacks[102] = DeserializeMineOperationRequest;
+		RoomSystem.netEventCallbacks[103] = DeserializeStartChunk;
+		RoomSystem.netEventCallbacks[104] = DeserializeContinueChunk;
+		RoomSystem.netEventCallbacks[105] = DeserializeSetDensity;
+		RoomSystem.netEventCallbacks[106] = DeserializeMineCommand;
+	}
+
+	private static void SendWorldStateRequest(int worldId)
+	{
+		RoomSystem.SendEvent(100, new object[1] { worldId }, in NetworkSystemRaiseEvent.neoMaster, reliable: true);
+	}
+
+	internal static void DeserializeWorldStateRequest(object[] eventData, PhotonMessageInfoWrapped info)
+	{
+		MonkeAgent.IncrementRPCCall(info, "DeserializeWorldStateRequest");
+		if (IsValidAuthorityRPC(info, RPC.WorldRequest) && eventData.TryDeserializeTo<int>(out var v))
+		{
+			OnWorldStateRequestReceived(v, info);
+		}
+	}
+
+	private static void SendOperationRequest(int worldId, Vector3 localPosition, VoxelAction action)
+	{
+		object[] evData = new object[3] { worldId, localPosition, action };
+		RoomSystem.SendEvent(101, evData, in NetworkSystemRaiseEvent.neoMaster, reliable: true);
+	}
+
+	private static void DeserializeOperationRequest(object[] eventData, PhotonMessageInfoWrapped info)
+	{
+		MonkeAgent.IncrementRPCCall(info, "DeserializeOperationRequest");
+		if (IsValidAuthorityRPC(info, RPC.OperationRequest) && eventData.TryDeserializeTo<int, Vector3, VoxelAction>(out var v, out var v2, out var v3))
+		{
+			float maxVal = 10000f;
+			if (v2.IsValid(in maxVal) && v3.IsValid() && !(v3.radius > 5f))
+			{
+				OnOperationRequestReceived(v, v2, v3, info);
+			}
+		}
+	}
+
+	private static void SendMineOperationRequest(VoxelMineOperation op)
+	{
+		object[] evData = new object[1] { op };
+		RoomSystem.SendEvent(102, evData, in NetworkSystemRaiseEvent.neoMaster, reliable: true);
+	}
+
+	private static void DeserializeMineOperationRequest(object[] eventData, PhotonMessageInfoWrapped info)
+	{
+		MonkeAgent.IncrementRPCCall(info, "DeserializeMineOperationRequest");
+		if (IsValidAuthorityRPC(info, RPC.MineRequest) && eventData.TryDeserializeTo<VoxelMineOperation>(out var v) && _worlds.ContainsKey(v.worldId) && v.IsValid())
+		{
+			OnMineRequestReceived(v, info);
+		}
+	}
+
+	private static void SendStartChunk(NetPlayer player, int worldId, int3 chunkId, int hash, int totalSerializedBytes)
+	{
+		object[] evData = new object[4] { worldId, chunkId, hash, totalSerializedBytes };
+		RoomSystem.SendEvent(103, evData, in player, reliable: true);
+	}
+
+	private static void DeserializeStartChunk(object[] eventData, PhotonMessageInfoWrapped info)
+	{
+		if (eventData.TryDeserializeTo<int, int3, int, int>(out var v, out var v2, out var v3, out var v4))
+		{
+			if (v4 > 0)
+			{
+				MonkeAgent.IncrementRPCCall(info, "DeserializeStartChunk");
+			}
+			if (IsValidClientRPC(info, (v4 > 0) ? RPC.StartChunk : RPC.StartEmptyChunk))
+			{
+				OnStartChunkReceived(v, v2, v3, v4);
+			}
+		}
+	}
+
+	private static void SendContinueChunk(NetPlayer player, int hash, int size, byte[] data)
+	{
+		if (data.Length > 1000)
+		{
+			Debug.LogError($"Attempted to send ContinueChunk() with too many bytes ({data.Length})");
+			return;
+		}
+		object[] evData = new object[3] { hash, size, data };
+		RoomSystem.SendEvent(104, evData, in player, reliable: true);
+	}
+
+	private static void DeserializeContinueChunk(object[] eventData, PhotonMessageInfoWrapped info)
+	{
+		MonkeAgent.IncrementRPCCall(info, "DeserializeContinueChunk");
+		if (IsValidClientRPC(info, RPC.ContinueChunk) && eventData.TryDeserializeTo<int, int, byte[]>(out var v, out var v2, out var v3) && v2 >= 1 && v2 <= 1000 && v2 <= v3.Length)
+		{
+			OnChunkPacketReceived(v, v2, v3);
+		}
+	}
+
+	private static void SendSetDensity(NetPlayer player, int worldId, UnityEngine.BoundsInt bounds, byte[] data)
+	{
+		if (data.Length > 1000)
+		{
+			Debug.LogError($"Attempted to send SetDensity() with too many bytes ({data.Length})");
+			return;
+		}
+		object[] evData = new object[3] { worldId, bounds, data };
+		RoomSystem.SendEvent(105, evData, in player, reliable: true);
+		EnqueueTransferLog(data.Length);
+	}
+
+	private static void DeserializeSetDensity(object[] eventData, PhotonMessageInfoWrapped info)
+	{
+		MonkeAgent.IncrementRPCCall(info, "DeserializeSetDensity");
+		if (IsValidClientRPC(info, RPC.SetDensity) && eventData.TryDeserializeTo<int, UnityEngine.BoundsInt, byte[]>(out var v, out var v2, out var v3) && v3.Length <= 1000)
+		{
+			OnSetDensityReceived(v, v2, v3);
+		}
+	}
+
+	private static void SendMineCommand(NetPlayer player, Span<VoxelMineOperation> ops)
+	{
+		object[] evData = new object[1] { ops.ToArray() };
+		RoomSystem.SendEvent(106, evData, in player, reliable: true);
+	}
+
+	private static void DeserializeMineCommand(object[] eventData, PhotonMessageInfoWrapped info)
+	{
+		MonkeAgent.IncrementRPCCall(info, "DeserializeMineCommand");
+		if (!IsValidClientRPC(info, RPC.MineCommand) || !eventData.TryDeserializeTo<VoxelMineOperation[]>(out var v) || v.Length > 20)
+		{
+			return;
+		}
+		VoxelMineOperation[] array = v;
+		for (int i = 0; i < array.Length; i++)
+		{
+			VoxelMineOperation op = array[i];
+			if (_worlds.ContainsKey(op.worldId) && op.IsValid())
+			{
+				OnMineCommandReceived(op);
+			}
+		}
+	}
+
+	private void TestHitPoint()
+	{
+		Test(new float[6] { 1f, 10f, 100f, 1000f, 10000f, 25000f });
+		static void Test(float[] magnitudes)
+		{
+			VoxelWorld voxelWorld = UnityEngine.Object.FindAnyObjectByType<VoxelWorld>();
+			if ((bool)voxelWorld)
+			{
+				Debug.Log($"Testing HitPoint with world {voxelWorld}", voxelWorld);
+				foreach (float num in magnitudes)
+				{
+					float num2 = 0f;
+					for (int j = 0; j < 100; j++)
+					{
+						Vector3 vector = new Vector3(UnityEngine.Random.Range(0f - num, num), UnityEngine.Random.Range(0f - num, num), UnityEngine.Random.Range(0f - num, num));
+						Vector3 localPosition = voxelWorld.GetLocalPosition(vector);
+						VoxelMineOperation voxelMineOperation = new VoxelMineOperation(voxelWorld, vector, Vector3.one, localPosition, default(VoxelAction));
+						Vector3 worldPosition = voxelWorld.GetWorldPosition(voxelMineOperation.localHitPoint);
+						num2 = Mathf.Max(num2, (vector - worldPosition).magnitude);
+					}
+					Debug.Log($"[HPTest] Magnitude: {num} Max diff: {num2}");
+				}
+			}
+			else
+			{
+				Debug.LogError("[VOX][HPTest] Can't text HitPoint without at least one VoxelWorld in scene!");
+			}
+		}
+	}
+
+	[WeaverGenerated]
+	public override void CopyBackingFieldsToState(bool P_0)
+	{
+		base.CopyBackingFieldsToState(P_0);
+	}
+
+	[WeaverGenerated]
+	public override void CopyStateToBackingFields()
+	{
+		base.CopyStateToBackingFields();
+	}
+}
