@@ -17,18 +17,6 @@ internal static class ModioUnity
 		{
 			modioUnitySettings = Resources.Load<ModioUnitySettings>("mod.io/v3_config");
 		}
-		if (ModioCommandLine.TryGet("gameid", out var value))
-		{
-			modioUnitySettings.Settings.GameId = int.Parse(value);
-		}
-		if (ModioCommandLine.TryGet("apikey", out var value2))
-		{
-			modioUnitySettings.Settings.APIKey = value2;
-		}
-		if (ModioCommandLine.TryGet("url", out var value3))
-		{
-			modioUnitySettings.Settings.ServerURL = value3;
-		}
 		ModioServices.Bind<IModioLogHandler>().FromNew<ModioUnityLogger>(ModioServicePriority.EngineImplementation);
 		string text = $"Unity; {Application.unityVersion}; {Application.platform}";
 		ModioLog.Verbose?.Log(text);
