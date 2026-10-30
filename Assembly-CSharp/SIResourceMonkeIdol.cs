@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Resource Monke Idol")]
 public class SIResourceMonkeIdol : SIResource
 {
 	[SerializeField]

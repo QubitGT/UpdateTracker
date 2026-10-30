@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Dock")]
 public class GameDock : MonoBehaviour
 {
 	public GameEntity gameEntity;

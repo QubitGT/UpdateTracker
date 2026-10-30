@@ -1,10 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using CjLib;
-using Fusion;
-using Fusion.CodeGen;
 using GorillaExtensions;
 using GorillaGameModes;
 using GorillaLocomotion;
@@ -12,11 +9,9 @@ using GorillaLocomotion.Swimming;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
-using UnityEngine.Scripting;
 
 namespace GorillaTag;
 
-[NetworkBehaviourWeaved(76)]
 public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 {
 	public enum RisingLiquidState
@@ -80,125 +75,6 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 		public Transform target;
 
 		public float heightOffset;
-	}
-
-	[StructLayout(LayoutKind.Explicit, Size = 304)]
-	[NetworkStructWeaved(76)]
-	private struct ScienceManagerData : INetworkStruct
-	{
-		[FieldOffset(0)]
-		public int reliableState;
-
-		[FieldOffset(4)]
-		public double stateStartTime;
-
-		[FieldOffset(12)]
-		public float stateStartLiquidProgressLinear;
-
-		[FieldOffset(16)]
-		public double activationProgress;
-
-		[FieldOffset(24)]
-		public int nextRoundRiseSpeed;
-
-		[FieldOffset(28)]
-		public float riseTime;
-
-		[FieldOffset(32)]
-		public int lastWinnerId;
-
-		[FieldOffset(36)]
-		public int inGamePlayerCount;
-
-		[FieldOffset(40)]
-		[FixedBufferProperty(typeof(NetworkArray<int>), typeof(UnityArraySurrogate_0040ElementReaderWriterInt32), 10, order = -2147483647)]
-		[WeaverGenerated]
-		[SerializeField]
-		private FixedStorage_004010 _playerIdArray;
-
-		[FieldOffset(80)]
-		[FixedBufferProperty(typeof(NetworkArray<bool>), typeof(UnityArraySurrogate_0040ElementReaderWriterBoolean), 10, order = -2147483647)]
-		[WeaverGenerated]
-		[SerializeField]
-		private FixedStorage_004010 _touchedLiquidArray;
-
-		[FieldOffset(120)]
-		[FixedBufferProperty(typeof(NetworkArray<float>), typeof(UnityArraySurrogate_0040ElementReaderWriterSingle), 10, order = -2147483647)]
-		[WeaverGenerated]
-		[SerializeField]
-		private FixedStorage_004010 _touchedLiquidAtProgressArray;
-
-		[FieldOffset(160)]
-		[FixedBufferProperty(typeof(NetworkLinkedList<float>), typeof(UnityLinkedListSurrogate_0040ElementReaderWriterSingle), 5, order = -2147483647)]
-		[WeaverGenerated]
-		[SerializeField]
-		private FixedStorage_004018 _initialAngleArray;
-
-		[FieldOffset(232)]
-		[FixedBufferProperty(typeof(NetworkLinkedList<float>), typeof(UnityLinkedListSurrogate_0040ElementReaderWriterSingle), 5, order = -2147483647)]
-		[WeaverGenerated]
-		[SerializeField]
-		private FixedStorage_004018 _resultingAngleArray;
-
-		[Networked]
-		[Capacity(10)]
-		[NetworkedWeavedArray(10, 1, typeof(Fusion.ElementReaderWriterInt32))]
-		[NetworkedWeaved(10, 10)]
-		public unsafe NetworkArray<int> playerIdArray => new NetworkArray<int>(Native.ReferenceToPointer(ref _playerIdArray), 10, Fusion.ElementReaderWriterInt32.GetInstance());
-
-		[Networked]
-		[Capacity(10)]
-		[NetworkedWeavedArray(10, 1, typeof(global::ElementReaderWriterBoolean))]
-		[NetworkedWeaved(20, 10)]
-		public unsafe NetworkArray<bool> touchedLiquidArray => new NetworkArray<bool>(Native.ReferenceToPointer(ref _touchedLiquidArray), 10, global::ElementReaderWriterBoolean.GetInstance());
-
-		[Networked]
-		[Capacity(10)]
-		[NetworkedWeavedArray(10, 1, typeof(Fusion.ElementReaderWriterSingle))]
-		[NetworkedWeaved(30, 10)]
-		public unsafe NetworkArray<float> touchedLiquidAtProgressArray => new NetworkArray<float>(Native.ReferenceToPointer(ref _touchedLiquidAtProgressArray), 10, Fusion.ElementReaderWriterSingle.GetInstance());
-
-		[Networked]
-		[Capacity(5)]
-		[NetworkedWeavedLinkedList(5, 1, typeof(Fusion.ElementReaderWriterSingle))]
-		[NetworkedWeaved(40, 18)]
-		public unsafe NetworkLinkedList<float> initialAngleArray => new NetworkLinkedList<float>(Native.ReferenceToPointer(ref _initialAngleArray), 5, Fusion.ElementReaderWriterSingle.GetInstance());
-
-		[Networked]
-		[Capacity(5)]
-		[NetworkedWeavedLinkedList(5, 1, typeof(Fusion.ElementReaderWriterSingle))]
-		[NetworkedWeaved(58, 18)]
-		public unsafe NetworkLinkedList<float> resultingAngleArray => new NetworkLinkedList<float>(Native.ReferenceToPointer(ref _resultingAngleArray), 5, Fusion.ElementReaderWriterSingle.GetInstance());
-
-		public ScienceManagerData(int reliableState, double stateStartTime, float stateStartLiquidProgressLinear, double activationProgress, int nextRoundRiseSpeed, float riseTime, int lastWinnerId, int inGamePlayerCount, PlayerGameState[] playerStates, RotatingRingState[] rings)
-		{
-			this.reliableState = reliableState;
-			this.stateStartTime = stateStartTime;
-			this.stateStartLiquidProgressLinear = stateStartLiquidProgressLinear;
-			this.activationProgress = activationProgress;
-			this.nextRoundRiseSpeed = nextRoundRiseSpeed;
-			this.riseTime = riseTime;
-			this.lastWinnerId = lastWinnerId;
-			this.inGamePlayerCount = inGamePlayerCount;
-			for (int i = 0; i < rings.Length; i++)
-			{
-				RotatingRingState rotatingRingState = rings[i];
-				initialAngleArray.Add(rotatingRingState.initialAngle);
-				resultingAngleArray.Add(rotatingRingState.resultingAngle);
-			}
-			int[] array = new int[10];
-			bool[] array2 = new bool[10];
-			float[] array3 = new float[10];
-			for (int j = 0; j < 10; j++)
-			{
-				array[j] = playerStates[j].playerId;
-				array2[j] = playerStates[j].touchedLiquid;
-				array3[j] = playerStates[j].touchedLiquidAtProgress;
-			}
-			playerIdArray.CopyFrom(array, 0, array.Length);
-			touchedLiquidArray.CopyFrom(array2, 0, array2.Length);
-			touchedLiquidAtProgressArray.CopyFrom(array3, 0, array3.Length);
-		}
 	}
 
 	public static volatile ScienceExperimentManager instance;
@@ -388,11 +264,6 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 
 	private bool debugRandomizingRings;
 
-	[WeaverGenerated]
-	[DefaultForProperty("Data", 0, 76)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private ScienceManagerData _Data;
-
 	private bool RefreshWaterAvailable
 	{
 		get
@@ -431,28 +302,6 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 
 	bool ITickSystemTick.TickRunning { get; set; }
 
-	[Networked]
-	[NetworkedWeaved(0, 76)]
-	private unsafe ScienceManagerData Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing ScienceExperimentManager.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(ScienceManagerData*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing ScienceExperimentManager.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(ScienceManagerData*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
-
 	protected override void Awake()
 	{
 		base.Awake();
@@ -463,7 +312,6 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 			riseTimeLookup = new float[4] { riseTimeFast, riseTimeMedium, riseTimeSlow, riseTimeExtraSlow };
 			riseTime = riseTimeLookup[(int)nextRoundRiseSpeed];
 			allPlayersInRoom = RoomSystem.PlayersInRoom.ToArray();
-			GorillaGameManager.OnTouch += OnPlayerTagged;
 			RoomSystem.PlayerLeftEvent += new Action<NetPlayer>(OnPlayerLeftRoom);
 			RoomSystem.LeftRoomEvent += new Action(OnLeftRoom);
 			rotatingRings = new RotatingRingState[ringParent.childCount];
@@ -504,22 +352,18 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 
 	internal override void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		base.OnEnable();
 		TickSystem<object>.AddTickCallback(this);
 	}
 
 	internal override void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		base.OnDisable();
 		TickSystem<object>.RemoveTickCallback(this);
 	}
 
 	private void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
-		GorillaGameManager.OnTouch -= OnPlayerTagged;
 		if (gameAreaTriggerNotifier != null)
 		{
 			gameAreaTriggerNotifier.CompositeTriggerEnter -= OnColliderEnteredVolume;
@@ -681,11 +525,11 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 			}
 			if (flag2)
 			{
-				GorillaGameModes.GameMode.OptOut(allPlayersInRoom[j]);
+				GameMode.OptOut(allPlayersInRoom[j]);
 			}
 			else
 			{
-				GorillaGameModes.GameMode.OptIn(allPlayersInRoom[j]);
+				GameMode.OptIn(allPlayersInRoom[j]);
 			}
 		}
 	}
@@ -1330,44 +1174,6 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 		}
 	}
 
-	public override void WriteDataFusion()
-	{
-		ScienceManagerData data = new ScienceManagerData((int)reliableState.state, reliableState.stateStartTime, reliableState.stateStartLiquidProgressLinear, reliableState.activationProgress, (int)nextRoundRiseSpeed, riseTime, lastWinnerId, inGamePlayerCount, inGamePlayerStates, rotatingRings);
-		Data = data;
-	}
-
-	public override void ReadDataFusion()
-	{
-		int num = lastWinnerId;
-		_ = nextRoundRiseSpeed;
-		reliableState.state = (RisingLiquidState)Data.reliableState;
-		reliableState.stateStartTime = Data.stateStartTime;
-		reliableState.stateStartLiquidProgressLinear = Data.stateStartLiquidProgressLinear.ClampSafe(0f, 1f);
-		reliableState.activationProgress = Data.activationProgress.GetFinite();
-		nextRoundRiseSpeed = (RiseSpeed)Data.nextRoundRiseSpeed;
-		riseTime = Data.riseTime.GetFinite();
-		lastWinnerId = Data.lastWinnerId;
-		inGamePlayerCount = Mathf.Clamp(Data.inGamePlayerCount, 0, 10);
-		for (int i = 0; i < 10; i++)
-		{
-			inGamePlayerStates[i].playerId = Data.playerIdArray[i];
-			inGamePlayerStates[i].touchedLiquid = Data.touchedLiquidArray[i];
-			inGamePlayerStates[i].touchedLiquidAtProgress = Data.touchedLiquidAtProgressArray[i].ClampSafe(0f, 1f);
-		}
-		for (int j = 0; j < rotatingRings.Length; j++)
-		{
-			rotatingRings[j].initialAngle = Data.initialAngleArray[j].GetFinite();
-			rotatingRings[j].resultingAngle = Data.resultingAngleArray[j].GetFinite();
-		}
-		float num2 = riseProgress;
-		UpdateLocalState(NetworkSystem.Instance.SimTime, reliableState);
-		localLagRiseProgressOffset = num2 - riseProgress;
-		if (num != lastWinnerId)
-		{
-			RefreshWinnerName();
-		}
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		stream.SendNext((int)reliableState.state);
@@ -1451,7 +1257,7 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 			inGamePlayerCount++;
 			if (optPlayersOutOfRoomGameMode)
 			{
-				GorillaGameModes.GameMode.OptOut(pId);
+				GameMode.OptOut(pId);
 			}
 		}
 	}
@@ -1470,7 +1276,7 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 				inGamePlayerCount--;
 				if (optPlayersOutOfRoomGameMode)
 				{
-					GorillaGameModes.GameMode.OptIn(playerId);
+					GameMode.OptIn(playerId);
 				}
 				break;
 			}
@@ -1482,55 +1288,6 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 	{
 		MonkeAgent.IncrementRPCCall(info, "PlayerTouchedLavaRPC");
 		PlayerTouchedLava(info.Sender.ActorNumber);
-	}
-
-	[Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-	public unsafe void RPC_PlayerTouchedLava(RpcInfo info = default(RpcInfo))
-	{
-		if (((NetworkBehaviour)this).InvokeRpc)
-		{
-			((NetworkBehaviour)this).InvokeRpc = false;
-		}
-		else
-		{
-			NetworkBehaviourUtils.ThrowIfBehaviourNotInitialized(this);
-			if (base.Runner.Stage == SimulationStages.Resimulate)
-			{
-				return;
-			}
-			int localAuthorityMask = base.Object.GetLocalAuthorityMask();
-			if ((localAuthorityMask & 7) == 0)
-			{
-				NetworkBehaviourUtils.NotifyLocalSimulationNotAllowedToSendRpc("System.Void GorillaTag.ScienceExperimentManager::RPC_PlayerTouchedLava(Fusion.RpcInfo)", base.Object, 7);
-				return;
-			}
-			if ((localAuthorityMask & 1) != 1)
-			{
-				int num = 8;
-				if (!SimulationMessage.CanAllocateUserPayload(num))
-				{
-					NetworkBehaviourUtils.NotifyRpcPayloadSizeExceeded("System.Void GorillaTag.ScienceExperimentManager::RPC_PlayerTouchedLava(Fusion.RpcInfo)", num);
-					return;
-				}
-				if (base.Runner.HasAnyActiveConnections())
-				{
-					SimulationMessage* ptr = SimulationMessage.Allocate(base.Runner.Simulation, num);
-					byte* ptr2 = (byte*)ptr + 28;
-					*(RpcHeader*)ptr2 = RpcHeader.Create(base.Object.Id, ((NetworkBehaviour)this).ObjectIndex, 1);
-					int num2 = 8;
-					ptr->Offset = num2 * 8;
-					base.Runner.SendRpc(ptr);
-				}
-				if ((localAuthorityMask & 1) == 0)
-				{
-					return;
-				}
-			}
-			info = RpcInfo.FromLocal(base.Runner, RpcChannel.Reliable, RpcHostMode.SourceIsServer);
-		}
-		PhotonMessageInfoWrapped infoWrapped = new PhotonMessageInfoWrapped(info);
-		MonkeAgent.IncrementRPCCall(infoWrapped, "PlayerTouchedLavaRPC");
-		PlayerTouchedLava(infoWrapped.Sender.ActorNumber);
 	}
 
 	private void PlayerTouchedLava(int playerId)
@@ -1562,55 +1319,6 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 		PlayerTouchedRefreshWater(info.Sender.ActorNumber);
 	}
 
-	[Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-	private unsafe void RPC_PlayerTouchedRefreshWater(RpcInfo info = default(RpcInfo))
-	{
-		if (((NetworkBehaviour)this).InvokeRpc)
-		{
-			((NetworkBehaviour)this).InvokeRpc = false;
-		}
-		else
-		{
-			NetworkBehaviourUtils.ThrowIfBehaviourNotInitialized(this);
-			if (base.Runner.Stage == SimulationStages.Resimulate)
-			{
-				return;
-			}
-			int localAuthorityMask = base.Object.GetLocalAuthorityMask();
-			if ((localAuthorityMask & 7) == 0)
-			{
-				NetworkBehaviourUtils.NotifyLocalSimulationNotAllowedToSendRpc("System.Void GorillaTag.ScienceExperimentManager::RPC_PlayerTouchedRefreshWater(Fusion.RpcInfo)", base.Object, 7);
-				return;
-			}
-			if ((localAuthorityMask & 1) != 1)
-			{
-				int num = 8;
-				if (!SimulationMessage.CanAllocateUserPayload(num))
-				{
-					NetworkBehaviourUtils.NotifyRpcPayloadSizeExceeded("System.Void GorillaTag.ScienceExperimentManager::RPC_PlayerTouchedRefreshWater(Fusion.RpcInfo)", num);
-					return;
-				}
-				if (base.Runner.HasAnyActiveConnections())
-				{
-					SimulationMessage* ptr = SimulationMessage.Allocate(base.Runner.Simulation, num);
-					byte* ptr2 = (byte*)ptr + 28;
-					*(RpcHeader*)ptr2 = RpcHeader.Create(base.Object.Id, ((NetworkBehaviour)this).ObjectIndex, 2);
-					int num2 = 8;
-					ptr->Offset = num2 * 8;
-					base.Runner.SendRpc(ptr);
-				}
-				if ((localAuthorityMask & 1) == 0)
-				{
-					return;
-				}
-			}
-			info = RpcInfo.FromLocal(base.Runner, RpcChannel.Reliable, RpcHostMode.SourceIsServer);
-		}
-		PhotonMessageInfoWrapped infoWrapped = new PhotonMessageInfoWrapped(info);
-		MonkeAgent.IncrementRPCCall(infoWrapped, "PlayerTouchedRefreshWaterRPC");
-		PlayerTouchedRefreshWater(infoWrapped.Sender.ActorNumber);
-	}
-
 	private void PlayerTouchedRefreshWater(int playerId)
 	{
 		if (!base.IsMine || !RefreshWaterAvailable)
@@ -1640,49 +1348,6 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 		}
 	}
 
-	[Rpc(InvokeLocal = false)]
-	private unsafe void RPC_ValidateLocalPlayerWaterBalloonHit(int playerId, RpcInfo info = default(RpcInfo))
-	{
-		if (((NetworkBehaviour)this).InvokeRpc)
-		{
-			((NetworkBehaviour)this).InvokeRpc = false;
-			MonkeAgent.IncrementRPCCall(new PhotonMessageInfoWrapped(info), "ValidateLocalPlayerWaterBalloonHitRPC");
-			if (playerId == NetworkSystem.Instance.LocalPlayer.ActorNumber)
-			{
-				ValidateLocalPlayerWaterBalloonHit(playerId);
-			}
-			return;
-		}
-		NetworkBehaviourUtils.ThrowIfBehaviourNotInitialized(this);
-		if (base.Runner.Stage == SimulationStages.Resimulate)
-		{
-			return;
-		}
-		int localAuthorityMask = base.Object.GetLocalAuthorityMask();
-		if ((localAuthorityMask & 7) == 0)
-		{
-			NetworkBehaviourUtils.NotifyLocalSimulationNotAllowedToSendRpc("System.Void GorillaTag.ScienceExperimentManager::RPC_ValidateLocalPlayerWaterBalloonHit(System.Int32,Fusion.RpcInfo)", base.Object, 7);
-			return;
-		}
-		int num = 8;
-		num += 4;
-		if (!SimulationMessage.CanAllocateUserPayload(num))
-		{
-			NetworkBehaviourUtils.NotifyRpcPayloadSizeExceeded("System.Void GorillaTag.ScienceExperimentManager::RPC_ValidateLocalPlayerWaterBalloonHit(System.Int32,Fusion.RpcInfo)", num);
-		}
-		else if (base.Runner.HasAnyActiveConnections())
-		{
-			SimulationMessage* ptr = SimulationMessage.Allocate(base.Runner.Simulation, num);
-			byte* ptr2 = (byte*)ptr + 28;
-			*(RpcHeader*)ptr2 = RpcHeader.Create(base.Object.Id, ((NetworkBehaviour)this).ObjectIndex, 3);
-			int num2 = 8;
-			*(int*)(ptr2 + num2) = playerId;
-			num2 += 4;
-			ptr->Offset = num2 * 8;
-			base.Runner.SendRpc(ptr);
-		}
-	}
-
 	private void ValidateLocalPlayerWaterBalloonHit(int playerId)
 	{
 		if (playerId == NetworkSystem.Instance.LocalPlayer.ActorNumber && !GTPlayer.Instance.InWater)
@@ -1700,57 +1365,6 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 	private void PlayerHitByWaterBalloonRPC(int playerId, PhotonMessageInfo info)
 	{
 		MonkeAgent.IncrementRPCCall(info, "PlayerHitByWaterBalloonRPC");
-		PlayerHitByWaterBalloon(playerId);
-	}
-
-	[Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-	private unsafe void RPC_PlayerHitByWaterBalloon(int playerId, RpcInfo info = default(RpcInfo))
-	{
-		if (((NetworkBehaviour)this).InvokeRpc)
-		{
-			((NetworkBehaviour)this).InvokeRpc = false;
-		}
-		else
-		{
-			NetworkBehaviourUtils.ThrowIfBehaviourNotInitialized(this);
-			if (base.Runner.Stage == SimulationStages.Resimulate)
-			{
-				return;
-			}
-			int localAuthorityMask = base.Object.GetLocalAuthorityMask();
-			if ((localAuthorityMask & 7) == 0)
-			{
-				NetworkBehaviourUtils.NotifyLocalSimulationNotAllowedToSendRpc("System.Void GorillaTag.ScienceExperimentManager::RPC_PlayerHitByWaterBalloon(System.Int32,Fusion.RpcInfo)", base.Object, 7);
-				return;
-			}
-			if ((localAuthorityMask & 1) != 1)
-			{
-				int num = 8;
-				num += 4;
-				if (!SimulationMessage.CanAllocateUserPayload(num))
-				{
-					NetworkBehaviourUtils.NotifyRpcPayloadSizeExceeded("System.Void GorillaTag.ScienceExperimentManager::RPC_PlayerHitByWaterBalloon(System.Int32,Fusion.RpcInfo)", num);
-					return;
-				}
-				if (base.Runner.HasAnyActiveConnections())
-				{
-					SimulationMessage* ptr = SimulationMessage.Allocate(base.Runner.Simulation, num);
-					byte* ptr2 = (byte*)ptr + 28;
-					*(RpcHeader*)ptr2 = RpcHeader.Create(base.Object.Id, ((NetworkBehaviour)this).ObjectIndex, 4);
-					int num2 = 8;
-					*(int*)(ptr2 + num2) = playerId;
-					num2 += 4;
-					ptr->Offset = num2 * 8;
-					base.Runner.SendRpc(ptr);
-				}
-				if ((localAuthorityMask & 1) == 0)
-				{
-					return;
-				}
-			}
-			info = RpcInfo.FromLocal(base.Runner, RpcChannel.Reliable, RpcHostMode.SourceIsServer);
-		}
-		MonkeAgent.IncrementRPCCall(new PhotonMessageInfoWrapped(info), "PlayerHitByWaterBalloonRPC");
 		PlayerHitByWaterBalloon(playerId);
 	}
 
@@ -1808,73 +1422,5 @@ public class ScienceExperimentManager : NetworkComponent, ITickSystemTick
 				i--;
 			}
 		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
-	}
-
-	[NetworkRpcWeavedInvoker(1, 7, 1)]
-	[Preserve]
-	[WeaverGenerated]
-	protected unsafe static void RPC_PlayerTouchedLava_0040Invoker(NetworkBehaviour behaviour, SimulationMessage* message)
-	{
-		byte* ptr = (byte*)message + 28;
-		int num = 8;
-		RpcInfo info = RpcInfo.FromMessage(behaviour.Runner, message, RpcHostMode.SourceIsServer);
-		behaviour.InvokeRpc = true;
-		((ScienceExperimentManager)behaviour).RPC_PlayerTouchedLava(info);
-	}
-
-	[NetworkRpcWeavedInvoker(2, 7, 1)]
-	[Preserve]
-	[WeaverGenerated]
-	protected unsafe static void RPC_PlayerTouchedRefreshWater_0040Invoker(NetworkBehaviour behaviour, SimulationMessage* message)
-	{
-		byte* ptr = (byte*)message + 28;
-		int num = 8;
-		RpcInfo info = RpcInfo.FromMessage(behaviour.Runner, message, RpcHostMode.SourceIsServer);
-		behaviour.InvokeRpc = true;
-		((ScienceExperimentManager)behaviour).RPC_PlayerTouchedRefreshWater(info);
-	}
-
-	[NetworkRpcWeavedInvoker(3, 7, 7)]
-	[Preserve]
-	[WeaverGenerated]
-	protected unsafe static void RPC_ValidateLocalPlayerWaterBalloonHit_0040Invoker(NetworkBehaviour behaviour, SimulationMessage* message)
-	{
-		byte* ptr = (byte*)message + 28;
-		int num = 8;
-		int num2 = *(int*)(ptr + num);
-		num += 4;
-		int playerId = num2;
-		RpcInfo info = RpcInfo.FromMessage(behaviour.Runner, message, RpcHostMode.SourceIsServer);
-		behaviour.InvokeRpc = true;
-		((ScienceExperimentManager)behaviour).RPC_ValidateLocalPlayerWaterBalloonHit(playerId, info);
-	}
-
-	[NetworkRpcWeavedInvoker(4, 7, 1)]
-	[Preserve]
-	[WeaverGenerated]
-	protected unsafe static void RPC_PlayerHitByWaterBalloon_0040Invoker(NetworkBehaviour behaviour, SimulationMessage* message)
-	{
-		byte* ptr = (byte*)message + 28;
-		int num = 8;
-		int num2 = *(int*)(ptr + num);
-		num += 4;
-		int playerId = num2;
-		RpcInfo info = RpcInfo.FromMessage(behaviour.Runner, message, RpcHostMode.SourceIsServer);
-		behaviour.InvokeRpc = true;
-		((ScienceExperimentManager)behaviour).RPC_PlayerHitByWaterBalloon(playerId, info);
 	}
 }

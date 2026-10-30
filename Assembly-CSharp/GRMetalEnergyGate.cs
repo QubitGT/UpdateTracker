@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Metal Energy Gate")]
 public class GRMetalEnergyGate : MonoBehaviour
 {
 	public enum State

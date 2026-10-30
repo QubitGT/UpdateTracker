@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Spawn On Enter")]
 public class SpawnOnEnter : MonoBehaviour
 {
 	public GameObject prefab;

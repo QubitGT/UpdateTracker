@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/Super Infection Hand Display")]
 public class SuperInfectionHandDisplay : MonoBehaviour
 {
 	[SerializeField]

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Debug Screen")]
 public class KIDUI_DebugScreen : MonoBehaviour
 {
 	public const string KID_ENABLED_KEY = "dbg-kid-enabled";

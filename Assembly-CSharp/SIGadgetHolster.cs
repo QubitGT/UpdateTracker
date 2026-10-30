@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 [RequireComponent(typeof(GameGrabbable))]
 [RequireComponent(typeof(GameSnappable))]
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Holster")]
 public class SIGadgetHolster : SIGadget, I_SIDisruptable
 {
 	private enum State

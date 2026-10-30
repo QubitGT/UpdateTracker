@@ -2,6 +2,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Hypno Ring")]
 public class HypnoRing : MonoBehaviour, ISpawnable
 {
 	[SerializeField]

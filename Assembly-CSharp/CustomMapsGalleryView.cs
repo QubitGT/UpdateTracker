@@ -5,6 +5,7 @@ using Modio.Mods;
 using PlayFab;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Gallery View")]
 public class CustomMapsGalleryView : MonoBehaviour
 {
 	private class RequestSynchronizer

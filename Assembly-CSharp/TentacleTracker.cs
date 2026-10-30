@@ -3,6 +3,7 @@ using GorillaLocomotion;
 using GorillaLocomotion.Climbing;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Tentacle Tracker")]
 public class TentacleTracker : MonoBehaviour
 {
 	[SerializeField]

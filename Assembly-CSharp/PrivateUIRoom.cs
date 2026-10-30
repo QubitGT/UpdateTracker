@@ -16,7 +16,8 @@ public class PrivateUIRoom : MonoBehaviourTick
 		ModIO = 2,
 		CustomMap = 4,
 		AlarmClock = 8,
-		VStumpConsent = 0x10
+		VStumpConsent = 0x10,
+		StatusMessage = 0x20
 	}
 
 	[SerializeField]

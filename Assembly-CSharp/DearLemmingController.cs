@@ -104,7 +104,7 @@ public class DearLemmingController : MonoBehaviour
 			MothershipEnvId = MothershipClientApiUnity.EnvironmentId,
 			MessageText = messageText
 		};
-		UnityWebRequest request = new UnityWebRequest(PlayFabAuthenticatorSettings.VotingApiBaseUrl + endpoint, "POST");
+		UnityWebRequest request = new UnityWebRequest(BackendApiUrl.Build(PlayFabAuthenticatorSettings.VotingApiBaseUrl, endpoint), "POST");
 		byte[] bytes = Encoding.UTF8.GetBytes(JsonUtility.ToJson(obj));
 		bool retry = false;
 		request.uploadHandler = new UploadHandlerRaw(bytes);

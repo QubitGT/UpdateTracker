@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Error Screen")]
 public class KIDUI_ErrorScreen : MonoBehaviour
 {
 	[SerializeField]

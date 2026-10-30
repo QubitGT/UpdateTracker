@@ -2,6 +2,7 @@ using GorillaLocomotion;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Map Telemetry Trigger")]
 public class CustomMapTelemetryTrigger : MonoBehaviour
 {
 	public void OnTriggerEnter(Collider other)

@@ -1,6 +1,7 @@
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Bee Avoider Test")]
 public class BeeAvoiderTest : MonoBehaviour
 {
 	public GameObject[] patrolPoints;

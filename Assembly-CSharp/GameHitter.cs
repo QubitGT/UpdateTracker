@@ -3,6 +3,7 @@ using GorillaLocomotion;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Hitter")]
 public class GameHitter : MonoBehaviour, IGameEntityComponent
 {
 	public GameEntity gameEntity;

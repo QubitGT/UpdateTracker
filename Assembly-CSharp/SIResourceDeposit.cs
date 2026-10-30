@@ -3,6 +3,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Resource Deposit")]
 public class SIResourceDeposit : MonoBehaviour, ISIResourceDeposit
 {
 	public int index;

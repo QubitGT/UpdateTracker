@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Fade And Destroy Light")]
 public class GRFadeAndDestroyLight : MonoBehaviour
 {
 	public float TimeToFade = 10f;

@@ -24,14 +24,12 @@ public class DebugHudStats : MonoBehaviour
 		ShowError,
 		ShowStats,
 		ShowRBs,
-		timeAdjust,
+		TimeAdjust,
 		RecordingMode,
 		TitleDataMonitor
 	}
 
 	public static int FPS_THRESHOLD = 89;
-
-	private static DebugHudStats _instance;
 
 	[SerializeField]
 	public TMP_Text text;
@@ -51,348 +49,413 @@ public class DebugHudStats : MonoBehaviour
 	[SerializeField]
 	private float delayUpdateRate = 0.25f;
 
-	private float updateTimer;
+	private float _updateTimer;
 
-	public float sessionAnytrackingLost;
+	private float _firstAwake;
 
-	public float last30SecondsTrackingLost;
+	private bool _leftHandTracked;
 
-	private float firstAwake;
+	private bool _rightHandTracked;
 
-	private bool leftHandTracked;
+	private StringBuilder _builder;
 
-	private bool rightHandTracked;
+	private StringBuilder _logBuilder = new StringBuilder(4096);
 
-	private StringBuilder builder;
+	private StringBuilder _logTitleBuilder = new StringBuilder(64);
 
-	private Vector3 averagedVelocity;
+	private Vector3 _averagedVelocity;
 
-	private Vector3 groundVelocity;
+	private Vector3 _groundVelocity;
 
-	private Vector3 centerHeadPos;
+	private Vector3 _centerHeadPos;
 
-	private float distanceMoved;
+	private float _distanceMoved;
 
-	private float distanceSwam;
+	private float _distanceSwam;
 
-	private List<string> logMessage = new List<string>();
+	private List<string> _logMessage = new List<string>();
 
-	private List<string> logError = new List<string>();
+	private List<string> _logError = new List<string>();
 
-	private List<string> logTD = new List<string>();
+	private List<string> _logTD = new List<string>();
 
-	private bool buttonDown;
+	private bool _buttonDown;
 
-	private bool buttonDownBack;
+	private bool _buttonDownBack;
 
-	private bool spoofIds;
+	private bool _spoofIds;
 
-	private int lowFps;
+	private int _lowFps;
 
-	private string zones;
+	private string _zones;
 
-	private GroupJoinZoneAB lastGroupJoinZone;
+	private GroupJoinZoneAB _lastGroupJoinZone;
 
-	private State currentState = State.Active;
+	private ZoneDef _lastZone;
 
-	private ProfilerRecorder drawCallsRecorder;
+	private GTZone _lastZoneId;
 
-	private ProfilerRecorder trisRecorder;
+	private GTSubZone _lastSubZoneId;
 
-	private string pLog;
+	private State _currentState = State.Active;
 
-	private bool button1Down;
+	private ProfilerRecorder _drawCallsRecorder;
 
-	private bool button2Down;
+	private ProfilerRecorder _trisRecorder;
 
-	private bool button3Down;
+	private string _pLog;
 
-	private bool button5Down;
+	private bool _logDirty;
 
-	private bool button6Down;
+	private bool _button1Down;
 
-	private bool button7Down;
+	private bool _button2Down;
 
-	private bool button8Down;
+	private bool _button3Down;
+
+	private bool _button5Down;
+
+	private bool _button6Down;
+
+	private bool _button7Down;
+
+	private bool _button8Down;
 
 	[SerializeField]
 	private StringTable betaTitleDataOveride;
 
-	private Array fixedWeathers;
+	private Array _fixedWeathers;
 
-	private int fixedWeatherIndex;
+	private int _fixedWeatherIndex;
 
-	private float btnDownTime;
+	private float _btnDownTime;
 
-	public static DebugHudStats Instance => _instance;
+	public static DebugHudStats Instance { get; private set; }
 
 	private void Awake()
 	{
-		if (_instance != null && _instance != this)
+		if (Instance != null && Instance != this)
 		{
 			UnityEngine.Object.Destroy(base.gameObject);
 		}
 		else
 		{
-			_instance = this;
-			fixedWeathers = Enum.GetValues(typeof(BetterDayNightManager.WeatherType));
+			Instance = this;
+			_fixedWeathers = Enum.GetValues(typeof(BetterDayNightManager.WeatherType));
 		}
 		base.gameObject.SetActive(value: false);
 	}
 
 	private void OnDestroy()
 	{
-		if (_instance == this)
+		if (Instance == this)
 		{
-			_instance = null;
-			if (drawCallsRecorder.Valid)
+			Instance = null;
+			if (_drawCallsRecorder.Valid)
 			{
-				drawCallsRecorder.Dispose();
+				_drawCallsRecorder.Dispose();
 			}
-			if (trisRecorder.Valid)
+			if (_trisRecorder.Valid)
 			{
-				trisRecorder.Dispose();
+				_trisRecorder.Dispose();
 			}
 		}
 	}
 
 	private void LateUpdate()
 	{
-		if (GTPlayerTransform.Instance != null)
+		Camera main = Camera.main;
+		if (main != null)
 		{
-			base.transform.LookAt(Camera.main.transform.position, GTPlayerTransform.Instance.GravityUp);
-		}
-		else
-		{
-			base.transform.LookAt(Camera.main.transform.position, Vector3.up);
+			Vector3 worldUp = ((GTPlayerTransform.Instance != null) ? GTPlayerTransform.Instance.GravityUp : Vector3.up);
+			base.transform.LookAt(main.transform.position, worldUp);
 		}
 		if (!ControllerInputPoller.HandTrackingActive())
 		{
-			if (currentState == State.timeAdjust)
+			if (_currentState == State.TimeAdjust)
 			{
 				bool flag = ControllerInputPoller.PrimaryButtonPress(XRNode.RightHand);
 				bool flag2 = ControllerInputPoller.SecondaryButtonPress(XRNode.RightHand);
 				bool flag3 = ControllerInputPoller.TriggerFloat(XRNode.RightHand) > 0.5f;
 				bool flag4 = ControllerInputPoller.GripFloat(XRNode.RightHand) > 0.5f;
-				bool flag5 = ControllerInputPoller.Primary2DAxis(XRNode.LeftHand).x > 0.5f;
-				bool flag6 = ControllerInputPoller.Primary2DAxis(XRNode.LeftHand).x < -0.5f;
-				bool flag7 = ControllerInputPoller.Primary2DAxis(XRNode.LeftHand).y > 0.5f;
-				bool flag8 = ControllerInputPoller.Primary2DAxis(XRNode.LeftHand).y < -0.5f;
-				if (button1Down && !flag)
+				Vector2 vector = ControllerInputPoller.Primary2DAxis(XRNode.LeftHand);
+				bool flag5 = vector.x > 0.5f;
+				bool flag6 = vector.x < -0.5f;
+				bool flag7 = vector.y > 0.5f;
+				bool flag8 = vector.y < -0.5f;
+				if (_button1Down && !flag)
 				{
 					GorillaComputer.instance.AddSeverTime(flag4 ? (-60) : 60);
 				}
-				if (button2Down && !flag2)
+				if (_button2Down && !flag2)
 				{
 					GorillaComputer.instance.AddSeverTime(flag4 ? (-1) : 5);
 				}
-				if (button3Down && !flag3)
+				if (_button3Down && !flag3)
 				{
 					GorillaComputer.instance.AddSeverTime(flag4 ? (-1440) : 1440);
 				}
-				if (!button5Down && flag5)
+				if (!_button5Down && flag5)
 				{
 					ChangeTOD(1);
 				}
-				if (!button6Down && flag6)
+				if (!_button6Down && flag6)
 				{
 					ChangeTOD(-1);
 				}
-				if (!button7Down && flag7)
+				if (!_button7Down && flag7)
 				{
 					ChangeWeather(1);
 				}
-				if (!button8Down && flag8)
+				if (!_button8Down && flag8)
 				{
 					ChangeWeather(-1);
 				}
-				button1Down = flag;
-				button2Down = flag2;
-				button3Down = flag3;
-				button5Down = flag5;
-				button6Down = flag6;
-				button7Down = flag7;
-				button8Down = flag8;
+				_button1Down = flag;
+				_button2Down = flag2;
+				_button3Down = flag3;
+				_button5Down = flag5;
+				_button6Down = flag6;
+				_button7Down = flag7;
+				_button8Down = flag8;
 			}
-			if (currentState == State.TitleDataMonitor || currentState == State.ShowLog || currentState == State.ShowError)
+			if (_currentState == State.TitleDataMonitor || _currentState == State.ShowLog || _currentState == State.ShowError)
 			{
 				bool flag9 = ControllerInputPoller.PrimaryButtonPress(XRNode.RightHand);
 				bool flag10 = ControllerInputPoller.SecondaryButtonPress(XRNode.RightHand);
-				if (button1Down && !flag9)
+				if (_button1Down && !flag9)
 				{
 					logging.pageToDisplay = ((logging.pageToDisplay >= logging.textInfo.pageCount) ? 1 : (logging.pageToDisplay + 1));
-					updateLogTitle();
+					UpdateLogTitle();
 				}
-				if (button2Down && !flag10)
+				if (_button2Down && !flag10)
 				{
 					logging.pageToDisplay = ((logging.pageToDisplay > 1) ? (logging.pageToDisplay - 1) : logging.textInfo.pageCount);
-					updateLogTitle();
+					UpdateLogTitle();
 				}
-				button1Down = flag9;
-				button2Down = flag10;
+				_button1Down = flag9;
+				_button2Down = flag10;
 			}
 			bool flag11 = ControllerInputPoller.SecondaryButtonPress(XRNode.LeftHand);
 			bool flag12 = ControllerInputPoller.PrimaryButtonPress(XRNode.LeftHand);
-			if ((buttonDown && !flag11) || (buttonDownBack && !flag12))
+			if ((_buttonDown && !flag11) || (_buttonDownBack && !flag12))
 			{
-				NextState(buttonDown);
-				if (currentState == State.ShowStats)
+				NextState(_buttonDown);
+				if (_currentState == State.ShowStats)
 				{
-					distanceMoved = (distanceSwam = 0f);
+					_distanceMoved = (_distanceSwam = 0f);
 					PlayerGameEvents.OnPlayerMoved += OnPlayerMoved;
 					PlayerGameEvents.OnPlayerSwam += OnPlayerSwam;
 				}
-				text.gameObject.SetActive(currentState != State.Inactive);
+				text.gameObject.SetActive(_currentState != State.Inactive);
 				if (RigidbodyHighlighter.Instance != null)
 				{
-					RigidbodyHighlighter.Instance.Active = currentState == State.ShowRBs;
+					RigidbodyHighlighter.Instance.Active = _currentState == State.ShowRBs;
 				}
-				btnDownTime = 0f;
+				_btnDownTime = 0f;
 			}
-			buttonDown = flag11;
-			buttonDownBack = flag12;
+			_buttonDown = flag11;
+			_buttonDownBack = flag12;
 		}
-		if (firstAwake == 0f)
+		if (_logDirty)
 		{
-			firstAwake = Time.time;
+			_logDirty = false;
+			RefreshLog();
 		}
-		if (updateTimer < delayUpdateRate)
+		if (_firstAwake == 0f)
 		{
-			updateTimer += Time.deltaTime;
+			_firstAwake = Time.time;
+		}
+		if (_updateTimer < delayUpdateRate)
+		{
+			_updateTimer += Time.deltaTime;
 			return;
 		}
-		int num = Mathf.RoundToInt(1f / Time.smoothDeltaTime);
+		int num = ((Time.smoothDeltaTime > 0f) ? Mathf.RoundToInt(1f / Time.smoothDeltaTime) : 0);
 		if (num < FPS_THRESHOLD)
 		{
-			lowFps++;
+			_lowFps++;
 		}
 		else
 		{
-			lowFps = 0;
+			_lowFps = 0;
 		}
-		fpsWarning.gameObject.SetActive(lowFps > 5 && currentState == State.Inactive);
-		if (currentState != 0)
+		SetActiveIfChanged(fpsWarning.gameObject, _lowFps > 5 && _currentState == State.Inactive);
+		if (_currentState != 0)
 		{
-			builder.Clear();
-			builder.Append("gt: ");
-			builder.Append(GorillaComputer.instance.version);
-			builder.Append(":");
-			builder.Append(GorillaComputer.instance.buildCode);
-			builder.AppendLine(spoofIds ? " <color=\"red\">*Spoofing IDs*</color>" : string.Empty);
+			_builder.Clear();
+			_builder.Append("gt: ");
+			_builder.Append(GorillaComputer.instance.version);
+			_builder.Append(":");
+			_builder.Append(GorillaComputer.instance.buildCode);
+			_builder.AppendLine(_spoofIds ? " <color=\"red\">*Spoofing IDs*</color>" : string.Empty);
+			GorillaTagger instance = GorillaTagger.Instance;
 			num = Mathf.Min(num, 90);
-			builder.Append((num < FPS_THRESHOLD) ? "<color=\"red\">" : "<color=\"white\">");
-			builder.Append(num);
-			builder.Append($" fps / {FPS_THRESHOLD + 1} fps</color> ");
-			builder.AppendLine($"sfps: {GorillaTagger.Instance.SmoothedFramerate} (Health: {GorillaTagger.Instance.FramerateHealth})");
-			float eyeTextureResolutionScale = XRSettings.eyeTextureResolutionScale;
-			float renderViewportScale = XRSettings.renderViewportScale;
-			float renderScale = (GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset).renderScale;
-			builder.AppendLine($"draw calls: {drawCallsRecorder.LastValue} tris: {trisRecorder.LastValue} " + $"rs: {eyeTextureResolutionScale}/{renderViewportScale}/{renderScale} ");
-			builder.AppendLine($"Memory: {Profiler.GetMonoUsedSizeLong() / 1048576}M");
+			_builder.Append((num < FPS_THRESHOLD) ? "<color=\"red\">" : "<color=\"white\">");
+			_builder.Append(num);
+			_builder.Append(" fps / ");
+			_builder.Append(FPS_THRESHOLD + 1);
+			_builder.Append(" fps</color> ");
+			GorillaTagger.FramerateHealthLevel framerateHealth = instance.FramerateHealth;
+			_builder.Append("sfps: ");
+			_builder.Append(instance.SmoothedFramerate);
+			_builder.Append(" (H: <color=");
+			_builder.Append(ColorFromFramerateHealth(framerateHealth));
+			_builder.Append('>');
+			_builder.Append(FramerateHealthName(framerateHealth));
+			_builder.AppendLine("</color>)");
+			UniversalRenderPipelineAsset universalRenderPipelineAsset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+			_builder.Append("draw calls: ");
+			_builder.Append(_drawCallsRecorder.LastValue);
+			_builder.Append(" tris: ");
+			_builder.Append(_trisRecorder.LastValue);
+			_builder.Append(" rs: ");
+			_builder.Append(XRSettings.eyeTextureResolutionScale);
+			_builder.Append('/');
+			_builder.Append(XRSettings.renderViewportScale);
+			_builder.Append('/');
+			_builder.Append((universalRenderPipelineAsset != null) ? universalRenderPipelineAsset.renderScale : 1f);
+			_builder.AppendLine(" ");
+			_builder.Append("Memory: ");
+			_builder.Append(Profiler.GetMonoUsedSizeLong() / 1048576);
+			_builder.AppendLine("M");
 			if (GorillaComputer.instance != null)
 			{
 				DateTime serverTime = GorillaComputer.instance.GetServerTime();
-				builder.AppendLine(string.Format("<color={0}>{1}</color>", (serverTime.Year > 2020) ? "#00FFAA" : "#FF3333", serverTime));
+				_builder.Append((serverTime.Year > 2020) ? "<color=#00FFAA>" : "<color=#FF3333>");
+				_builder.Append(serverTime.ToString());
+				_builder.AppendLine("</color>");
 			}
 			else
 			{
-				builder.AppendLine("<color=#FF3333>Server Time Unavailable</color>");
+				_builder.AppendLine("<color=#FF3333>Server Time Unavailable</color>");
 			}
-			ZoneDef currentNode = GorillaTagger.Instance.offlineVRRig.zoneEntity.currentNode;
-			if (currentNode != null)
+			ZoneDef currentNode = instance.offlineVRRig.zoneEntity.currentNode;
+			if (currentNode != null && (currentNode != _lastZone || currentNode.zoneId != _lastZoneId || currentNode.subZoneId != _lastSubZoneId))
 			{
-				zones = $"{currentNode.gameObject.name.ToUpperInvariant()}/{currentNode.zoneId}/{currentNode.subZoneId}";
+				_lastZone = currentNode;
+				_lastZoneId = currentNode.zoneId;
+				_lastSubZoneId = currentNode.subZoneId;
+				_zones = $"{currentNode.gameObject.name.ToUpperInvariant()}/{currentNode.zoneId}/{currentNode.subZoneId}";
 			}
 			if (NetworkSystem.Instance.IsMasterClient)
 			{
-				builder.Append("H");
+				_builder.Append("H");
 			}
 			if (NetworkSystem.Instance.InRoom)
 			{
 				if (NetworkSystem.Instance.SessionIsPrivate)
 				{
-					builder.Append("Pri ");
+					_builder.Append("Pri ");
 				}
 				else
 				{
-					builder.Append("Pub ");
+					_builder.Append("Pub ");
 				}
 			}
 			else
 			{
-				builder.Append("DC ");
+				_builder.Append("DC ");
 			}
-			builder.Append("z: <color=\"green\">");
-			builder.Append(zones);
-			builder.AppendLine("</color>");
+			_builder.Append("z: <color=\"green\">");
+			_builder.Append(_zones);
+			_builder.AppendLine("</color>");
 			if (NetworkSystem.Instance.InRoom)
 			{
-				GorillaGameManager instance = GorillaGameManager.instance;
-				if (instance != null)
+				GorillaGameManager instance2 = GorillaGameManager.instance;
+				if (instance2 != null)
 				{
-					GorillaTagCompetitiveManager gorillaTagCompetitiveManager = instance as GorillaTagCompetitiveManager;
+					GorillaTagCompetitiveManager gorillaTagCompetitiveManager = instance2 as GorillaTagCompetitiveManager;
 					if (gorillaTagCompetitiveManager != null)
 					{
-						builder.Append("Ranked Mode ELO: ");
-						builder.Append(gorillaTagCompetitiveManager.GetScoring().Progression.GetEloScore().ToString());
-						builder.Append("  Tier: ");
-						builder.AppendLine(gorillaTagCompetitiveManager.GetScoring().Progression.GetRankedProgressionTierName());
-						RankedMultiplayerScore.PlayerScoreInRound inGameScoreForSelf = gorillaTagCompetitiveManager.GetScoring().GetInGameScoreForSelf();
-						builder.Append("Tags: ");
-						builder.Append(inGameScoreForSelf.NumTags.ToString());
-						builder.Append("  Defense: ");
-						builder.Append(Mathf.RoundToInt(inGameScoreForSelf.PointsOnDefense).ToString());
-						builder.Append("  Score: ");
-						builder.AppendLine(Mathf.RoundToInt(gorillaTagCompetitiveManager.GetScoring().ComputeGameScore(inGameScoreForSelf.NumTags, inGameScoreForSelf.PointsOnDefense)).ToString());
+						RankedMultiplayerScore scoring = gorillaTagCompetitiveManager.GetScoring();
+						_builder.Append("Ranked Mode ELO: ");
+						_builder.Append(scoring.Progression.GetEloScore());
+						_builder.Append("  Tier: ");
+						_builder.AppendLine(scoring.Progression.GetRankedProgressionTierName());
+						RankedMultiplayerScore.PlayerScoreInRound inGameScoreForSelf = scoring.GetInGameScoreForSelf();
+						_builder.Append("Tags: ");
+						_builder.Append(inGameScoreForSelf.NumTags);
+						_builder.Append("  Defense: ");
+						_builder.Append(Mathf.RoundToInt(inGameScoreForSelf.PointsOnDefense));
+						_builder.Append("  Score: ");
+						_builder.Append(Mathf.RoundToInt(scoring.ComputeGameScore(inGameScoreForSelf.NumTags, inGameScoreForSelf.PointsOnDefense)));
+						_builder.AppendLine();
 						if (gorillaTagCompetitiveManager.ShowDebugPing)
 						{
-							builder.AppendLine("Server MatchID Ping!");
+							_builder.AppendLine("Server MatchID Ping!");
 						}
 					}
 				}
 			}
-			switch (currentState)
+			switch (_currentState)
 			{
 			case State.ShowStats:
 			{
-				builder.AppendLine("\nStats:\n");
-				Vector3 vector = GTPlayer.Instance.AveragedVelocity;
+				_builder.AppendLine("\nStats:\n");
+				Vector3 averagedVelocity = GTPlayer.Instance.AveragedVelocity;
 				Vector3 headCenterPosition = GTPlayer.Instance.HeadCenterPosition;
-				float magnitude = vector.magnitude;
-				groundVelocity = vector;
-				groundVelocity.y = 0f;
-				builder.AppendLine($"v: {magnitude:F1} m/s\t\todo: {distanceMoved:F2}m\tswam: {distanceSwam:F2}m");
-				builder.AppendLine($"ground: {groundVelocity.magnitude:F1} m/s\thead: {headCenterPosition:F2}");
+				float magnitude = averagedVelocity.magnitude;
+				_groundVelocity = averagedVelocity;
+				_groundVelocity.y = 0f;
+				_builder.Append("v: ");
+				_builder.Append(magnitude.ToString("F1"));
+				_builder.Append(" m/s\t\todo: ");
+				_builder.Append(_distanceMoved.ToString("F2"));
+				_builder.Append("m\tswam: ");
+				_builder.Append(_distanceSwam.ToString("F2"));
+				_builder.AppendLine("m");
+				_builder.Append("ground: ");
+				_builder.Append(_groundVelocity.magnitude.ToString("F1"));
+				_builder.Append(" m/s\thead: ");
+				_builder.AppendLine(headCenterPosition.ToString("F2"));
 				break;
 			}
-			case State.timeAdjust:
-				builder.AppendLine("\nAdjust Time\n");
-				builder.AppendLine("Press [A] to advance one hour [+ R Grip to go back one hour]");
-				builder.AppendLine("Press [B] to advance five minutes [+ R Grip to go back one minute]");
-				builder.AppendLine("Press [R] Trigger to advance one day [+ R Grip to go back one day]");
-				builder.AppendLine($"\nAdjust Environment {BetterDayNightManager.instance.currentTimeIndex + 1}/{BetterDayNightManager.instance.timeOfDayRange.Length} : {BetterDayNightManager.instance.CurrentWeather()} \n");
-				builder.AppendLine("[L STICK L/R] to change Time Of Day. [L STICK U/D] to change Weather.");
+			case State.TimeAdjust:
+			{
+				_builder.AppendLine("\nAdjust Time\n");
+				_builder.AppendLine("Press [A] to advance one hour [+ R Grip to go back one hour]");
+				_builder.AppendLine("Press [B] to advance five minutes [+ R Grip to go back one minute]");
+				_builder.AppendLine("Press [R] Trigger to advance one day [+ R Grip to go back one day]");
+				BetterDayNightManager instance3 = BetterDayNightManager.instance;
+				_builder.Append("\nAdjust Environment ");
+				_builder.Append(instance3.currentTimeIndex + 1);
+				_builder.Append('/');
+				_builder.Append(instance3.timeOfDayRange.Length);
+				_builder.Append(" : ");
+				_builder.Append(instance3.CurrentWeather().ToString());
+				_builder.AppendLine(" \n");
+				_builder.AppendLine("[L STICK L/R] to change Time Of Day. [L STICK U/D] to change Weather.");
 				break;
+			}
 			case State.RecordingMode:
-				builder.AppendLine("\nMo-Cap Recording:\n");
+				_builder.AppendLine("\nMo-Cap Recording:\n");
 				break;
 			case State.ShowRBs:
-				builder.AppendLine("\nRigid Body Locator\n");
+				_builder.AppendLine("\nRigid Body Locator\n");
 				break;
 			}
-			text.text = builder.ToString();
+			text.SetText(_builder);
 		}
-		updateTimer = 0f;
-		if (buttonDown && currentState != State.RecordingMode)
+		_updateTimer = 0f;
+		if (_buttonDown && _currentState != State.RecordingMode)
 		{
-			btnDownTime += Time.deltaTime / delayUpdateRate;
-			if (btnDownTime >= 15f)
+			_btnDownTime += Time.deltaTime / delayUpdateRate;
+			if (_btnDownTime >= 15f)
 			{
 				base.gameObject.SetActive(value: false);
 			}
-			dismiss.text = $"let go of that button in the next {15f - btnDownTime:0.0} seconds or the debug hud will vanish forever";
+			dismiss.SetText("let go of that button in the next {0:1} seconds or the debug hud will vanish forever", 15f - _btnDownTime);
 		}
-		dismiss.gameObject.SetActive(buttonDown && currentState != State.RecordingMode && btnDownTime > 5f);
+		SetActiveIfChanged(dismiss.gameObject, _buttonDown && _currentState != State.RecordingMode && _btnDownTime > 5f);
+	}
+
+	private static void SetActiveIfChanged(GameObject go, bool active)
+	{
+		if (go.activeSelf != active)
+		{
+			go.SetActive(active);
+		}
 	}
 
 	private void ChangeTOD(int v)
@@ -400,13 +463,13 @@ public class DebugHudStats : MonoBehaviour
 		int num = (BetterDayNightManager.instance.currentTimeIndex + BetterDayNightManager.instance.timeOfDayRange.Length + v) % BetterDayNightManager.instance.timeOfDayRange.Length;
 		BetterDayNightManager.instance.SetTimeOfDay(num);
 		BetterDayNightManager.instance.SetOverrideIndex(num);
-		BetterDayNightManager.instance.SetFixedWeather((BetterDayNightManager.WeatherType)fixedWeathers.GetValue(fixedWeatherIndex));
+		BetterDayNightManager.instance.SetFixedWeather((BetterDayNightManager.WeatherType)_fixedWeathers.GetValue(_fixedWeatherIndex));
 	}
 
 	private void ChangeWeather(int v)
 	{
-		fixedWeatherIndex = (fixedWeatherIndex + fixedWeathers.Length + v) % fixedWeathers.Length;
-		BetterDayNightManager.instance.SetFixedWeather((BetterDayNightManager.WeatherType)fixedWeathers.GetValue(fixedWeatherIndex));
+		_fixedWeatherIndex = (_fixedWeatherIndex + _fixedWeathers.Length + v) % _fixedWeathers.Length;
+		BetterDayNightManager.instance.SetFixedWeather((BetterDayNightManager.WeatherType)_fixedWeathers.GetValue(_fixedWeatherIndex));
 	}
 
 	private void NextState(bool fwd)
@@ -415,43 +478,43 @@ public class DebugHudStats : MonoBehaviour
 		PlayerGameEvents.OnPlayerSwam -= OnPlayerSwam;
 		logging.gameObject.SetActive(value: false);
 		logging.pageToDisplay = 1;
-		if (currentState == State.timeAdjust)
+		if (_currentState == State.TimeAdjust)
 		{
 			BetterDayNightManager.instance.ClearFixedWeather();
 		}
-		switch (currentState)
+		switch (_currentState)
 		{
 		case State.Inactive:
-			currentState = (fwd ? State.Active : State.timeAdjust);
+			_currentState = (fwd ? State.Active : State.TimeAdjust);
 			break;
 		case State.Active:
-			currentState = (fwd ? State.ShowLog : State.Inactive);
+			_currentState = (fwd ? State.ShowLog : State.Inactive);
 			break;
 		case State.ShowLog:
-			currentState = ((!fwd) ? State.Active : State.ShowError);
+			_currentState = ((!fwd) ? State.Active : State.ShowError);
 			break;
 		case State.ShowError:
-			currentState = (fwd ? State.ShowStats : State.ShowLog);
+			_currentState = (fwd ? State.ShowStats : State.ShowLog);
 			break;
 		case State.ShowStats:
-			currentState = (fwd ? State.ShowRBs : State.ShowError);
+			_currentState = (fwd ? State.ShowRBs : State.ShowError);
 			break;
 		case State.ShowRBs:
-			currentState = (fwd ? State.TitleDataMonitor : State.ShowStats);
+			_currentState = (fwd ? State.TitleDataMonitor : State.ShowStats);
 			break;
 		case State.TitleDataMonitor:
-			currentState = (fwd ? State.timeAdjust : State.ShowRBs);
+			_currentState = (fwd ? State.TimeAdjust : State.ShowRBs);
 			break;
-		case State.timeAdjust:
-			currentState = ((!fwd) ? State.TitleDataMonitor : State.Inactive);
+		case State.TimeAdjust:
+			_currentState = ((!fwd) ? State.TitleDataMonitor : State.Inactive);
 			break;
 		case State.RecordingMode:
-			currentState = ((!fwd) ? State.timeAdjust : State.Inactive);
+			_currentState = ((!fwd) ? State.TimeAdjust : State.Inactive);
 			break;
 		}
-		if (currentState == State.timeAdjust)
+		if (_currentState == State.TimeAdjust)
 		{
-			BetterDayNightManager.instance.SetFixedWeather((BetterDayNightManager.WeatherType)fixedWeathers.GetValue(fixedWeatherIndex));
+			BetterDayNightManager.instance.SetFixedWeather((BetterDayNightManager.WeatherType)_fixedWeathers.GetValue(_fixedWeatherIndex));
 		}
 		UpdateLog();
 	}
@@ -459,22 +522,30 @@ public class DebugHudStats : MonoBehaviour
 	private void DisplayLog(List<string> log)
 	{
 		logging.gameObject.SetActive(value: true);
-		logging.text = string.Empty;
+		_logBuilder.Clear();
 		for (int num = log.Count - 1; num >= 0; num--)
 		{
-			TMP_Text tMP_Text = logging;
-			tMP_Text.text = tMP_Text.text + log[num] + "\n";
+			_logBuilder.Append(log[num]);
+			_logBuilder.Append('\n');
 		}
-		updateLogTitle();
+		logging.SetText(_logBuilder);
+		UpdateLogTitle();
 	}
 
-	private async void updateLogTitle()
+	private async void UpdateLogTitle()
 	{
 		await Task.Yield();
-		logPage.text = $"{logTitleFromState(currentState)} <<[B] turn page [A]>> ({logging.pageToDisplay}/{logging.textInfo.pageCount})";
+		_logTitleBuilder.Clear();
+		_logTitleBuilder.Append(LogTitleFromState(_currentState));
+		_logTitleBuilder.Append(" <<[B] turn page [A]>> (");
+		_logTitleBuilder.Append(logging.pageToDisplay);
+		_logTitleBuilder.Append('/');
+		_logTitleBuilder.Append(logging.textInfo.pageCount);
+		_logTitleBuilder.Append(')');
+		logPage.SetText(_logTitleBuilder);
 	}
 
-	private string logTitleFromState(State s)
+	private string LogTitleFromState(State s)
 	{
 		return s switch
 		{
@@ -485,7 +556,7 @@ public class DebugHudStats : MonoBehaviour
 		};
 	}
 
-	private string colorFromState(State s)
+	private string ColorFromState(State s)
 	{
 		return s switch
 		{
@@ -499,11 +570,35 @@ public class DebugHudStats : MonoBehaviour
 		};
 	}
 
+	private static string ColorFromFramerateHealth(GorillaTagger.FramerateHealthLevel health)
+	{
+		return health switch
+		{
+			GorillaTagger.FramerateHealthLevel.Good => "\"green\"", 
+			GorillaTagger.FramerateHealthLevel.Fair => "\"yellow\"", 
+			GorillaTagger.FramerateHealthLevel.Weak => "#ff8080", 
+			GorillaTagger.FramerateHealthLevel.Poor => "#ff0000", 
+			_ => "#ffffff", 
+		};
+	}
+
+	private static string FramerateHealthName(GorillaTagger.FramerateHealthLevel health)
+	{
+		return health switch
+		{
+			GorillaTagger.FramerateHealthLevel.Good => "Good", 
+			GorillaTagger.FramerateHealthLevel.Fair => "Fair", 
+			GorillaTagger.FramerateHealthLevel.Weak => "Weak", 
+			GorillaTagger.FramerateHealthLevel.Poor => "Poor", 
+			_ => "Unknown", 
+		};
+	}
+
 	private void OnPlayerSwam(float distance, float speed)
 	{
 		if (distance > 0.005f)
 		{
-			distanceSwam += distance;
+			_distanceSwam += distance;
 		}
 	}
 
@@ -511,7 +606,7 @@ public class DebugHudStats : MonoBehaviour
 	{
 		if (distance > 0.005f)
 		{
-			distanceMoved += distance;
+			_distanceMoved += distance;
 		}
 	}
 
@@ -524,20 +619,20 @@ public class DebugHudStats : MonoBehaviour
 
 	private void TDValueRetrieved(string arg1, string arg2)
 	{
-		logTD.Add($" >{Time.realtimeSinceStartup:F2}> TitleData[ <color=#ffaaff>{arg1}</color> ] = {arg2}");
-		if (logTD.Count > 1000)
+		_logTD.Add($" >{Time.realtimeSinceStartup:F2}> TitleData[ <color=#ffaaff>{arg1}</color> ] = {arg2}");
+		if (_logTD.Count > 1000)
 		{
-			logTD.RemoveAt(0);
+			_logTD.RemoveAt(0);
 		}
 		UpdateLog();
 	}
 
 	private void TDCachedValueRetrieved(string arg1, string arg2)
 	{
-		logTD.Add($" >{Time.realtimeSinceStartup:F2}> TitleData[ <color=#00ffff>{arg1}</color> ] = {arg2}");
-		if (logTD.Count > 1000)
+		_logTD.Add($" >{Time.realtimeSinceStartup:F2}> TitleData[ <color=#00ffff>{arg1}</color> ] = {arg2}");
+		if (_logTD.Count > 1000)
 		{
-			logTD.RemoveAt(0);
+			_logTD.RemoveAt(0);
 		}
 		UpdateLog();
 	}
@@ -551,26 +646,26 @@ public class DebugHudStats : MonoBehaviour
 
 	private void LogMessageReceived(string condition, string stackTrace, LogType type)
 	{
-		string text = $" >{Time.realtimeSinceStartup:F2}> {getColorStringFromLogType(type)}{condition}</color>";
-		if (pLog != condition)
+		string text = $" >{Time.realtimeSinceStartup:F2}> {GetColorStringFromLogType(type)}{condition}</color>";
+		if (_pLog != condition)
 		{
-			logMessage.Add(text);
+			_logMessage.Add(text);
 		}
 		else
 		{
-			logMessage[logMessage.Count - 1] = text;
+			_logMessage[_logMessage.Count - 1] = text;
 		}
-		pLog = condition;
-		if (logMessage.Count > 100)
+		_pLog = condition;
+		if (_logMessage.Count > 100)
 		{
-			logMessage.RemoveAt(0);
+			_logMessage.RemoveAt(0);
 		}
 		if (type == LogType.Error || type == LogType.Assert || type == LogType.Exception)
 		{
-			logError.Add(text + "\n" + stackTrace);
-			if (logError.Count > 100)
+			_logError.Add(text + "\n" + stackTrace);
+			if (_logError.Count > 100)
 			{
-				logError.RemoveAt(0);
+				_logError.RemoveAt(0);
 			}
 		}
 		UpdateLog();
@@ -578,21 +673,26 @@ public class DebugHudStats : MonoBehaviour
 
 	private void UpdateLog()
 	{
-		switch (currentState)
+		_logDirty = true;
+	}
+
+	private void RefreshLog()
+	{
+		switch (_currentState)
 		{
 		case State.ShowLog:
-			DisplayLog(logMessage);
+			DisplayLog(_logMessage);
 			break;
 		case State.ShowError:
-			DisplayLog(logError);
+			DisplayLog(_logError);
 			break;
 		case State.TitleDataMonitor:
-			DisplayLog(logTD);
+			DisplayLog(_logTD);
 			break;
 		}
 	}
 
-	private string getColorStringFromLogType(LogType type)
+	private static string GetColorStringFromLogType(LogType type)
 	{
 		switch (type)
 		{
@@ -609,12 +709,12 @@ public class DebugHudStats : MonoBehaviour
 
 	private void OnZoneChanged(ZoneData[] zoneData)
 	{
-		zones = string.Empty;
+		_zones = string.Empty;
 		for (int i = 0; i < zoneData.Length; i++)
 		{
 			if (zoneData[i].active)
 			{
-				zones = zones + zoneData[i].zone.ToString().ToUpper() + "; ";
+				_zones = _zones + zoneData[i].zone.ToString().ToUpper() + "; ";
 			}
 		}
 	}

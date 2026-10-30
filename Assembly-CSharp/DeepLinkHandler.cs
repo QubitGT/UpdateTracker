@@ -110,7 +110,7 @@ public class DeepLinkHandler : MonoBehaviour
 				mothershipEnvId = MothershipClientApiUnity.EnvironmentId
 			});
 			GTDev.Log("[DeepLinkHandler::HandleDeepLink] Sending Witchblood collab request for item: " + cachedLaunchDetails.DeeplinkMessage);
-			StartCoroutine(ProcessWebRequest(PlayFabAuthenticatorSettings.HpPromoApiBaseUrl + "/api/ConsumeItem", data, "application/json", OnWitchbloodCollabResponse));
+			StartCoroutine(ProcessWebRequest(BackendApiUrl.Build(PlayFabAuthenticatorSettings.HpPromoApiBaseUrl, "/api/ConsumeItem"), data, "application/json", OnWitchbloodCollabResponse));
 		}
 		else if (cachedLaunchDetails.LaunchSource.Contains("1903584373052985"))
 		{
@@ -127,7 +127,7 @@ public class DeepLinkHandler : MonoBehaviour
 				mothershipEnvId = MothershipClientApiUnity.EnvironmentId
 			});
 			GTDev.Log("[DeepLinkHandler::HandleDeepLink] Sending Raccoon Lagoon collab request for item: " + cachedLaunchDetails.DeeplinkMessage);
-			StartCoroutine(ProcessWebRequest(PlayFabAuthenticatorSettings.HpPromoApiBaseUrl + "/api/ConsumeItem", data2, "application/json", OnRaccoonLagoonCollabResponse));
+			StartCoroutine(ProcessWebRequest(BackendApiUrl.Build(PlayFabAuthenticatorSettings.HpPromoApiBaseUrl, "/api/ConsumeItem"), data2, "application/json", OnRaccoonLagoonCollabResponse));
 		}
 		else
 		{

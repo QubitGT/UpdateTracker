@@ -1,6 +1,7 @@
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Long Scarf Sim")]
 public class LongScarfSim : MonoBehaviour
 {
 	[SerializeField]

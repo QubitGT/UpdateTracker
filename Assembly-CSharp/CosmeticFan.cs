@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Fan")]
 public class CosmeticFan : MonoBehaviour
 {
 	[SerializeField]

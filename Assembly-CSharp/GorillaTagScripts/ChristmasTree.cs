@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Fusion;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace GorillaTagScripts;
 
-[NetworkBehaviourWeaved(1)]
 public class ChristmasTree : NetworkComponent
 {
 	public GameObject hangers;
@@ -33,33 +31,6 @@ public class ChristmasTree : NetworkComponent
 
 	[SerializeField]
 	private Material[] lightsOnMaterials;
-
-	[WeaverGenerated]
-	[DefaultForProperty("Data", 0, 1)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private NetworkBool _Data;
-
-	[Networked]
-	[NetworkedWeaved(0, 1)]
-	private unsafe NetworkBool Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing ChristmasTree.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(NetworkBool*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing ChristmasTree.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(NetworkBool*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	protected override void Awake()
 	{
@@ -90,7 +61,6 @@ public class ChristmasTree : NetworkComponent
 
 	private void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		foreach (AttachPoint attachPoints in attachPointsList)
 		{
 			attachPoints.onHookedChanged = (UnityAction)Delegate.Remove(attachPoints.onHookedChanged, new UnityAction(UpdateHangers));
@@ -131,21 +101,6 @@ public class ChristmasTree : NetworkComponent
 		spinTheTop = enable;
 	}
 
-	public override void WriteDataFusion()
-	{
-		Data = isActive;
-	}
-
-	public override void ReadDataFusion()
-	{
-		wasActive = isActive;
-		isActive = Data;
-		if (wasActive != isActive)
-		{
-			updateLight(isActive);
-		}
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (info.Sender.IsMasterClient)
@@ -165,19 +120,5 @@ public class ChristmasTree : NetworkComponent
 				updateLight(isActive);
 			}
 		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
 	}
 }

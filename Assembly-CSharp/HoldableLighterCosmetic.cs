@@ -4,6 +4,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Holdable Lighter Cosmetic")]
 public class HoldableLighterCosmetic : MonoBehaviour
 {
 	public enum LighterResult

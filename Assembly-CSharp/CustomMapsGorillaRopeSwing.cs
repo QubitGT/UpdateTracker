@@ -7,6 +7,7 @@ using GorillaLocomotion.Gameplay;
 using GorillaLocomotion.Swimming;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Gorilla Rope Swing")]
 public class CustomMapsGorillaRopeSwing : GorillaRopeSwing
 {
 	[SerializeField]

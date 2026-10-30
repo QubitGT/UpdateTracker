@@ -3,6 +3,7 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Entity Debug Canvas")]
 public class GREntityDebugCanvas : MonoBehaviour
 {
 	[SerializeField]

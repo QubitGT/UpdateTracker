@@ -10,12 +10,6 @@ public class BuildTargetManager : MonoBehaviour
 		Viveport
 	}
 
-	public enum NetworkBackend
-	{
-		Pun,
-		Fusion
-	}
-
 	public BuildTowards newBuildTarget;
 
 	public bool isBeta;
@@ -39,8 +33,6 @@ public class BuildTargetManager : MonoBehaviour
 	public GameObject[] betaDisableObjects;
 
 	public GameObject[] betaEnableObjects;
-
-	public NetworkBackend networkBackend;
 
 	public string GetPath()
 	{

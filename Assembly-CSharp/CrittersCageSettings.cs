@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Cage Settings")]
 public class CrittersCageSettings : CrittersActorSettings
 {
 	public Transform cagePoint;

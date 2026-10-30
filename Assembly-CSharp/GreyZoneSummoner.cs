@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Playables;
 
+[AddComponentMenu("GorillaTag/Seasonal/Grey Zone Summoner")]
 public class GreyZoneSummoner : MonoBehaviour
 {
 	[SerializeField]

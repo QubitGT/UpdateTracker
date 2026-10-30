@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Critter Spawner Butterfly Net")]
 public class CosmeticCritterSpawnerButterflyNet : CosmeticCritterSpawnerTimed
 {
 	[Tooltip("Spawn a butterfly on the surface of a sphere with this radius, and with a center on this object.")]

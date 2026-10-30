@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GorillaTag.CosmeticSystem;
 
-[CreateAssetMenu(fileName = "Untitled_CosmeticSO", menuName = "- Gorilla Tag/CosmeticSO", order = 0)]
+[CreateAssetMenu(fileName = "Untitled_CosmeticSO", menuName = "GorillaTag/Cosmetics/CosmeticSO", order = 0)]
 public class CosmeticSO : ScriptableObject
 {
 	public CosmeticInfoV2 info = new CosmeticInfoV2("UNNAMED");

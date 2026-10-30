@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Rotation Sound Player")]
 public class RotationSoundPlayer : MonoBehaviour
 {
 	[Tooltip("Transforms that will make a noise when they rotate.")]

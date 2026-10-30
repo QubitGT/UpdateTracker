@@ -2,6 +2,7 @@ using GorillaExtensions;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Button")]
 public class CosmeticButton : GorillaPressableButton
 {
 	[SerializeField]

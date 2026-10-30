@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Region")]
 public class CrittersRegion : MonoBehaviour
 {
 	private static List<CrittersRegion> _regions = new List<CrittersRegion>();

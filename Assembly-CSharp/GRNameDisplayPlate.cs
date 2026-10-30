@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Name Display Plate")]
 public class GRNameDisplayPlate : MonoBehaviour
 {
 	public TMP_Text namePlateLabel;

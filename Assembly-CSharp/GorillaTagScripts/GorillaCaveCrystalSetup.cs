@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GorillaTagScripts;
 
-[CreateAssetMenu(fileName = "GorillaCaveCrystalSetup", menuName = "ScriptableObjects/GorillaCaveCrystalSetup", order = 0)]
+[CreateAssetMenu(fileName = "GorillaCaveCrystalSetup", menuName = "ScriptableObjects/Visuals and Audio/GorillaCaveCrystalSetup", order = 0)]
 public class GorillaCaveCrystalSetup : ScriptableObject
 {
 	[Serializable]

@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Menagerie Slot")]
 public class MenagerieSlot : MonoBehaviour
 {
 	public Transform critterMountPoint;

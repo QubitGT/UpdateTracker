@@ -1,3 +1,6 @@
+using UnityEngine;
+
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Scannable")]
 public class GRToolScannable : GRScannable
 {
 	private GRTool tool;

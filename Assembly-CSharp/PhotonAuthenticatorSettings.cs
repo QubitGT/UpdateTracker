@@ -4,8 +4,6 @@ public class PhotonAuthenticatorSettings
 {
 	public static string PunAppId;
 
-	public static string FusionAppId;
-
 	public static string VoiceAppId;
 
 	static PhotonAuthenticatorSettings()
@@ -17,7 +15,6 @@ public class PhotonAuthenticatorSettings
 	{
 		PhotonAuthenticatorSettingsScriptableObject photonAuthenticatorSettingsScriptableObject = Resources.Load<PhotonAuthenticatorSettingsScriptableObject>(path);
 		PunAppId = photonAuthenticatorSettingsScriptableObject.PunAppId;
-		FusionAppId = photonAuthenticatorSettingsScriptableObject.FusionAppId;
 		VoiceAppId = photonAuthenticatorSettingsScriptableObject.VoiceAppId;
 	}
 }

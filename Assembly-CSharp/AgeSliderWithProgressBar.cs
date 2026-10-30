@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/KID/Age Slider With Progress Bar")]
 public class AgeSliderWithProgressBar : MonoBehaviourTick
 {
 	[Serializable]

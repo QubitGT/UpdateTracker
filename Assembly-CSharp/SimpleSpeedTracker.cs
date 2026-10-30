@@ -2,6 +2,7 @@ using GorillaTag.Cosmetics;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Simple Speed Tracker")]
 public class SimpleSpeedTracker : MonoBehaviour, IGorillaSliceableSimple
 {
 	private enum AxisFilter

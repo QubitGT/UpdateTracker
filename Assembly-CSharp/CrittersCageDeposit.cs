@@ -4,6 +4,7 @@ using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Cage Deposit")]
 public class CrittersCageDeposit : CrittersActorDeposit
 {
 	private bool isHandlingDeposit;

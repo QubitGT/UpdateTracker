@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using Fusion;
 using GorillaExtensions;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
-[NetworkBehaviourWeaved(0)]
+[AddComponentMenu("GorillaTag/Game Entity/Game Agent Manager")]
 public class GameAgentManager : NetworkComponent, ITickSystemTick
 {
 	public enum RPC
@@ -76,13 +75,11 @@ public class GameAgentManager : NetworkComponent, ITickSystemTick
 
 	private new void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		TickSystem<object>.AddCallbackTarget(this);
 	}
 
 	private new void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		TickSystem<object>.RemoveCallbackTarget(this);
 	}
 
@@ -431,14 +428,6 @@ public class GameAgentManager : NetworkComponent, ITickSystemTick
 		}
 	}
 
-	public override void WriteDataFusion()
-	{
-	}
-
-	public override void ReadDataFusion()
-	{
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		int num = Mathf.Min(4, agents.Count);
@@ -480,17 +469,5 @@ public class GameAgentManager : NetworkComponent, ITickSystemTick
 				}
 			}
 		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
 	}
 }

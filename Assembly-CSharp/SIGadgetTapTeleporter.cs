@@ -1,7 +1,9 @@
 using System;
+using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Tap Teleporter")]
 public class SIGadgetTapTeleporter : SIGadget
 {
 	[SerializeField]
@@ -105,9 +107,10 @@ public class SIGadgetTapTeleporter : SIGadget
 		}
 	}
 
-	private new void OnDisable()
+	protected override void OnDisable()
 	{
 		HandleHandDetach();
+		base.OnDisable();
 	}
 
 	private void HandleHandAttached()
@@ -208,10 +211,14 @@ public class SIGadgetTapTeleporter : SIGadget
 
 	public override void ProcessClientToAuthorityRPC(PhotonMessageInfo info, int rpcID, object[] data)
 	{
-		if (rpcID == 0 && data != null && data.Length == 4 && GameEntityManager.ValidateDataType<Vector3>(data[0], out var dataAsType) && GameEntityManager.ValidateDataType<Quaternion>(data[1], out var dataAsType2) && GameEntityManager.ValidateDataType<int>(data[2], out var dataAsType3) && dataAsType3 >= 0 && dataAsType3 <= 100 && GameEntityManager.ValidateDataType<float>(data[3], out var dataAsType4) && gameEntity.IsAttachedToPlayer(NetPlayer.Get(info.Sender)) && !(Vector3.Distance(dataAsType, base.transform.position) > placementCheckDistance) && CheckValidTeleporterPlacement(dataAsType, dataAsType2 * Vector3.forward))
+		if (rpcID == 0 && data != null && data.Length == 4 && GameEntityManager.ValidateDataType<Vector3>(data[0], out var dataAsType))
 		{
-			RemoveTeleporter(dataAsType3);
-			PlaceNewTapTeleporter(dataAsType, dataAsType2, dataAsType3, dataAsType4);
+			float maxVal = 10000f;
+			if (dataAsType.IsValid(in maxVal) && GameEntityManager.ValidateDataType<Quaternion>(data[1], out var dataAsType2) && dataAsType2.IsValid() && GameEntityManager.ValidateDataType<int>(data[2], out var dataAsType3) && dataAsType3 >= 0 && dataAsType3 <= 100 && GameEntityManager.ValidateDataType<float>(data[3], out var dataAsType4) && gameEntity.IsAttachedToPlayer(NetPlayer.Get(info.Sender)) && !(Vector3.Distance(dataAsType, base.transform.position) > placementCheckDistance) && CheckValidTeleporterPlacement(dataAsType, dataAsType2 * Vector3.forward))
+			{
+				RemoveTeleporter(dataAsType3);
+				PlaceNewTapTeleporter(dataAsType, dataAsType2, dataAsType3, dataAsType4);
+			}
 		}
 	}
 
@@ -285,7 +292,7 @@ public class SIGadgetTapTeleporter : SIGadget
 
 	private void HandleStateChanged(long oldState, long newState)
 	{
-		if (!gameEntity.IsAuthority())
+		if (!(gameEntity.manager == null) && !gameEntity.IsAuthority())
 		{
 			BitPackUtils.UnpackIntsFromLong(newState, out var value, out var value2);
 			GameEntity gameEntityFromNetId = gameEntity.manager.GetGameEntityFromNetId(value);

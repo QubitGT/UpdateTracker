@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Snowball Grab Zone")]
 public class SnowballGrabZone : HoldableObject
 {
 	[GorillaSoundLookup]

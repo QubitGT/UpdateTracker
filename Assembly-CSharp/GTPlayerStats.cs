@@ -34,7 +34,7 @@ public class GTPlayerStats : MonoBehaviourPostTick
 
 	public static long GetPackedValues()
 	{
-		return 0L | (long)Ping | ((long)FPS << 16) | ((long)TargetFPS << 32);
+		return 0L | (long)(ushort)Ping | (long)((ulong)(ushort)FPS << 16) | (long)((ulong)(ushort)TargetFPS << 32);
 	}
 
 	public static PlayerStatsReadonly UnPackValues(long values, int flags)

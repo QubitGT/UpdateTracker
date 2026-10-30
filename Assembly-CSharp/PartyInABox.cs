@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Party In A Box")]
 public class PartyInABox : MonoBehaviour
 {
 	[Serializable]

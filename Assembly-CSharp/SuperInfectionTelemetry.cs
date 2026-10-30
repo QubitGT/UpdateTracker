@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/Super Infection Telemetry")]
 public class SuperInfectionTelemetry : MonoBehaviour
 {
 	public const string ROOM_LEFT_EVENT_NAME = "super_infection_room_left";

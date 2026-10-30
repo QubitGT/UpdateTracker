@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/First Person X Ray Specs")]
 public class FirstPersonXRaySpecs : MonoBehaviour
 {
 	private void OnEnable()

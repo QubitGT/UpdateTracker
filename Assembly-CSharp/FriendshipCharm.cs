@@ -3,6 +3,7 @@ using GorillaLocomotion;
 using GorillaTagScripts;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Friendship Charm")]
 public class FriendshipCharm : HoldableObject
 {
 	[SerializeField]

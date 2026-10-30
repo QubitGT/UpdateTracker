@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Resource")]
 public class SIResource : MonoBehaviour, IGorillaSliceableSimple
 {
 	[Serializable]

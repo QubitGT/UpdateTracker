@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Entity Spawner")]
 public class EntitySpawner : MonoBehaviour, IGorillaSliceableSimple
 {
 	[SerializeField]

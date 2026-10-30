@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Bubble Gum Events")]
 public class BubbleGumEvents : MonoBehaviour
 {
 	public enum EdibleState

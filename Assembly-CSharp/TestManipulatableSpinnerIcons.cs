@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Test Manipulatable Spinner Icons")]
 public class TestManipulatableSpinnerIcons : MonoBehaviour
 {
 	public ManipulatableSpinner spinner;

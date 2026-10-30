@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Delayed Destroy Critters Pooled Object")]
 public class DelayedDestroyCrittersPooledObject : MonoBehaviour
 {
 	public float destroyDelay = 1f;

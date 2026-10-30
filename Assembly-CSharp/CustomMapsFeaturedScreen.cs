@@ -10,6 +10,7 @@ using Modio.Mods;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Featured Screen")]
 public class CustomMapsFeaturedScreen : CustomMapsTerminalScreen
 {
 	[Serializable]

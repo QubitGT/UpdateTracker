@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Upgrade Station")]
 public class GRToolUpgradeStation : MonoBehaviour
 {
 	private enum UpgradeStationState

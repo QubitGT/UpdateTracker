@@ -1,6 +1,7 @@
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Horse Stick Noise Maker")]
 public class HorseStickNoiseMaker : MonoBehaviour
 {
 	[Tooltip("Meters the object should traverse between playing a provided audio clip.")]

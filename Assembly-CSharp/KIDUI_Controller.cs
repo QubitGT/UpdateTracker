@@ -6,6 +6,7 @@ using GorillaNetworking;
 using KID.Model;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Controller")]
 public class KIDUI_Controller : MonoBehaviour
 {
 	public enum Metrics_ShowReason

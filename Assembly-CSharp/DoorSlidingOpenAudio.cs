@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Door Sliding Open Audio")]
 public class DoorSlidingOpenAudio : MonoBehaviour, IBuildValidation, ITickSystemTick
 {
 	public GhostLabButton button;

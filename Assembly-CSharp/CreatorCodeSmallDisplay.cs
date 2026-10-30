@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Creator Code Small Display")]
 public class CreatorCodeSmallDisplay : MonoBehaviour
 {
 	public Text codeText;

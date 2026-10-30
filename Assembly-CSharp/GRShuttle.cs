@@ -5,6 +5,7 @@ using GorillaNetworking;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Shuttle")]
 public class GRShuttle : MonoBehaviour, IGorillaSliceableSimple
 {
 	public const int InvalidId = -1;
@@ -230,7 +231,10 @@ public class GRShuttle : MonoBehaviour, IGorillaSliceableSimple
 			if (specificDestinationShuttle != null)
 			{
 				GRPlayer gRPlayer = GRPlayer.Get(GRElevatorManager.LowestActorNumberInElevator(friendCollider, specificDestinationShuttle.friendCollider));
-				shuttleOwner = gRPlayer.gamePlayer.rig.OwningNetPlayer;
+				if (gRPlayer != null)
+				{
+					shuttleOwner = gRPlayer.gamePlayer.rig.Creator;
+				}
 			}
 			TryStartLocalPlayerShuttleMove(shuttleId, shuttleOwner);
 			StartMoveFx();
@@ -470,13 +474,17 @@ public class GRShuttle : MonoBehaviour, IGorillaSliceableSimple
 
 	public void ToggleDoorActorNr(int actorNr)
 	{
-		if (state != GRShuttleState.Docked || GetOwner() == null || GetOwner().ActorNumber != actorNr || !GRPlayer.Get(shuttleOwner).IsDropPodUnlocked())
+		if (state == GRShuttleState.Docked && GetOwner() != null && GetOwner().ActorNumber == actorNr)
 		{
-			entryCardScanner?.onFailed.Invoke();
-			return;
+			GRPlayer gRPlayer = GRPlayer.Get(shuttleOwner);
+			if ((object)gRPlayer != null && gRPlayer.IsDropPodUnlocked())
+			{
+				entryCardScanner?.onSucceeded.Invoke();
+				ToggleDoor();
+				return;
+			}
 		}
-		entryCardScanner?.onSucceeded.Invoke();
-		ToggleDoor();
+		entryCardScanner?.onFailed.Invoke();
 	}
 
 	public void EmergencyOpenDoor()
@@ -581,7 +589,7 @@ public class GRShuttle : MonoBehaviour, IGorillaSliceableSimple
 			return;
 		}
 		GRShuttle shuttle = GRElevatorManager.GetShuttle(currShuttleId);
-		if (!(shuttle == null) && GRElevatorManager.IsPlayerInShuttle(local.gamePlayer.rig.OwningNetPlayer.ActorNumber, shuttle, null))
+		if (!(shuttle == null) && GRElevatorManager.IsPlayerInShuttle(local.gamePlayer.rig.Creator.ActorNumber, shuttle, null))
 		{
 			if (shuttleOwner != null && shuttleOwner.GetPlayerRef() != null)
 			{
@@ -589,7 +597,7 @@ public class GRShuttle : MonoBehaviour, IGorillaSliceableSimple
 			}
 			else
 			{
-				local.shuttleData.ownerUserId = VRRig.LocalRig.OwningNetPlayer.UserId;
+				local.shuttleData.ownerUserId = VRRig.LocalRig.Creator.UserId;
 			}
 			local.shuttleData.currShuttleId = currShuttleId;
 			local.shuttleData.targetShuttleId = -1;

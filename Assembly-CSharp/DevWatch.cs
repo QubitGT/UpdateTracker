@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Fusion;
+using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,7 +26,7 @@ public class DevWatch : MonoBehaviour
 
 	public Button DestroyObjectButton;
 
-	public List<NetworkObject> FoundNetworkObjects = new List<NetworkObject>();
+	public List<PhotonView> FoundNetworkObjects = new List<PhotonView>();
 
 	public TextMeshProUGUI SelectedItemName;
 
@@ -50,7 +50,7 @@ public class DevWatch : MonoBehaviour
 		RaycastHit[] array2 = array;
 		foreach (RaycastHit raycastHit in array2)
 		{
-			if (raycastHit.collider.gameObject.TryGetComponent<NetworkObject>(out var component))
+			if (raycastHit.collider.gameObject.TryGetComponent<PhotonView>(out var component))
 			{
 				FoundNetworkObjects.Add(component);
 			}

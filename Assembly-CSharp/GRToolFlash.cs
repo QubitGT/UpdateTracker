@@ -4,6 +4,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Flash")]
 public class GRToolFlash : MonoBehaviour, IGameEntityDebugComponent, IGameEntityComponent
 {
 	[Flags]

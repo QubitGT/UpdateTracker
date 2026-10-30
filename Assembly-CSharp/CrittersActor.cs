@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Actor")]
 public class CrittersActor : MonoBehaviour
 {
 	public enum CrittersActorType
@@ -59,6 +60,8 @@ public class CrittersActor : MonoBehaviour
 
 	[NonSerialized]
 	protected Transform defaultParentTransform;
+
+	public const int MaxParentChainDepth = 20;
 
 	[NonSerialized]
 	public int parentActorId = -1;
@@ -445,6 +448,10 @@ public class CrittersActor : MonoBehaviour
 		{
 			return BaseActorDataLength();
 		}
+		if (dataAsType6 < -1 || dataAsType6 >= CrittersManager.instance.universalActorId)
+		{
+			return BaseActorDataLength();
+		}
 		if (!CrittersManager.ValidateDataType<bool>(data[startingIndex + 7], out var dataAsType7))
 		{
 			return BaseActorDataLength();
@@ -578,13 +585,14 @@ public class CrittersActor : MonoBehaviour
 
 	public static CrittersActor GetRootActor(int actorId)
 	{
-		if (CrittersManager.instance.actorById.TryGetValue(actorId, out var value))
+		CrittersManager.instance.actorById.TryGetValue(actorId, out var value);
+		for (int i = 0; i < 20; i++)
 		{
-			if (value.parentActorId > -1)
+			if (value == null || value.parentActorId < 0)
 			{
-				return GetRootActor(value.parentActorId);
+				return value;
 			}
-			return value;
+			CrittersManager.instance.actorById.TryGetValue(value.parentActorId, out value);
 		}
 		return null;
 	}
@@ -609,6 +617,10 @@ public class CrittersActor : MonoBehaviour
 			return true;
 		}
 		CrittersActor rootActor = GetRootActor(grabbedBy.actorId);
+		if (rootActor == null)
+		{
+			return false;
+		}
 		if (CrittersManager.instance.actorById.TryGetValue(parentActorId, out var value))
 		{
 			if (value.crittersActorType == CrittersActorType.Bag)
@@ -616,6 +628,10 @@ public class CrittersActor : MonoBehaviour
 				if (!CrittersManager.instance.allowGrabbingFromBags)
 				{
 					CrittersActor rootActor2 = GetRootActor(actorId);
+					if (rootActor2 == null)
+					{
+						return false;
+					}
 					Debug.Log($"Grieffing - FromBag {rootActor2.rigPlayerId} == {rootActor.rigPlayerId} || {value.parentActorId} == -1 || {rootActor.rigPlayerId} == -1  - " + $" {rootActor2.rigPlayerId == rootActor.rigPlayerId || rootActor2.rigPlayerId == -1 || rootActor.rigPlayerId == -1}");
 					if (rootActor2.rigPlayerId != rootActor.rigPlayerId && rootActor2.rigPlayerId != -1)
 					{

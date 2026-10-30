@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "GhostReactorBreakableItemSpawnConfig", menuName = "ScriptableObjects/GhostReactorBreakableItemSpawnConfig")]
+[CreateAssetMenu(fileName = "GhostReactorBreakableItemSpawnConfig", menuName = "ScriptableObjects/Ghost Reactor/GhostReactorBreakableItemSpawnConfig")]
 public class GRBreakableItemSpawnConfig : ScriptableObject
 {
 	[Serializable]

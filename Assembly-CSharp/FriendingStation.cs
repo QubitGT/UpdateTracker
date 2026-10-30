@@ -194,10 +194,10 @@ public class FriendingStation : MonoBehaviour
 		if (PhotonNetwork.InRoom)
 		{
 			VRRig component = other.GetComponent<VRRig>();
-			if (component != null && component.OwningNetPlayer != null)
+			if (component != null && component.Creator != null)
 			{
 				addFriendButton.ResetState();
-				FriendingManager.Instance.PlayerEnteredStation(zone, component.OwningNetPlayer);
+				FriendingManager.Instance.PlayerEnteredStation(zone, component.Creator);
 			}
 		}
 		else if (other == GTPlayer.Instance.headCollider)
@@ -217,10 +217,10 @@ public class FriendingStation : MonoBehaviour
 		if (PhotonNetwork.InRoom)
 		{
 			VRRig component = other.GetComponent<VRRig>();
-			if (component != null)
+			if (component != null && component.Creator != null)
 			{
 				addFriendButton.ResetState();
-				FriendingManager.Instance.PlayerExitedStation(zone, component.OwningNetPlayer);
+				FriendingManager.Instance.PlayerExitedStation(zone, component.Creator);
 			}
 		}
 		else if (other == GTPlayer.Instance.headCollider)

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Breakable")]
 public class GRBreakable : MonoBehaviour, IGameHittable
 {
 	public enum BreakableState

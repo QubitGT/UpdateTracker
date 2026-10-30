@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GorillaTagScripts;
 
-[CreateAssetMenu(fileName = "CrystalVisualsPreset", menuName = "ScriptableObjects/CrystalVisualsPreset", order = 0)]
+[CreateAssetMenu(fileName = "CrystalVisualsPreset", menuName = "ScriptableObjects/Visuals and Audio/CrystalVisualsPreset", order = 0)]
 public class CrystalVisualsPreset : ScriptableObject
 {
 	[Serializable]

@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Touchscreen Button Container")]
 public class SITouchscreenButtonContainer : MonoBehaviour
 {
 	public SITouchscreenButton.SITouchscreenButtonType type;

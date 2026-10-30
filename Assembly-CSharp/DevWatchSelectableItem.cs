@@ -1,5 +1,5 @@
 using System;
-using Fusion;
+using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,11 +10,11 @@ public class DevWatchSelectableItem : MonoBehaviour
 
 	public TextMeshProUGUI ItemName;
 
-	public NetworkObject SelectedObject;
+	public PhotonView SelectedObject;
 
-	public Action<string, NetworkObject> OnSelected;
+	public Action<string, PhotonView> OnSelected;
 
-	public void Init(NetworkObject obj)
+	public void Init(PhotonView obj)
 	{
 		SelectedObject = obj;
 		ItemName.text = obj.name;

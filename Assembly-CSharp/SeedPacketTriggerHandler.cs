@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [RequireComponent(typeof(OnTriggerEventsCosmetic))]
+[AddComponentMenu("GorillaTag/Cosmetics/Seed Packet Trigger Handler")]
 public class SeedPacketTriggerHandler : MonoBehaviour
 {
 	[SerializeField]

@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Super Infection/SIUI Player Quest Entry")]
 public class SIUIPlayerQuestEntry : MonoBehaviour
 {
 	public Image background;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [DefaultExecutionOrder(1549)]
+[AddComponentMenu("GorillaTag/Cosmetics/Transferrable Object Manager")]
 public class TransferrableObjectManager : MonoBehaviour
 {
 	public static TransferrableObjectManager instance;

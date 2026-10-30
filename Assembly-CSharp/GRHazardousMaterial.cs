@@ -1,6 +1,7 @@
 using GorillaLocomotion;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Hazardous Material")]
 public class GRHazardousMaterial : MonoBehaviour
 {
 	private GhostReactor reactor;

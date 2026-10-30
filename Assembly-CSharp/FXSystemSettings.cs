@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "ScriptableObjects/FXSystemSettings", order = 2)]
+[CreateAssetMenu(menuName = "ScriptableObjects/Visuals and Audio/FXSystemSettings", order = 2)]
 public class FXSystemSettings : ScriptableObject
 {
 	private const string preLog = "FXSystemSettings: ";

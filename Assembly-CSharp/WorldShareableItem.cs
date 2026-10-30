@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Fusion;
 using GorillaExtensions;
 using GorillaNetworking;
 using GorillaTag;
@@ -9,7 +8,6 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
-[NetworkBehaviourWeaved(0)]
 public class WorldShareableItem : NetworkComponent, IRequestableOwnershipGuardCallbacks
 {
 	public delegate void Delegate();
@@ -86,7 +84,6 @@ public class WorldShareableItem : NetworkComponent, IRequestableOwnershipGuardCa
 
 	internal override void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		if (!GTAppState.isQuitting)
 		{
 			base.OnEnable();
@@ -98,7 +95,6 @@ public class WorldShareableItem : NetworkComponent, IRequestableOwnershipGuardCa
 
 	internal override void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		base.OnDisable();
 		if (target != null && target.transferrableObject.isSceneObject)
 		{
@@ -118,7 +114,6 @@ public class WorldShareableItem : NetworkComponent, IRequestableOwnershipGuardCa
 
 	public void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		WorldShareableItemManager.Unregister(this);
 	}
 
@@ -242,18 +237,6 @@ public class WorldShareableItem : NetworkComponent, IRequestableOwnershipGuardCa
 		}
 	}
 
-	public override void WriteDataFusion()
-	{
-		transferableObjectItemStateNetworked = transferableObjectItemState;
-		transferableObjectStateNetworked = transferableObjectState;
-	}
-
-	public override void ReadDataFusion()
-	{
-		transferableObjectItemState = transferableObjectItemStateNetworked;
-		transferableObjectState = transferableObjectStateNetworked;
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		stream.SendNext(transferableObjectState);
@@ -311,17 +294,5 @@ public class WorldShareableItem : NetworkComponent, IRequestableOwnershipGuardCa
 	public void SetWillTeleport()
 	{
 		teleportSerializer.SetWillTeleport();
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
 	}
 }

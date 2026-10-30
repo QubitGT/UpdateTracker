@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "CosmeticOutfitSystemConfig", menuName = "Gorilla Tag/Cosmetics/OutfitSystem", order = 0)]
+[CreateAssetMenu(fileName = "CosmeticOutfitSystemConfig", menuName = "GorillaTag/Cosmetics/OutfitSystem", order = 0)]
 public class CosmeticOutfitSystemConfig : ScriptableObject
 {
 	public int nonSubscriberMaxOutfits = 5;

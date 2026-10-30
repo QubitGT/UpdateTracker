@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 [DefaultExecutionOrder(-100)]
+[AddComponentMenu("GorillaTag/Super Infection/SI Progression")]
 public class SIProgression : MonoBehaviour, IGorillaSliceableSimple, GorillaQuestManager
 {
 	public struct SINode

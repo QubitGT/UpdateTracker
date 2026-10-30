@@ -2,6 +2,7 @@ using System;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Currency Depositor")]
 public class GRCurrencyDepositor : MonoBehaviour
 {
 	public Transform depositingChargePoint;

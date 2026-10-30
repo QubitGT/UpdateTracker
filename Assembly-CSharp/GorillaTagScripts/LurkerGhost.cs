@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using Fusion;
 using GorillaExtensions;
 using Photon.Pun;
 using Photon.Realtime;
@@ -10,7 +8,6 @@ using UnityEngine.Events;
 
 namespace GorillaTagScripts;
 
-[NetworkBehaviourWeaved(6)]
 public class LurkerGhost : AnnoyingNetworkComponent
 {
 	private enum ghostState
@@ -19,31 +16,6 @@ public class LurkerGhost : AnnoyingNetworkComponent
 		seek,
 		charge,
 		possess
-	}
-
-	[StructLayout(LayoutKind.Explicit, Size = 24)]
-	[NetworkStructWeaved(6)]
-	private struct LurkerGhostData : INetworkStruct
-	{
-		[FieldOffset(12)]
-		public Vector3 TargetPos;
-
-		[field: FieldOffset(0)]
-		public ghostState CurrentState { get; set; }
-
-		[field: FieldOffset(4)]
-		public int CurrentIndex { get; set; }
-
-		[field: FieldOffset(8)]
-		public int TargetActor { get; set; }
-
-		public LurkerGhostData(ghostState state, int index, int actor, Vector3 pos)
-		{
-			CurrentState = state;
-			CurrentIndex = index;
-			TargetActor = actor;
-			TargetPos = pos;
-		}
 	}
 
 	public float patrolSpeed = 3f;
@@ -169,33 +141,6 @@ public class LurkerGhost : AnnoyingNetworkComponent
 	private bool hauntNeighbors = true;
 
 	private bool lockedInPatrol;
-
-	[WeaverGenerated]
-	[DefaultForProperty("Data", 0, 6)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private LurkerGhostData _Data;
-
-	[Networked]
-	[NetworkedWeaved(0, 6)]
-	private unsafe LurkerGhostData Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing LurkerGhost.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(LurkerGhostData*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing LurkerGhost.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(LurkerGhostData*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	protected override void Awake()
 	{
@@ -430,7 +375,6 @@ public class LurkerGhost : AnnoyingNetworkComponent
 
 	private void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		Shader.SetGlobalFloat(_BlackAndWhite, 0f);
 	}
 
@@ -510,16 +454,6 @@ public class LurkerGhost : AnnoyingNetworkComponent
 		}
 	}
 
-	public override void WriteDataFusion()
-	{
-		Data = new LurkerGhostData(currentState, currentIndex, targetPlayer.ActorNumber, targetPosition);
-	}
-
-	public override void ReadDataFusion()
-	{
-		ReadDataShared(Data.CurrentState, Data.CurrentIndex, Data.TargetActor, Data.TargetPos);
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (info.Sender == PhotonNetwork.MasterClient)
@@ -597,19 +531,5 @@ public class LurkerGhost : AnnoyingNetworkComponent
 		{
 			ChangeState(ghostState.patrol);
 		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
 	}
 }

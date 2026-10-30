@@ -7,6 +7,7 @@ using PlayFab;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Try On Bundles Stand")]
 public class TryOnBundlesStand : MonoBehaviour, IBuildValidation
 {
 	[SerializeField]

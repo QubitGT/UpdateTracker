@@ -14,8 +14,6 @@ public class GorillaDevButton : GorillaPressableButton
 
 	public float holdForSeconds;
 
-	private Coroutine pressCoroutine;
-
 	public bool on
 	{
 		get

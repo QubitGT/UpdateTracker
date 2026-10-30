@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Spin Rotation")]
 public class SpinRotation : MonoBehaviour, ITickSystemTick
 {
 	[SerializeField]

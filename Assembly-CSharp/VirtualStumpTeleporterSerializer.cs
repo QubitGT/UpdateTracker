@@ -3,6 +3,7 @@ using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Virtual Stump Teleporter Serializer")]
 internal class VirtualStumpTeleporterSerializer : GorillaSerializer
 {
 	[SerializeField]

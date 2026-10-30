@@ -3,6 +3,7 @@ using GorillaExtensions;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Virtual Stump Barrier SFX")]
 public class VirtualStumpBarrierSFX : MonoBehaviour
 {
 	[SerializeField]

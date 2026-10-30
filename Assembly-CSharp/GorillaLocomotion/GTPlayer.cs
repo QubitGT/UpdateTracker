@@ -8,6 +8,7 @@ using GorillaExtensions;
 using GorillaLocomotion.Climbing;
 using GorillaLocomotion.Gameplay;
 using GorillaLocomotion.Swimming;
+using GorillaNetworking;
 using GorillaTag;
 using GorillaTagScripts;
 using Photon.Pun;
@@ -165,7 +166,7 @@ public class GTPlayer : MonoBehaviour
 			}
 			else
 			{
-				boostVectorThisFrame = (gtPlayer.enableHoverMode ? (gtPlayer.turnParent.transform.rotation * -velocityTracker.GetAverageVelocity() * paddleBoostFactor) : Vector3.zero);
+				boostVectorThisFrame = (gtPlayer.enableHoverMode ? (gtPlayer.turnParent.transform.rotation * -velocityTracker.GetAverageVelocity() * (paddleBoostFactor * gtPlayer.scale)) : Vector3.zero);
 			}
 			Vector3 vector = GetCurrentHandPosition() + gtPlayer.movingSurfaceOffset;
 			Vector3 vector2 = GetLastPosition();
@@ -665,6 +666,10 @@ public class GTPlayer : MonoBehaviour
 	private List<Material> tempMaterialArray = new List<Material>(16);
 
 	private Vector3? antiDriftLastPosition;
+
+	private const float antiDriftMinMovement = 0.0001f;
+
+	private Vector3? lastButtDebouncePosition;
 
 	private const float CameraFarClipDefault = 500f;
 
@@ -1906,7 +1911,7 @@ public class GTPlayer : MonoBehaviour
 			audioManager.UnsetMixerSnapshot();
 		}
 		handleClimbing(Time.fixedDeltaTime);
-		stuckHandsCheckFixedUpdate();
+		StuckHandsCheckFixedUpdate();
 		FixedUpdate_HandHolds(Time.fixedDeltaTime);
 	}
 
@@ -1918,12 +1923,11 @@ public class GTPlayer : MonoBehaviour
 
 	private void HoverboardLateUpdate()
 	{
-		_ = headCollider.transform.eulerAngles;
 		bool flag = false;
 		for (int i = 0; i < hoverboardCasts.Length; i++)
 		{
 			HoverBoardCast hoverBoardCast = hoverboardCasts[i];
-			hoverBoardCast.didHit = Physics.SphereCast(new Ray(hoverboardVisual.transform.TransformPoint(hoverBoardCast.localOrigin), hoverboardVisual.transform.rotation * hoverBoardCast.localDirection), hoverBoardCast.sphereRadius, out var hitInfo, hoverBoardCast.distance, hoverboardLocomotionLayers);
+			hoverBoardCast.didHit = Physics.SphereCast(new Ray(hoverboardVisual.transform.TransformPoint(hoverBoardCast.localOrigin), hoverboardVisual.transform.rotation * hoverBoardCast.localDirection), hoverBoardCast.sphereRadius * scale, out var hitInfo, hoverBoardCast.distance * scale, hoverboardLocomotionLayers);
 			if (hoverBoardCast.didHit)
 			{
 				if (hitInfo.collider.TryGetComponent<HoverboardCantHover>(out var _))
@@ -1943,7 +1947,7 @@ public class GTPlayer : MonoBehaviour
 			}
 		}
 		hasHoverPoint = flag;
-		bodyCollider.enabled = (bodyCollider.transform.position - hoverboardVisual.transform.TransformPoint(GTPlayerTransform.Up * hoverBodyCollisionRadiusUpOffset)).IsLongerThan(hoverBodyHasCollisionsOutsideRadius);
+		bodyCollider.enabled = true;
 	}
 
 	private Vector3 HoverboardFixedUpdate(Vector3 velocity)
@@ -1966,11 +1970,13 @@ public class GTPlayer : MonoBehaviour
 			{
 				continue;
 			}
-			Vector3 vector3 = position + Vector3.Project(hoverBoardCast.pointHit - position, forward);
-			Vector3 vector4 = vector + Vector3.Project(hoverBoardCast.pointHit - position, forward);
-			bool num = hoverBoardCast.isSolid || Vector3.Dot(hoverBoardCast.normalHit, hoverBoardCast.pointHit - vector4) + hoverIdealHeight > 0f;
-			float num2 = (hoverBoardCast.isSolid ? (Vector3.Dot(hoverBoardCast.normalHit, hoverBoardCast.pointHit - hoverboardVisual.transform.TransformPoint(hoverBoardCast.localOrigin + hoverBoardCast.localDirection * hoverBoardCast.distance)) + hoverBoardCast.sphereRadius) : (Vector3.Dot(hoverBoardCast.normalHit, hoverBoardCast.pointHit - vector3) + hoverIdealHeight));
-			if (num)
+			Vector3 vector3 = forward * (hoverBoardCast.localOrigin.z * scale);
+			Vector3 vector4 = position + vector3;
+			Vector3 vector5 = vector + vector3;
+			float num = hoverIdealHeight * scale;
+			bool num2 = hoverBoardCast.isSolid || Vector3.Dot(hoverBoardCast.normalHit, hoverBoardCast.pointHit - vector5) + num > 0f;
+			float num3 = (hoverBoardCast.isSolid ? (Vector3.Dot(hoverBoardCast.normalHit, hoverBoardCast.pointHit - hoverboardVisual.transform.TransformPoint(hoverBoardCast.localOrigin + hoverBoardCast.localDirection * hoverBoardCast.distance)) + hoverBoardCast.sphereRadius * scale) : (Vector3.Dot(hoverBoardCast.normalHit, hoverBoardCast.pointHit - vector4) + num));
+			if (num2)
 			{
 				flag = true;
 				boostEnabledUntilTimestamp = Time.time + hoverboardBoostGracePeriod;
@@ -1978,69 +1984,70 @@ public class GTPlayer : MonoBehaviour
 				{
 					velocity = Vector3.ProjectOnPlane(velocity, hoverBoardCast.normalHit);
 				}
-				playerRigidBody.transform.position += hoverBoardCast.normalHit * num2;
-				Vector3 vector5 = turnParent.transform.rotation * (hoverboardVisual.IsLeftHanded ? leftHand.velocityTracker : rightHand.velocityTracker).GetAverageVelocity();
-				if (Vector3.Dot(vector5, hoverBoardCast.normalHit) < 0f)
+				playerRigidBody.position += num3 * hoverBoardCast.normalHit;
+				Vector3 vector6 = turnParent.transform.rotation * (hoverboardVisual.IsLeftHanded ? leftHand.velocityTracker : rightHand.velocityTracker).GetAverageVelocity() * scale;
+				if (Vector3.Dot(vector6, hoverBoardCast.normalHit) < 0f)
 				{
-					velocity -= Vector3.Project(vector5, hoverBoardCast.normalHit) * hoverSlamJumpStrengthFactor * Time.fixedDeltaTime;
+					velocity -= Vector3.Project(vector6, hoverBoardCast.normalHit) * hoverSlamJumpStrengthFactor * Time.fixedDeltaTime;
 				}
 				vector = position + velocity * Time.fixedDeltaTime;
 			}
 		}
 		float time = Mathf.Abs(Mathf.DeltaAngle(0f, Mathf.Acos(Vector3.Dot(hoverboardVisual.transform.up, Vector3.ProjectOnPlane(vector2, forward).normalized)) * 57.29578f));
-		float num3 = hoverCarveAngleResponsiveness.Evaluate(time);
+		float num4 = hoverCarveAngleResponsiveness.Evaluate(time);
 		forward = (forward + Vector3.ProjectOnPlane(hoverboardVisual.transform.up, vector2) * hoverTiltAdjustsForwardFactor).normalized;
 		if (!flag)
 		{
 			didHoverLastFrame = false;
-			num3 = 0f;
+			num4 = 0f;
 		}
-		Vector3 vector6 = velocity;
+		Vector3 vector7 = velocity;
 		if (enableHoverMode && hasHoverPoint)
 		{
-			Vector3 vector7 = Vector3.ProjectOnPlane(velocity, vector2);
-			Vector3 vector8 = velocity - vector7;
-			Vector3 vector9 = Vector3.Project(vector7, forward);
-			float num4 = vector7.magnitude;
-			if (num4 <= hoveringSlowSpeed)
+			Vector3 vector8 = Vector3.ProjectOnPlane(velocity, vector2);
+			Vector3 vector9 = velocity - vector8;
+			Vector3 vector10 = Vector3.Project(vector8, forward);
+			float num5 = vector8.magnitude;
+			if (num5 <= hoveringSlowSpeed * scale)
 			{
-				num4 *= hoveringSlowStoppingFactor;
+				num5 *= hoveringSlowStoppingFactor;
 			}
-			Vector3 vector10 = vector7 - vector9;
-			float num5 = 0f;
+			Vector3 vector11 = vector8 - vector10;
+			float num6 = 0f;
 			bool flag2 = false;
-			if (num3 > 0f)
+			if (num4 > 0f)
 			{
-				if (vector10.IsLongerThan(vector9))
+				if (vector11.IsLongerThan(vector10))
 				{
-					num5 = Mathf.Min((vector10.magnitude - vector9.magnitude) * hoverCarveSidewaysSpeedLossFactor * num3, num4);
-					if (num5 > 0f && num4 > hoverMinGrindSpeed)
+					num6 = Mathf.Min((vector11.magnitude - vector10.magnitude) * hoverCarveSidewaysSpeedLossFactor * num4, num5);
+					if (num6 > 0f && num5 > hoverMinGrindSpeed * scale)
 					{
 						flag2 = true;
 						hoverboardVisual.PlayGrindHaptic();
 					}
-					num4 -= num5;
+					num5 -= num6;
 				}
-				vector10 *= 1f - num3 * sidewaysDrag;
+				vector11 *= 1f - num4 * sidewaysDrag;
 				if (!leftHand.isColliding && !rightHand.isColliding)
 				{
-					velocity = (vector9 + vector10).normalized * num4 + vector8;
+					velocity = (vector10 + vector11).normalized * num5 + vector9;
 				}
 			}
 			else
 			{
-				velocity = vector7.normalized * num4 + vector8;
+				velocity = vector8.normalized * num5 + vector9;
 			}
-			float magnitude = (velocity - vector6).magnitude;
-			hoverboardAudio.UpdateAudioLoop(velocity.magnitude, bodyVelocityTracker.GetAverageVelocity(worldSpace: true).magnitude, magnitude, flag2 ? num5 : 0f);
+			float magnitude = (velocity - vector7).magnitude;
+			float num7 = 1f / scale;
+			hoverboardAudio.UpdateAudioLoop(velocity.magnitude * num7, bodyVelocityTracker.GetAverageVelocity(worldSpace: true).magnitude * num7, magnitude * num7, flag2 ? (num6 * num7) : 0f);
 			if (magnitude > 0f && !flag2)
 			{
-				hoverboardVisual.PlayCarveHaptic(magnitude);
+				hoverboardVisual.PlayCarveHaptic(magnitude * num7);
 			}
 		}
 		else
 		{
-			hoverboardAudio.UpdateAudioLoop(0f, bodyVelocityTracker.GetAverageVelocity(worldSpace: true).magnitude, 0f, 0f);
+			hoverboardAudio.UpdateAudioLoop(0f, bodyVelocityTracker.GetAverageVelocity(worldSpace: true).magnitude / scale, 0f, 0f);
 		}
 		return velocity;
 	}
@@ -2054,6 +2061,8 @@ public class GTPlayer : MonoBehaviour
 		hoverboardVisual.SetIsHeld(isLeftHand, pos, rot, col);
 		hoverboardVisual.ProxyGrabHandle(isLeftHand);
 		FreeHoverboardManager.instance.PreserveMaxHoverboardsConstraint(NetworkSystem.Instance.LocalPlayer.ActorNumber);
+		string skinDisplayName = ((CosmeticsController.instance != null) ? CosmeticsController.instance.currentWornSet.items[32].displayName : null);
+		FreeHoverboardManager.instance.SendHeldBoardSkinRPC(skinDisplayName);
 	}
 
 	public void AddHoverArea(HoverboardAreaTrigger area)
@@ -2252,7 +2261,8 @@ public class GTPlayer : MonoBehaviour
 			valueOrDefault = base.transform.position;
 			antiDriftLastPosition = valueOrDefault;
 		}
-		if ((double)(antiDriftLastPosition.Value - base.transform.position).sqrMagnitude < 1E-08)
+		float num = 0.0001f * scale;
+		if ((antiDriftLastPosition.Value - base.transform.position).sqrMagnitude < num * num)
 		{
 			base.transform.position = antiDriftLastPosition.Value;
 		}
@@ -2330,8 +2340,8 @@ public class GTPlayer : MonoBehaviour
 		{
 			movingSurfaceOffset = Vector3.zero;
 		}
-		float num = 40f * scale;
-		if (vector.sqrMagnitude >= num * num)
+		float num2 = 40f * scale;
+		if (vector.sqrMagnitude >= num2 * num2)
 		{
 			movingSurfaceOffset = Vector3.zero;
 			vector = Vector3.zero;
@@ -2350,7 +2360,7 @@ public class GTPlayer : MonoBehaviour
 			base.transform.position = base.transform.position + slideVelocity * calcDeltaTime;
 			slideVelocity += 9.8f * GTPlayerTransform.PhysicsDown * calcDeltaTime * scale;
 		}
-		float paddleBoostFactor = ((Time.time > boostEnabledUntilTimestamp) ? 0f : (Time.deltaTime * Mathf.Clamp(playerRigidBody.linearVelocity.magnitude * hoverboardPaddleBoostMultiplier, 0f, hoverboardPaddleBoostMax)));
+		float paddleBoostFactor = ((Time.time > boostEnabledUntilTimestamp) ? 0f : (Time.deltaTime * Mathf.Clamp(playerRigidBody.linearVelocity.magnitude / scale * hoverboardPaddleBoostMultiplier, 0f, hoverboardPaddleBoostMax)));
 		int divisor = 0;
 		Vector3 totalMove = Vector3.zero;
 		anyHandIsColliding = false;
@@ -2410,6 +2420,16 @@ public class GTPlayer : MonoBehaviour
 			TakeMyHand_ProcessMovement();
 		}
 		HandleTentacleMovement();
+		Vector3? vector3 = lastButtDebouncePosition;
+		if (vector3.HasValue)
+		{
+			Vector3 valueOrDefault2 = vector3.GetValueOrDefault();
+			if (IsGroundedButt && lastMovingSurfaceContact == MovingSurfaceContactPoint.NONE && Vector3.Distance(valueOrDefault2, base.transform.position) < 0.001f * base.transform.lossyScale.x)
+			{
+				base.transform.position = valueOrDefault2;
+			}
+		}
+		lastButtDebouncePosition = base.transform.position;
 		anyHandIsColliding = false;
 		anyHandIsSliding = false;
 		anyHandIsSticking = false;
@@ -2424,7 +2444,7 @@ public class GTPlayer : MonoBehaviour
 				GorillaTagger.Instance.SetExtraHandPosition((StiltID)j, handState.finalPositionThisFrame, handState.canTag, handState.canStun);
 			}
 		}
-		Vector3 vector3 = lastPosition;
+		Vector3 vector4 = lastPosition;
 		MovingSurfaceContactPoint movingSurfaceContactPoint = MovingSurfaceContactPoint.NONE;
 		int movingSurfaceId = -1;
 		int movingSurfaceId2 = -1;
@@ -2462,11 +2482,11 @@ public class GTPlayer : MonoBehaviour
 		StoreVelocities();
 		if (InWater)
 		{
-			PlayerGameEvents.PlayerSwam((lastPosition - vector3).magnitude, currentVelocity.magnitude);
+			PlayerGameEvents.PlayerSwam((lastPosition - vector4).magnitude, currentVelocity.magnitude);
 		}
 		else
 		{
-			PlayerGameEvents.PlayerMoved((lastPosition - vector3).magnitude, currentVelocity.magnitude);
+			PlayerGameEvents.PlayerMoved((lastPosition - vector4).magnitude, currentVelocity.magnitude);
 		}
 		didAJump = false;
 		bool flag2 = exitMovingSurface;
@@ -2479,21 +2499,21 @@ public class GTPlayer : MonoBehaviour
 		else if (anyHandIsSliding)
 		{
 			slideAverageNormal = Vector3.zero;
-			int num2 = 0;
+			int num3 = 0;
 			averageSlipPercentage = 0f;
 			bool flag3 = false;
 			if (leftHand.isSliding)
 			{
 				slideAverageNormal += leftHand.slideNormal.normalized;
 				averageSlipPercentage += leftHand.slipPercentage;
-				num2++;
+				num3++;
 			}
 			if (rightHand.isSliding)
 			{
 				flag3 = true;
 				slideAverageNormal += rightHand.slideNormal.normalized;
 				averageSlipPercentage += rightHand.slipPercentage;
-				num2++;
+				num3++;
 			}
 			for (int k = 0; k < stiltStates.Length; k++)
 			{
@@ -2505,12 +2525,12 @@ public class GTPlayer : MonoBehaviour
 					}
 					slideAverageNormal += stiltStates[k].slideNormal.normalized;
 					averageSlipPercentage += stiltStates[k].slipPercentage;
-					num2++;
+					num3++;
 				}
 			}
 			slideAverageNormal = slideAverageNormal.normalized;
-			averageSlipPercentage /= num2;
-			if (num2 == 1)
+			averageSlipPercentage /= num3;
+			if (num3 == 1)
 			{
 				surfaceDirection = (flag3 ? Vector3.ProjectOnPlane(rightHand.handFollower.forward, rightHand.slideNormal) : Vector3.ProjectOnPlane(leftHand.handFollower.forward, leftHand.slideNormal));
 				if (Vector3.Dot(slideVelocity, surfaceDirection) > 0f)
@@ -2562,9 +2582,9 @@ public class GTPlayer : MonoBehaviour
 					}
 					anyHandIsSliding = false;
 					didAJump = true;
-					float num3 = ApplyNativeScaleAdjustment(Mathf.Min(maxJumpSpeed * ExtraVelMaxMultiplier(), jumpMultiplier * ExtraVelMultiplier() * Vector3.Project(averagedVelocity, slideAverageNormal).magnitude));
-					playerRigidBody.linearVelocity = num3 * siJumpMultiplier * slideAverageNormal.normalized + Vector3.ProjectOnPlane(slideVelocity, slideAverageNormal);
-					if (num3 > slideVelocityLimit * scale * exitMovingSurfaceThreshold)
+					float num4 = ApplyNativeScaleAdjustment(Mathf.Min(maxJumpSpeed * ExtraVelMaxMultiplier(), jumpMultiplier * ExtraVelMultiplier() * Vector3.Project(averagedVelocity, slideAverageNormal).magnitude));
+					playerRigidBody.linearVelocity = num4 * siJumpMultiplier * slideAverageNormal.normalized + Vector3.ProjectOnPlane(slideVelocity, slideAverageNormal);
+					if (num4 > slideVelocityLimit * scale * exitMovingSurfaceThreshold)
 					{
 						exitMovingSurface = true;
 					}
@@ -2572,16 +2592,16 @@ public class GTPlayer : MonoBehaviour
 			}
 			else if (averagedVelocity.magnitude > velocityLimit * scale)
 			{
-				float num4 = ((InWater && CurrentWaterVolume != null) ? liquidPropertiesList[(int)CurrentWaterVolume.LiquidType].surfaceJumpFactor : 1f);
-				float num5 = ApplyNativeScaleAdjustment(enableHoverMode ? Mathf.Min(hoverMaxPaddleSpeed, averagedVelocity.magnitude) : Mathf.Min(maxJumpSpeed * ExtraVelMaxMultiplier(), jumpMultiplier * ExtraVelMultiplier() * num4 * averagedVelocity.magnitude));
-				Vector3 vector4 = num5 * siJumpMultiplier * averagedVelocity.normalized;
+				float num5 = ((InWater && CurrentWaterVolume != null) ? liquidPropertiesList[(int)CurrentWaterVolume.LiquidType].surfaceJumpFactor : 1f);
+				float num6 = ApplyNativeScaleAdjustment(enableHoverMode ? Mathf.Min(hoverMaxPaddleSpeed, averagedVelocity.magnitude) : Mathf.Min(maxJumpSpeed * ExtraVelMaxMultiplier(), jumpMultiplier * ExtraVelMultiplier() * num5 * averagedVelocity.magnitude));
+				Vector3 vector5 = num6 * siJumpMultiplier * averagedVelocity.normalized;
 				didAJump = true;
-				playerRigidBody.linearVelocity = vector4;
+				playerRigidBody.linearVelocity = vector5;
 				if (InWater)
 				{
-					swimmingVelocity += vector4 * GetSwimmingParams(CurrentWaterVolume).underwaterJumpsAsSwimVelocityFactor;
+					swimmingVelocity += vector5 * GetSwimmingParams(CurrentWaterVolume).underwaterJumpsAsSwimVelocityFactor;
 				}
-				if (num5 > velocityLimit * scale * exitMovingSurfaceThreshold)
+				if (num6 > velocityLimit * scale * exitMovingSurfaceThreshold)
 				{
 					exitMovingSurface = true;
 				}
@@ -2650,15 +2670,15 @@ public class GTPlayer : MonoBehaviour
 			GorillaTagger.Instance.StartVibration(forLeftController: false, GorillaTagger.Instance.tapHapticStrength, GorillaTagger.Instance.tapHapticDuration);
 		}
 		zero2 = Vector3.ClampMagnitude(zero2, Mathf.Max(swimmingParams.waterSurfaceJumpMaxSpeed, swimmingParams2.waterSurfaceJumpMaxSpeed) * scale);
-		float num6 = Mathf.Max(a, leftHandNonDiveHapticsAmount);
-		if (num6 > 0.001f && time - lastWaterSurfaceJumpTimeLeft > GorillaTagger.Instance.tapHapticDuration)
+		float num7 = Mathf.Max(a, leftHandNonDiveHapticsAmount);
+		if (num7 > 0.001f && time - lastWaterSurfaceJumpTimeLeft > GorillaTagger.Instance.tapHapticDuration)
 		{
-			GorillaTagger.Instance.DoVibration(XRNode.LeftHand, num6, calcDeltaTime);
+			GorillaTagger.Instance.DoVibration(XRNode.LeftHand, num7, calcDeltaTime);
 		}
-		float num7 = Mathf.Max(a2, rightHandNonDiveHapticsAmount);
-		if (num7 > 0.001f && time - lastWaterSurfaceJumpTimeRight > GorillaTagger.Instance.tapHapticDuration)
+		float num8 = Mathf.Max(a2, rightHandNonDiveHapticsAmount);
+		if (num8 > 0.001f && time - lastWaterSurfaceJumpTimeRight > GorillaTagger.Instance.tapHapticDuration)
 		{
-			GorillaTagger.Instance.DoVibration(XRNode.RightHand, num7, calcDeltaTime);
+			GorillaTagger.Instance.DoVibration(XRNode.RightHand, num8, calcDeltaTime);
 		}
 		if (!disableMovement)
 		{
@@ -2825,22 +2845,22 @@ public class GTPlayer : MonoBehaviour
 			lastMovingSurfaceRot = Quaternion.identity;
 		}
 		Vector3 position2 = lastMovingSurfaceTouchWorld;
-		int num8 = -1;
+		int num9 = -1;
 		bool flag5 = false;
 		switch (movingSurfaceContactPoint)
 		{
 		case MovingSurfaceContactPoint.RIGHT:
-			num8 = movingSurfaceId;
+			num9 = movingSurfaceId;
 			flag5 = isMonkeBlock;
 			position2 = GorillaTagger.Instance.offlineVRRig.rightHandTransform.position;
 			break;
 		case MovingSurfaceContactPoint.LEFT:
-			num8 = movingSurfaceId2;
+			num9 = movingSurfaceId2;
 			flag5 = isMonkeBlock2;
 			position2 = GorillaTagger.Instance.offlineVRRig.leftHandTransform.position;
 			break;
 		case MovingSurfaceContactPoint.BODY:
-			num8 = movingSurfaceId3;
+			num9 = movingSurfaceId3;
 			flag5 = isMonkeBlock3;
 			position2 = GorillaTagger.Instance.offlineVRRig.bodyTransform.position;
 			break;
@@ -2849,16 +2869,16 @@ public class GTPlayer : MonoBehaviour
 			{
 				exitMovingSurface = true;
 			}
-			num8 = -1;
+			num9 = -1;
 			break;
 		}
 		if (!flag5)
 		{
 			lastMonkeBlock = null;
 		}
-		if (num8 != lastMovingSurfaceID || lastMovingSurfaceContact != movingSurfaceContactPoint || flag5 != wasMovingSurfaceMonkeBlock)
+		if (num9 != lastMovingSurfaceID || lastMovingSurfaceContact != movingSurfaceContactPoint || flag5 != wasMovingSurfaceMonkeBlock)
 		{
-			if (num8 == -1)
+			if (num9 == -1)
 			{
 				if (Time.frameCount - lastAttachedToMovingSurfaceFrame > 3)
 				{
@@ -2870,8 +2890,8 @@ public class GTPlayer : MonoBehaviour
 			{
 				if (lastMonkeBlock != null)
 				{
-					VRRig.AttachLocalPlayerToMovingSurface(num8, movingSurfaceContactPoint == MovingSurfaceContactPoint.LEFT, movingSurfaceContactPoint == MovingSurfaceContactPoint.BODY, lastMonkeBlock.transform.InverseTransformPoint(position2), flag5);
-					lastMovingSurfaceID = num8;
+					VRRig.AttachLocalPlayerToMovingSurface(num9, movingSurfaceContactPoint == MovingSurfaceContactPoint.LEFT, movingSurfaceContactPoint == MovingSurfaceContactPoint.BODY, lastMonkeBlock.transform.InverseTransformPoint(position2), flag5);
+					lastMovingSurfaceID = num9;
 				}
 				else
 				{
@@ -2881,10 +2901,10 @@ public class GTPlayer : MonoBehaviour
 			}
 			else if (MovingSurfaceManager.instance != null)
 			{
-				if (MovingSurfaceManager.instance.TryGetMovingSurface(num8, out var result))
+				if (MovingSurfaceManager.instance.TryGetMovingSurface(num9, out var result))
 				{
-					VRRig.AttachLocalPlayerToMovingSurface(num8, movingSurfaceContactPoint == MovingSurfaceContactPoint.LEFT, movingSurfaceContactPoint == MovingSurfaceContactPoint.BODY, result.transform.InverseTransformPoint(position2), flag5);
-					lastMovingSurfaceID = num8;
+					VRRig.AttachLocalPlayerToMovingSurface(num9, movingSurfaceContactPoint == MovingSurfaceContactPoint.LEFT, movingSurfaceContactPoint == MovingSurfaceContactPoint.BODY, result.transform.InverseTransformPoint(position2), flag5);
+					lastMovingSurfaceID = num9;
 				}
 				else
 				{
@@ -2915,14 +2935,6 @@ public class GTPlayer : MonoBehaviour
 				SetNativeScale(null);
 			}
 		}
-		TakeMyHand_HandLink grabbedLink = VRRig.LocalRig.leftHandLink.grabbedLink;
-		if (grabbedLink != null)
-		{
-			_ = PhotonNetwork.Time;
-			_ = LastHandTouchedGroundAtNetworkTime;
-			_ = PhotonNetwork.Time;
-			_ = grabbedLink.myRig.LastHandTouchedGroundAtNetworkTime;
-		}
 		if (didAJump || anyHandIsColliding || anyHandIsSliding || anyHandIsSticking || IsGroundedHand || forceRBSync)
 		{
 			playerRigidBody.position = base.transform.position;
@@ -2933,9 +2945,9 @@ public class GTPlayer : MonoBehaviour
 
 	private float ApplyNativeScaleAdjustment(float adjustedMagnitude)
 	{
-		if (nativeScale > 0f && nativeScale != 1f)
+		if (nativeScale > 0f && !Mathf.Approximately(nativeScale, 1f))
 		{
-			return adjustedMagnitude *= nativeScaleMagnitudeAdjustmentFactor.Evaluate(nativeScale);
+			adjustedMagnitude *= nativeScaleMagnitudeAdjustmentFactor.Evaluate(nativeScale);
 		}
 		return adjustedMagnitude;
 	}
@@ -2960,7 +2972,7 @@ public class GTPlayer : MonoBehaviour
 		return 0f;
 	}
 
-	private void stuckHandsCheckFixedUpdate()
+	private void StuckHandsCheckFixedUpdate()
 	{
 		Vector3 currentHandPosition = leftHand.GetCurrentHandPosition();
 		stuckLeft = !controllerState.LeftValid || (leftHand.isColliding && (currentHandPosition - leftHand.GetLastPosition()).magnitude > unStickDistance * scale && !Physics.Raycast(headCollider.transform.position, (currentHandPosition - headCollider.transform.position).normalized, (currentHandPosition - headCollider.transform.position).magnitude, locomotionEnabledLayers.value));

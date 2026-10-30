@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Bakery lightmap group")]
+[CreateAssetMenu(menuName = "Bakery Lightmap Group")]
 public class BakeryLightmapGroup : ScriptableObject
 {
 	public enum ftLMGroupMode

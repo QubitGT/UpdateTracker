@@ -1,6 +1,7 @@
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Actor Deposit")]
 public class CrittersActorDeposit : MonoBehaviour
 {
 	public CrittersActor attachPoint;

@@ -5,6 +5,7 @@ using GorillaNetworking;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Body Dock Positions")]
 public class BodyDockPositions : MonoBehaviour
 {
 	[Flags]

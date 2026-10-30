@@ -5,6 +5,7 @@ using Photon.Pun;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Sentient Core")]
 public class GRSentientCore : MonoBehaviour, IGRSleepableEntity
 {
 	public enum SentientCoreState

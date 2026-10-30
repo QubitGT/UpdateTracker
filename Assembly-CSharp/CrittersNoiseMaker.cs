@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Noise Maker")]
 public class CrittersNoiseMaker : CrittersToolThrowable
 {
 	[Header("Noise Maker")]

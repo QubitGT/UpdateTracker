@@ -2,6 +2,7 @@ using System;
 using GorillaTagScripts.GhostReactor;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Recycler")]
 public class GRRecycler : MonoBehaviourTick
 {
 	private GameEntity gameEntity;

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Line Renderer Update Target")]
 public class LineRendererUpdateTarget : MonoBehaviourPostTick
 {
 	private LineRenderer lineRenderer;

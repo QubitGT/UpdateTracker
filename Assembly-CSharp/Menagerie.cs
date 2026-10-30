@@ -8,6 +8,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Critters/Menagerie")]
 public class Menagerie : MonoBehaviour
 {
 	public class CritterData

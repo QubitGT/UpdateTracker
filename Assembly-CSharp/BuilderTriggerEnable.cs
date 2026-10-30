@@ -18,7 +18,7 @@ public class BuilderTriggerEnable : MonoBehaviour
 			return;
 		}
 		VRRig component = other.attachedRigidbody.gameObject.GetComponent<VRRig>();
-		if (component == null || component.OwningNetPlayer == null || !component.OwningNetPlayer.IsLocal)
+		if (component == null || component.Creator == null || !component.Creator.IsLocal)
 		{
 			return;
 		}
@@ -52,7 +52,7 @@ public class BuilderTriggerEnable : MonoBehaviour
 			return;
 		}
 		VRRig component = other.attachedRigidbody.gameObject.GetComponent<VRRig>();
-		if (component == null || component.OwningNetPlayer == null || !component.OwningNetPlayer.IsLocal)
+		if (component == null || component.Creator == null || !component.Creator.IsLocal)
 		{
 			return;
 		}

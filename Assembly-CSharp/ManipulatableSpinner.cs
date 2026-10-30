@@ -2,6 +2,7 @@ using Unity.Mathematics;
 using UnityEngine;
 
 [RequireComponent(typeof(BezierSpline))]
+[AddComponentMenu("GorillaTag/Cosmetics/Manipulatable Spinner")]
 public class ManipulatableSpinner : ManipulatableObject
 {
 	public float breakDistance = 0.2f;

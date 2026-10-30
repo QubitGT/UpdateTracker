@@ -3,6 +3,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Environment/ID Card Scanner")]
 public class IDCardScanner : MonoBehaviour
 {
 	public delegate void CardSwipeEvent(int actorNumber);
@@ -41,7 +42,7 @@ public class IDCardScanner : MonoBehaviour
 		if (component != null && component.heldByActorNumber != -1)
 		{
 			bool num = !requireSpecificPlayer || (restrictToPlayer != null && restrictToPlayer.ActorNumber == component.heldByActorNumber && component.heldByActorNumber == PhotonNetwork.LocalPlayer.ActorNumber);
-			bool flag = !requireAuthority || component.manager.IsAuthority();
+			bool flag = !requireAuthority || component.IsAuthority();
 			if (num && flag)
 			{
 				onCardSwipedByPlayer?.Invoke(component.heldByActorNumber);

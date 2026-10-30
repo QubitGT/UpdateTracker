@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Elevator Button")]
 public class GRElevatorButton : MonoBehaviour
 {
 	public GRElevator.ButtonType buttonType;

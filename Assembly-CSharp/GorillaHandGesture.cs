@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Hand Gesture", menuName = "Gorilla/Hand Gesture")]
+[CreateAssetMenu(fileName = "New Hand Gesture", menuName = "GorillaTag/Cosmetics/Hand Gesture")]
 public class GorillaHandGesture : ScriptableObject
 {
 	public bool track = true;

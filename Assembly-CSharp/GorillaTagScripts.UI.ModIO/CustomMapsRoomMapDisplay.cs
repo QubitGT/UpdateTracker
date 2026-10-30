@@ -67,6 +67,8 @@ public class CustomMapsRoomMapDisplay : MonoBehaviour
 		CustomMapManager.OnRoomMapChanged.AddListener(OnRoomMapChanged);
 		CustomMapManager.OnMapLoadStatusChanged.AddListener(OnMapLoadProgress);
 		CustomMapManager.OnMapLoadComplete.AddListener(OnMapLoadComplete);
+		CustomMapManager.OnFeaturedMapChanged.AddListener(OnRoomMapChanged);
+		UpdateRoomMap();
 	}
 
 	public void OnDestroy()
@@ -76,6 +78,7 @@ public class CustomMapsRoomMapDisplay : MonoBehaviour
 		CustomMapManager.OnRoomMapChanged.RemoveListener(OnRoomMapChanged);
 		CustomMapManager.OnMapLoadStatusChanged.RemoveListener(OnMapLoadProgress);
 		CustomMapManager.OnMapLoadComplete.RemoveListener(OnMapLoadComplete);
+		CustomMapManager.OnFeaturedMapChanged.RemoveListener(OnRoomMapChanged);
 	}
 
 	private void OnJoinedRoom()
@@ -96,6 +99,10 @@ public class CustomMapsRoomMapDisplay : MonoBehaviour
 	private async Task UpdateRoomMap()
 	{
 		ModId currentRoomMap = CustomMapManager.GetRoomMapId();
+		if (currentRoomMap == ModId.Null)
+		{
+			currentRoomMap = CustomMapManager.GetFeaturedMapId();
+		}
 		if (currentRoomMap == ModId.Null)
 		{
 			roomMapNameText.text = noRoomMapString;

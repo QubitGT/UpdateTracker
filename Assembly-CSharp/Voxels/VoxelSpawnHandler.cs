@@ -70,14 +70,14 @@ public class VoxelSpawnHandler : MonoBehaviour, IGameEntityComponent
 		RegisterSpawnables();
 		entity.manager.OnAuthorityChanged += OnAuthorityChanged;
 		entity.manager.OnZoneActiveChanged += OnZoneActiveChanged;
-		SetIsAuthority(entity.manager.IsAuthority());
+		SetIsAuthority(entity.IsAuthority());
 		SetZoneActive(entity.manager.IsZoneActive());
 	}
 
 	public void OnEntityDestroy()
 	{
 		entity.manager.OnAuthorityChanged -= OnAuthorityChanged;
-		entity.manager.OnZoneActiveChanged += OnZoneActiveChanged;
+		entity.manager.OnZoneActiveChanged -= OnZoneActiveChanged;
 	}
 
 	public void OnEntityStateChange(long prevState, long newState)

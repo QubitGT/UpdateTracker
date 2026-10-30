@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Rotate Xform")]
 public class RotateXform : MonoBehaviour
 {
 	public enum Mode

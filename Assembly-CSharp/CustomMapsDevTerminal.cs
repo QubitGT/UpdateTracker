@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using GorillaNetworking;
-using GorillaTagScripts.Subscription.AlarmClocks;
 using GorillaTagScripts.VirtualStumpCustomMaps;
 using GorillaTagScripts.VirtualStumpCustomMaps.UI;
 using Modio;
@@ -11,9 +10,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Dev Terminal")]
 public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 {
-	[Tooltip("Everything visible (monitor, text, buttons). Turned on only when the player may use the terminal.")]
+	[Tooltip("Everything visible on the Dev page.")]
 	[SerializeField]
 	private GameObject contentRoot;
 
@@ -76,11 +76,6 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 	[SerializeField]
 	private CustomMapsScreenButton returnToPositionButton;
 
-	[Header("In-room screen (shown instead of the browser while in any networked room)")]
-	[Tooltip("Shown when the player is in a room; the dev terminal is singleplayer-only. Disconnecting back to singleplayer is handled by the existing world path, not this screen.")]
-	[SerializeField]
-	private GameObject inRoomScreen;
-
 	[Tooltip("Minimum seconds between refreshes from the refresh button; the list crawls every page of /me/mods.")]
 	[SerializeField]
 	private float refreshCooldown = 5f;
@@ -109,7 +104,7 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 
 	private bool showingDetails;
 
-	private bool showingInRoom;
+	private bool isShown;
 
 	private ModId detailsLogoMapId = ModId.Null;
 
@@ -123,13 +118,15 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 
 	private bool isRefreshing;
 
+	private bool isAvailable;
+
 	private bool isVisible;
 
 	private float lastManualRefreshTime = float.MinValue;
 
 	private string statusMessage = "";
 
-	private const string StumpAlarmClockKey = "virtualStumpCustom";
+	public bool IsAvailable => isAvailable;
 
 	private int MapsPerPage
 	{
@@ -149,6 +146,24 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 	{
 	}
 
+	public override void Show()
+	{
+		isShown = true;
+		showTime = Time.time;
+		ShowBrowseScreen();
+		statusMessage = "";
+		displayedPage = -1;
+		UpdateVisibility();
+		Redraw();
+	}
+
+	public override void Hide()
+	{
+		isShown = false;
+		showTime = 0f;
+		UpdateVisibility();
+	}
+
 	private void Awake()
 	{
 		if (detailsThumbnail != null)
@@ -164,7 +179,7 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 			watchText.overflowMode = TextOverflowModes.Overflow;
 		}
 		ShowBrowseScreen();
-		SetVisible(visible: false);
+		UpdateVisibility();
 		CustomMapDevWatchMode.OnWatchStarted.AddListener(ForwardWatchStarted);
 		CustomMapDevWatchMode.OnWatchStopped.AddListener(ForwardWatchStopped);
 		CustomMapDevWatchMode.OnReturnToPositionChanged.AddListener(ForwardReturnToPositionChanged);
@@ -194,7 +209,6 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 
 	private void OnEnable()
 	{
-		AlarmClockManager.OnActiveKeyChanged += HandleActiveAlarmChanged;
 		CustomMapManager.OnMapLoadStatusChanged.AddListener(OnMapLoadStatusChanged);
 		CustomMapManager.OnMapLoadComplete.AddListener(OnMapLoadComplete);
 		CustomMapManager.OnMapUnloadComplete.AddListener(OnMapUnloadComplete);
@@ -205,14 +219,13 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 		CustomMapDevWatchMode.OnWatchStarted.AddListener(OnWatchChanged);
 		CustomMapDevWatchMode.OnWatchStopped.AddListener(OnWatchChanged);
 		CustomMapDevWatchMode.OnReturnToPositionChanged.AddListener(OnReturnToPositionChanged);
-		NetworkSystem.Instance.OnJoinedRoomEvent += new Action(OnRoomStateChanged);
-		NetworkSystem.Instance.OnReturnedToSinglePlayer += new Action(OnRoomStateChanged);
+		UGCPermissionManager.SubscribeToUGCEnabled(OnUGCAccessChanged);
+		UGCPermissionManager.SubscribeToUGCDisabled(OnUGCAccessChanged);
 		RefreshAvailability(forceRefresh: false);
 	}
 
 	private void OnDisable()
 	{
-		AlarmClockManager.OnActiveKeyChanged -= HandleActiveAlarmChanged;
 		CustomMapManager.OnMapLoadStatusChanged.RemoveListener(OnMapLoadStatusChanged);
 		CustomMapManager.OnMapLoadComplete.RemoveListener(OnMapLoadComplete);
 		CustomMapManager.OnMapUnloadComplete.RemoveListener(OnMapUnloadComplete);
@@ -223,28 +236,20 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 		CustomMapDevWatchMode.OnWatchStarted.RemoveListener(OnWatchChanged);
 		CustomMapDevWatchMode.OnWatchStopped.RemoveListener(OnWatchChanged);
 		CustomMapDevWatchMode.OnReturnToPositionChanged.RemoveListener(OnReturnToPositionChanged);
-		NetworkSystem.Instance.OnJoinedRoomEvent -= new Action(OnRoomStateChanged);
-		NetworkSystem.Instance.OnReturnedToSinglePlayer -= new Action(OnRoomStateChanged);
+		UGCPermissionManager.UnsubscribeFromUGCEnabled(OnUGCAccessChanged);
+		UGCPermissionManager.UnsubscribeFromUGCDisabled(OnUGCAccessChanged);
 		CustomMapNetworkJoinTrigger.SuppressJoins = false;
 		refreshRequestId++;
 		isRefreshing = false;
-		SetVisible(visible: false);
+		isShown = false;
+		SetAvailable(available: false);
 	}
 
 	private static bool MeetsEntryRequirements()
 	{
-		if (IsStumpAlarmSet())
+		if (!UGCPermissionManager.IsUGCDisabled)
 		{
 			return IsLinkedToModIO();
-		}
-		return false;
-	}
-
-	private static bool IsStumpAlarmSet()
-	{
-		if (AlarmClockManager.Instance != null)
-		{
-			return AlarmClockManager.Instance.ActiveKey == "virtualStumpCustom";
 		}
 		return false;
 	}
@@ -265,21 +270,9 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 		{
 			ownMaps.Clear();
 			isRefreshing = false;
-			SetVisible(visible: false);
+			SetAvailable(available: false);
 			CustomMapDevWatchMode.StopWatching();
 			return;
-		}
-		if (IsInRoom())
-		{
-			CustomMapDevWatchMode.StopWatching();
-			isRefreshing = false;
-			SetVisible(visible: true);
-			ShowInRoomScreen();
-			return;
-		}
-		if (showingInRoom)
-		{
-			ShowBrowseScreen();
 		}
 		isRefreshing = true;
 		Redraw();
@@ -292,13 +285,13 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 		if (!MeetsEntryRequirements())
 		{
 			ownMaps.Clear();
-			SetVisible(visible: false);
+			SetAvailable(available: false);
 			CustomMapDevWatchMode.StopWatching();
 			return;
 		}
 		if ((bool)error)
 		{
-			if (isVisible)
+			if (isAvailable)
 			{
 				statusMessage = "COULDN'T REFRESH YOUR MAPS: " + error.GetMessage();
 				Redraw();
@@ -329,23 +322,29 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 			CustomMapDevWatchMode.StopWatching();
 		}
 		statusMessage = "";
-		SetVisible(ownMaps.Count > 0);
+		SetAvailable(ownMaps.Count > 0);
 		displayedPage = -1;
 		Redraw();
 	}
 
-	private void SetVisible(bool visible)
+	private void SetAvailable(bool available)
 	{
-		isVisible = visible;
-		if (contentRoot != null && contentRoot.activeSelf != visible)
+		isAvailable = available;
+		UpdateVisibility();
+		if (!available && isShown)
 		{
-			contentRoot.SetActive(visible);
+			CustomMapsTerminal.OnDevScreenUnavailable();
 		}
-		if (visible)
+	}
+
+	private void UpdateVisibility()
+	{
+		bool flag = (isVisible = isShown && isAvailable);
+		if (contentRoot != null && contentRoot.activeSelf != flag)
 		{
-			showTime = Time.time;
+			contentRoot.SetActive(flag);
 		}
-		else
+		if (!flag)
 		{
 			displayedPage = -1;
 		}
@@ -353,49 +352,56 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 
 	public override void PressButton(CustomMapKeyboardBinding pressedButton)
 	{
-		if (!isVisible || Time.time < showTime + activationTime || showingInRoom)
+		if (pressedButton == CustomMapKeyboardBinding.dev)
 		{
-			return;
+			CustomMapsTerminal.ToggleDevScreen();
 		}
-		if (pressedButton == CustomMapKeyboardBinding.option3)
+		else
 		{
-			ManualRefresh();
-			return;
-		}
-		if (!showingDetails)
-		{
-			if (CustomMapsListScreen.TryGetTileIndex(pressedButton, out var tileIndex))
+			if (!isVisible || Time.time < showTime + activationTime || !CustomMapsTerminal.IsDriver)
 			{
-				OpenDetailsForTile(tileIndex);
+				return;
+			}
+			if (pressedButton == CustomMapKeyboardBinding.option3)
+			{
+				ManualRefresh();
+				return;
+			}
+			if (!showingDetails)
+			{
+				if (CustomMapsListScreen.TryGetTileIndex(pressedButton, out var tileIndex))
+				{
+					OpenDetailsForTile(tileIndex);
+					return;
+				}
+				switch (pressedButton)
+				{
+				case CustomMapKeyboardBinding.up:
+					ChangePage(-1);
+					break;
+				case CustomMapKeyboardBinding.down:
+					ChangePage(1);
+					break;
+				}
 				return;
 			}
 			switch (pressedButton)
 			{
-			case CustomMapKeyboardBinding.up:
-				ChangePage(-1);
+			case CustomMapKeyboardBinding.goback:
+				ShowBrowseScreen();
+				statusMessage = "";
+				Redraw();
 				break;
-			case CustomMapKeyboardBinding.down:
-				ChangePage(1);
+			case CustomMapKeyboardBinding.enter:
+				LoadOrUnload();
+				break;
+			case CustomMapKeyboardBinding.option1:
+				ToggleWatch();
+				break;
+			case CustomMapKeyboardBinding.option2:
+				CustomMapDevWatchMode.SetReturnToPosition(!CustomMapDevWatchMode.ReturnToPosition);
 				break;
 			}
-			return;
-		}
-		switch (pressedButton)
-		{
-		case CustomMapKeyboardBinding.goback:
-			ShowBrowseScreen();
-			statusMessage = "";
-			Redraw();
-			break;
-		case CustomMapKeyboardBinding.enter:
-			LoadOrUnload();
-			break;
-		case CustomMapKeyboardBinding.option1:
-			ToggleWatch();
-			break;
-		case CustomMapKeyboardBinding.option2:
-			CustomMapDevWatchMode.SetReturnToPosition(!CustomMapDevWatchMode.ReturnToPosition);
-			break;
 		}
 	}
 
@@ -414,11 +420,6 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 	private void ShowBrowseScreen()
 	{
 		showingDetails = false;
-		showingInRoom = false;
-		if (inRoomScreen != null)
-		{
-			inRoomScreen.SetActive(value: false);
-		}
 		if (detailsScreen != null)
 		{
 			detailsScreen.SetActive(value: false);
@@ -432,11 +433,6 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 	private void ShowDetailsScreen()
 	{
 		showingDetails = true;
-		showingInRoom = false;
-		if (inRoomScreen != null)
-		{
-			inRoomScreen.SetActive(value: false);
-		}
 		if (browseScreen != null)
 		{
 			browseScreen.SetActive(value: false);
@@ -446,42 +442,6 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 			detailsScreen.SetActive(value: true);
 		}
 		showTime = Time.time;
-	}
-
-	private void ShowInRoomScreen()
-	{
-		showingDetails = false;
-		showingInRoom = true;
-		if (browseScreen != null)
-		{
-			browseScreen.SetActive(value: false);
-		}
-		if (detailsScreen != null)
-		{
-			detailsScreen.SetActive(value: false);
-		}
-		if (inRoomScreen != null)
-		{
-			inRoomScreen.SetActive(value: true);
-		}
-		showTime = Time.time;
-	}
-
-	private static bool IsInRoom()
-	{
-		if (NetworkSystem.Instance != null)
-		{
-			return NetworkSystem.Instance.InRoom;
-		}
-		return false;
-	}
-
-	private void OnRoomStateChanged()
-	{
-		if (base.isActiveAndEnabled)
-		{
-			RefreshAvailability(forceRefresh: false);
-		}
 	}
 
 	private void ChangePage(int delta)
@@ -505,9 +465,17 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 		}
 		if (CustomMapLoader.IsMapLoaded() || CustomMapManager.IsLoading())
 		{
-			VirtualStumpSerializer.Instance.UnloadMapSynced();
-			statusMessage = "UNLOADING MAP...";
-			Redraw();
+			if (!CustomMapManager.CanUnloadSharedMap())
+			{
+				statusMessage = "ALL PLAYERS MUST BE IN THE TENT BEFORE UNLOADING THE MAP.";
+				Redraw();
+			}
+			else
+			{
+				VirtualStumpSerializer.Instance.UnloadMapSynced();
+				statusMessage = "UNLOADING MAP...";
+				Redraw();
+			}
 			return;
 		}
 		Mod selectedMap = GetSelectedMap();
@@ -583,7 +551,7 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 
 	private void Redraw()
 	{
-		if (isVisible && !showingInRoom)
+		if (isVisible)
 		{
 			if (showingDetails)
 			{
@@ -843,7 +811,7 @@ public class CustomMapsDevTerminal : CustomMapsTerminalScreen
 		return FindMap(modId) != null;
 	}
 
-	private void HandleActiveAlarmChanged(string activeKey)
+	private void OnUGCAccessChanged()
 	{
 		RefreshAvailability(forceRefresh: false);
 	}

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New AudioMixVarPool", menuName = "ScriptableObjects/AudioMixVarPool", order = 0)]
+[CreateAssetMenu(fileName = "New AudioMixVarPool", menuName = "ScriptableObjects/Visuals and Audio/AudioMixVarPool", order = 0)]
 public class AudioMixVarPool : ScriptableObject
 {
 	[SerializeField]

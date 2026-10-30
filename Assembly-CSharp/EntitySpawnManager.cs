@@ -2,6 +2,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(GameEntity))]
 [RequireComponent(typeof(XSceneRefTarget))]
+[AddComponentMenu("GorillaTag/Game Entity/Entity Spawn Manager")]
 public class EntitySpawnManager : MonoBehaviour, IGameEntityComponent
 {
 	[SerializeField]

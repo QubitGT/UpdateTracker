@@ -1,9 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using ExitGames.Client.Photon;
-using Fusion;
 using Photon.Pun;
 using UnityEngine;
 
@@ -18,7 +14,7 @@ public static class NetCrossoverUtils
 		FixedBuffer = new byte[2048];
 	}
 
-	public static void WriteNetDataToBuffer<T>(this T data, PhotonStream stream) where T : struct, INetworkStruct
+	public static void WriteNetDataToBuffer<T>(this T data, PhotonStream stream) where T : struct
 	{
 		if (stream.IsReading)
 		{
@@ -44,7 +40,7 @@ public static class NetCrossoverUtils
 		}
 	}
 
-	public static object ReadNetDataFromBuffer<T>(PhotonStream stream) where T : struct, INetworkStruct
+	public static object ReadNetDataFromBuffer<T>(PhotonStream stream) where T : struct
 	{
 		if (stream.IsWriting)
 		{
@@ -132,15 +128,5 @@ public static class NetCrossoverUtils
 		{
 			Marshal.FreeHGlobal(intPtr);
 		}
-	}
-
-	public static Dictionary<string, SessionProperty> ToPropDict(this ExitGames.Client.Photon.Hashtable hash)
-	{
-		Dictionary<string, SessionProperty> dictionary = new Dictionary<string, SessionProperty>();
-		foreach (DictionaryEntry item in hash)
-		{
-			dictionary.Add((string)item.Key, (string)item.Value);
-		}
-		return dictionary;
 	}
 }

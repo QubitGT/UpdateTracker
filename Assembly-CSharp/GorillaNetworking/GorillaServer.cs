@@ -127,7 +127,7 @@ public class GorillaServer : MonoBehaviour, ISerializationCallbackReceiver
 			mothershipEnvId = MothershipClientApiUnity.EnvironmentId,
 			mothershipDeploymentId = MothershipClientApiUnity.DeploymentId
 		});
-		using UnityWebRequest www = new UnityWebRequest(PlayFabAuthenticatorSettings.IapApiBaseUrl + "/api/ReconcileBundleRewards", "POST");
+		using UnityWebRequest www = new UnityWebRequest(BackendApiUrl.Build(PlayFabAuthenticatorSettings.IapApiBaseUrl, "/api/ReconcileBundleRewards"), "POST");
 		www.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(s));
 		www.downloadHandler = new DownloadHandlerBuffer();
 		www.SetRequestHeader("Content-Type", "application/json");
@@ -173,7 +173,7 @@ public class GorillaServer : MonoBehaviour, ISerializationCallbackReceiver
 			mothershipDeploymentId = MothershipClientApiUnity.DeploymentId,
 			playFabItemId = playFabItemId
 		});
-		using UnityWebRequest www = new UnityWebRequest(PlayFabAuthenticatorSettings.IapApiBaseUrl + "/api/ClaimItem", "POST");
+		using UnityWebRequest www = new UnityWebRequest(BackendApiUrl.Build(PlayFabAuthenticatorSettings.IapApiBaseUrl, "/api/ClaimItem"), "POST");
 		www.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(s));
 		www.downloadHandler = new DownloadHandlerBuffer();
 		www.SetRequestHeader("Content-Type", "application/json");

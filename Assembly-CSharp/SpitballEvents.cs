@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Spitball Events")]
 public class SpitballEvents : SubEmitterListener
 {
 	[SerializeField]

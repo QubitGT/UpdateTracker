@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Video;
 
+[AddComponentMenu("GorillaTag/Environment/VOD Player")]
 public class VODPlayer : MonoBehaviour, IGorillaSliceableSimple
 {
 	public enum State
@@ -246,6 +247,7 @@ public class VODPlayer : MonoBehaviour, IGorillaSliceableSimple
 		GorillaSlicerSimpleManager.RegisterSliceable(this, GorillaSlicerSimpleManager.UpdateStep.Update);
 		VODTarget.AlertEnabled = (Action<VODTarget>)Delegate.Combine(VODTarget.AlertEnabled, new Action<VODTarget>(VODTarget_AlertEnabled));
 		VODTarget.AlertDisabled = (Action<VODTarget>)Delegate.Combine(VODTarget.AlertDisabled, new Action<VODTarget>(VODTarget_AlertDisabled));
+		VODTarget.RequestReplay = (Action<VODTarget>)Delegate.Combine(VODTarget.RequestReplay, new Action<VODTarget>(VODTarget_RequestReplay));
 		PlayerPrefFlags.OnFlagChange = (Action<PlayerPrefFlags.Flag, bool>)Delegate.Combine(PlayerPrefFlags.OnFlagChange, new Action<PlayerPrefFlags.Flag, bool>(PlayerPreFlagChange));
 		playerPrefMuted = PlayerPrefFlags.Check(PlayerPrefFlags.Flag.GTV_MUTED);
 		if (voiceChatPermRequiredList == null)
@@ -268,6 +270,12 @@ public class VODPlayer : MonoBehaviour, IGorillaSliceableSimple
 			}
 			waitOnServerTimeAndSchedule();
 		}
+	}
+
+	private void VODTarget_RequestReplay(VODTarget target)
+	{
+		Debug.Log("VODTarget_RequestReplay");
+		PlayPreviouStream(target, timeSync: false);
 	}
 
 	private void PlayerPreFlagChange(PlayerPrefFlags.Flag flag, bool v)
@@ -374,6 +382,7 @@ public class VODPlayer : MonoBehaviour, IGorillaSliceableSimple
 		player.loopPointReached -= Player_loopPointReached;
 		VODTarget.AlertEnabled = (Action<VODTarget>)Delegate.Remove(VODTarget.AlertEnabled, new Action<VODTarget>(VODTarget_AlertEnabled));
 		VODTarget.AlertDisabled = (Action<VODTarget>)Delegate.Remove(VODTarget.AlertDisabled, new Action<VODTarget>(VODTarget_AlertDisabled));
+		VODTarget.RequestReplay = (Action<VODTarget>)Delegate.Remove(VODTarget.RequestReplay, new Action<VODTarget>(VODTarget_RequestReplay));
 		PlayerPrefFlags.OnFlagChange = (Action<PlayerPrefFlags.Flag, bool>)Delegate.Remove(PlayerPrefFlags.OnFlagChange, new Action<PlayerPrefFlags.Flag, bool>(PlayerPreFlagChange));
 	}
 
@@ -381,6 +390,7 @@ public class VODPlayer : MonoBehaviour, IGorillaSliceableSimple
 	{
 		VODTarget.AlertEnabled = (Action<VODTarget>)Delegate.Remove(VODTarget.AlertEnabled, new Action<VODTarget>(VODTarget_AlertEnabled));
 		VODTarget.AlertDisabled = (Action<VODTarget>)Delegate.Remove(VODTarget.AlertDisabled, new Action<VODTarget>(VODTarget_AlertDisabled));
+		VODTarget.RequestReplay = (Action<VODTarget>)Delegate.Remove(VODTarget.RequestReplay, new Action<VODTarget>(VODTarget_RequestReplay));
 		PlayerPrefFlags.OnFlagChange = (Action<PlayerPrefFlags.Flag, bool>)Delegate.Remove(PlayerPrefFlags.OnFlagChange, new Action<PlayerPrefFlags.Flag, bool>(PlayerPreFlagChange));
 	}
 
@@ -579,27 +589,36 @@ public class VODPlayer : MonoBehaviour, IGorillaSliceableSimple
 
 	private void PlayPreviouStream()
 	{
+		PlayPreviouStream(null, timeSync: true);
+	}
+
+	private void PlayPreviouStream(VODTarget vTarget, bool timeSync)
+	{
 		DateTime serverTime = GorillaComputer.instance.GetServerTime();
 		int hour = serverTime.Hour;
 		int minute = serverTime.Minute;
 		DateTime dateTime = new DateTime(serverTime.Year, serverTime.Month, serverTime.Day, hour, minute, 0);
 		int num = -1;
-		List<VODStream.VODStreamChannel> priorityChannels = getPriorityChannels();
+		List<VODStream.VODStreamChannel> list = ((vTarget == null) ? getPriorityChannels() : new List<VODStream.VODStreamChannel>(vTarget.Channel));
 		for (int i = 0; i < schedule.hourly.Length; i++)
 		{
-			if (priorityChannels.Contains(schedule.hourly[i].stream.ch) && schedule.hourly[i].minute <= minute && schedule.hourly[i].IsDateInRange(serverTime))
+			if (list.Contains(schedule.hourly[i].stream.ch) && schedule.hourly[i].minute <= minute && (!timeSync || schedule.hourly[i].IsDateInRange(serverTime)))
 			{
 				num = i;
 			}
 		}
 		if (num >= 0)
 		{
-			int num2 = minute - schedule.hourly[num].minute;
-			StartPlayback(schedule.hourly[num].stream, serverTime.Subtract(dateTime.AddMinutes(-num2)).TotalSeconds);
+			double time = 0.0;
+			if (timeSync)
+			{
+				time = serverTime.Subtract(dateTime.AddMinutes(schedule.hourly[num].minute - minute)).TotalSeconds;
+			}
+			StartPlayback(schedule.hourly[num].stream, time);
 		}
 	}
 
-	private void StartPlayback(VODStream str, double time = 0.0)
+	private void StartPlayback(VODStream str, double time)
 	{
 		switch (str.type)
 		{
@@ -713,14 +732,14 @@ public class VODPlayer : MonoBehaviour, IGorillaSliceableSimple
 		}
 	}
 
-	private async void StartVideoPlayback(string url, string fileId, VODStream.VODStreamChannel ch, double time, string cachedUrl)
+	private async void StartVideoPlayback(string url, string fileId, VODStream.VODStreamChannel ch, double time, string cachedUrl, List<VODTarget> vodTargets = null)
 	{
 		if (playerBusy)
 		{
 			return;
 		}
 		playerBusy = true;
-		if (player.isPlaying)
+		if (player.isPlaying || vodTargets != null)
 		{
 			if (!getPriorityChannels().Contains(ch))
 			{
@@ -729,13 +748,26 @@ public class VODPlayer : MonoBehaviour, IGorillaSliceableSimple
 			}
 			player.Stop();
 		}
-		for (int i = 0; i < targets.Count; i++)
+		if (vodTargets == null)
 		{
-			if (targets[i].VerifyChannel(ch))
+			vodTargets = new List<VODTarget>();
+			for (int i = 0; i < targets.Count; i++)
 			{
-				targets[i].Renderer.material = busyMaterial;
-				targets[i].ClearNext();
+				if (targets[i].VerifyChannel(ch))
+				{
+					vodTargets.Add(targets[i]);
+				}
 			}
+		}
+		if (vodTargets.Count == 0)
+		{
+			playerBusy = false;
+			return;
+		}
+		for (int j = 0; j < vodTargets.Count; j++)
+		{
+			vodTargets[j].Renderer.material = busyMaterial;
+			vodTargets[j].ClearNext();
 		}
 		try
 		{
@@ -758,9 +790,9 @@ public class VODPlayer : MonoBehaviour, IGorillaSliceableSimple
 			if (time >= player.length || state != State.RUNNING)
 			{
 				playerBusy = false;
-				for (int j = 0; j < targets.Count; j++)
+				for (int k = 0; k < vodTargets.Count; k++)
 				{
-					targets[j].Renderer.material = getStandby(targets[j]);
+					vodTargets[k].Renderer.material = getStandby(vodTargets[k]);
 				}
 				return;
 			}
@@ -776,12 +808,9 @@ public class VODPlayer : MonoBehaviour, IGorillaSliceableSimple
 		{
 			Debug.LogException(exception);
 		}
-		for (int k = 0; k < targets.Count; k++)
+		for (int l = 0; l < vodTargets.Count; l++)
 		{
-			if (targets[k].VerifyChannel(ch))
-			{
-				targets[k].Renderer.material = playBackMaterial;
-			}
+			vodTargets[l].Renderer.material = playBackMaterial;
 		}
 		playerBusy = false;
 	}

@@ -10,6 +10,7 @@ using Modio.Users;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Virtual Stump Options Terminal")]
 public class VirtualStumpOptionsTerminal : MonoBehaviour, IWssAuthPrompter
 {
 	private enum ETerminalState

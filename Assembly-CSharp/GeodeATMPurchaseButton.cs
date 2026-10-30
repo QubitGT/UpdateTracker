@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Geode ATM Purchase Button")]
 public class GeodeATMPurchaseButton : GorillaPressableButton
 {
 	public float buttonFadeTime = 0.25f;

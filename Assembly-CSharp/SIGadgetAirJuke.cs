@@ -5,6 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(GameGrabbable))]
 [RequireComponent(typeof(GameSnappable))]
 [RequireComponent(typeof(GameButtonActivatable))]
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Air Juke")]
 public class SIGadgetAirJuke : SIGadget
 {
 	private const string preLog = "[SIGadgetAirJuke]  ";

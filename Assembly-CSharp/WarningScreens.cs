@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/Warning Screens")]
 public class WarningScreens : MonoBehaviour
 {
 	private static WarningScreens _activeReference;

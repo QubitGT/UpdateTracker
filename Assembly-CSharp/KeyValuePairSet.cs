@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New KeyValuePairSet", menuName = "Data/KeyValuePairSet", order = 0)]
+[CreateAssetMenu(fileName = "New KeyValuePairSet", menuName = "ScriptableObjects/Data/KeyValuePairSet", order = 0)]
 public class KeyValuePairSet : ScriptableObject
 {
 	[SerializeField]

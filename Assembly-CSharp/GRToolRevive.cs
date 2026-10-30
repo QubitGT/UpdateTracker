@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.XR;
 
 [RequireComponent(typeof(GameEntity))]
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Revive")]
 public class GRToolRevive : MonoBehaviour
 {
 	private enum State

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Monke Vote Proximity Trigger")]
 public class MonkeVoteProximityTrigger : GorillaTriggerBox
 {
 	private float triggerTime = float.MinValue;

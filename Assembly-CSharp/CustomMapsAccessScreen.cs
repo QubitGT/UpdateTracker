@@ -2,6 +2,7 @@ using GorillaNetworking;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Access Screen")]
 public class CustomMapsAccessScreen : CustomMapsTerminalScreen
 {
 	[SerializeField]

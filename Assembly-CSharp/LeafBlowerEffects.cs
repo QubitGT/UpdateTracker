@@ -4,6 +4,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Leaf Blower Effects")]
 public class LeafBlowerEffects : MonoBehaviour, ISpawnable
 {
 	[SerializeField]

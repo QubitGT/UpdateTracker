@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Shopping Cart")]
 public class ShoppingCart : MonoBehaviour
 {
 	[OnEnterPlay_SetNull]

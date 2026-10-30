@@ -99,6 +99,8 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 
 	private static Task<ModId> pendingFeaturedMapFetch;
 
+	private static ModId pendingFeaturedMapId = ModId.Null;
+
 	private static ModId pendingRoomChangeReloadModId = ModId.Null;
 
 	private static bool customMapDefaultZoneShaderSettingsInitialized;
@@ -189,6 +191,8 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 
 	public static UnityEvent OnMapEntered = new UnityEvent();
 
+	public static UnityEvent<ModId> OnFeaturedMapChanged = new UnityEvent<ModId>();
+
 	private const ModChangeType ModFileProgressChanges = ModChangeType.DownloadProgress | ModChangeType.FileState;
 
 	private const string PreparingMessage = "PREPARING MAP";
@@ -201,6 +205,8 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 
 	private const string InstallingMessage = "INSTALLING MAP FILES";
 
+	public const string PlayersInMapMessage = "ALL PLAYERS MUST BE IN THE TENT BEFORE UNLOADING THE MAP.";
+
 	private const float MaxCuratedPrefetchWaitSeconds = 600f;
 
 	private const int CuratedPrefetchPollIntervalMs = 2000;
@@ -212,6 +218,12 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 	private static bool curatedPrefetchRunning;
 
 	private static bool inVStumpOrVHallway;
+
+	private static MapLoadStatus lastLoggedLoadStatus;
+
+	private static string lastLoggedLoadMessage;
+
+	public static bool IsInVStumpOrVHallway => inVStumpOrVHallway;
 
 	public static bool WaitingForRoomJoin => waitingForRoomJoin;
 
@@ -610,6 +622,39 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 		}
 	}
 
+	private static void EnterVStumpGamemode(VirtualStumpTeleporter teleporter)
+	{
+		if (GorillaComputer.hasInstance)
+		{
+			if (preVStumpGamemode == "")
+			{
+				preVStumpGamemode = GorillaComputer.instance.currentGameMode.Value;
+			}
+			GameModeType gameModeType = CustomMapModeSelector.DefaultGamemodeForLoadedMap;
+			if (teleporter.IsNotNull() && teleporter.GetAutoLoadGamemode() != GameModeType.None && teleporter.GetAutoLoadGamemode() != GameModeType.Count)
+			{
+				gameModeType = teleporter.GetAutoLoadGamemode();
+			}
+			GorillaComputer.instance.SetGameModeWithoutButton(gameModeType.ToString());
+		}
+	}
+
+	private static void RestorePreVStumpGamemode(bool applyTeleporterReturnMode)
+	{
+		if (!(preVStumpGamemode == "") && GorillaComputer.hasInstance)
+		{
+			if (applyTeleporterReturnMode && lastUsedTeleporter.IsNotNull() && lastUsedTeleporter.GetReturnGamemode() != GameModeType.None && lastUsedTeleporter.GetReturnGamemode() != GameModeType.Count)
+			{
+				GorillaComputer.instance.SetGameModeWithoutButton(lastUsedTeleporter.GetReturnGamemode().ToString());
+			}
+			else
+			{
+				GorillaComputer.instance.SetGameModeWithoutButton(preVStumpGamemode);
+			}
+			preVStumpGamemode = "";
+		}
+	}
+
 	internal static void TeleportToVirtualStump(VirtualStumpTeleporter fromTeleporter, Action<bool> callback)
 	{
 		if (!UGCPermissionManager.HasNoMapAccess)
@@ -624,6 +669,7 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 			activateHasAutoLoadOverride = false;
 			activateIsActive = false;
 			ActivateVStumpRoot();
+			EnterVStumpGamemode(fromTeleporter);
 			instance.StartCoroutine(Internal_TeleportToVirtualStump(fromTeleporter, callback));
 		}
 	}
@@ -631,15 +677,49 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 	public static void EnterVHallway(VirtualStumpActivateMode mode)
 	{
 		ActivateVStumpRoot();
+		if (hasInstance)
+		{
+			EnterVStumpGamemode(instance.defaultTeleporter);
+		}
 		SetFeaturedMapObjectsHidden(mode != VirtualStumpActivateMode.Custom);
 		pendingActivateMode = mode;
+		pendingFeaturedMapId = ModId.Null;
 		pendingFeaturedMapFetch = ResolveFeaturedMapForMode(mode);
+		TrackPendingFeaturedMap(pendingFeaturedMapFetch);
+	}
+
+	private static async void TrackPendingFeaturedMap(Task<ModId> fetch)
+	{
+		ModId arg = await fetch;
+		if (fetch == pendingFeaturedMapFetch)
+		{
+			pendingFeaturedMapId = arg;
+			OnFeaturedMapChanged.Invoke(arg);
+		}
+	}
+
+	public static ModId GetFeaturedMapId()
+	{
+		if (IsFeaturedMapLocked())
+		{
+			return FeaturedLockedMapId;
+		}
+		if (pendingActivateMode == VirtualStumpActivateMode.Custom)
+		{
+			return ModId.Null;
+		}
+		return pendingFeaturedMapId;
 	}
 
 	private static void ClearPendingActivateMode()
 	{
 		pendingActivateMode = VirtualStumpActivateMode.Custom;
 		pendingFeaturedMapFetch = null;
+		if (pendingFeaturedMapId != ModId.Null)
+		{
+			pendingFeaturedMapId = ModId.Null;
+			OnFeaturedMapChanged.Invoke(ModId.Null);
+		}
 	}
 
 	public static void EnterVStump()
@@ -678,41 +758,47 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 
 	public static async void Activate(VirtualStumpActivateMode mode, bool hasEntryTeleportNode = true)
 	{
-		if (!UGCPermissionManager.HasNoMapAccess && hasInstance && !activateIsActive)
+		if (UGCPermissionManager.HasNoMapAccess || !hasInstance || activateIsActive)
 		{
-			activateIsActive = true;
-			activateCurrentMode = mode;
-			EnterVirtualStumpZone();
-			ActivateVStumpRoot();
-			SetFeaturedMapObjectsHidden(IsInFeaturedMode());
-			if (GorillaComputer.hasInstance)
-			{
-				GorillaComputer.instance.SetVStumpRoomModePrefix(GetActivateRoomModePrefix());
-			}
-			ModId modId = await ((pendingFeaturedMapFetch != null && pendingActivateMode == mode) ? pendingFeaturedMapFetch : ResolveFeaturedMapForMode(mode));
-			if (!hasInstance)
-			{
-				activateIsActive = false;
-				return;
-			}
-			if (!activateIsActive)
-			{
-				GTDev.Log("[CustomMapManager::Activate] Entry was cancelled while resolving the featured map; not activating.");
-				return;
-			}
-			if (instance.defaultTeleporter.IsNull())
-			{
-				GTDev.LogError("[CustomMapManager::Activate] Default Teleporter is not set; cannot activate.");
-				activateIsActive = false;
-				return;
-			}
-			activateSkipTeleport = true;
-			activateDeferZoneToNode = hasEntryTeleportNode;
-			activateHasAutoLoadOverride = true;
-			activateAutoLoadModIdOverride = modId;
-			ActivateVStumpRoot();
-			instance.StartCoroutine(Internal_TeleportToVirtualStump(instance.defaultTeleporter, null));
+			return;
 		}
+		activateIsActive = true;
+		activateCurrentMode = mode;
+		EnterVirtualStumpZone();
+		ActivateVStumpRoot();
+		EnterVStumpGamemode(instance.defaultTeleporter);
+		SetFeaturedMapObjectsHidden(IsInFeaturedMode());
+		if (GorillaComputer.hasInstance)
+		{
+			GorillaComputer.instance.SetVStumpRoomModePrefix(GetActivateRoomModePrefix());
+		}
+		ModId arg = await ((pendingFeaturedMapFetch != null && pendingActivateMode == mode) ? pendingFeaturedMapFetch : ResolveFeaturedMapForMode(mode));
+		if (!hasInstance)
+		{
+			activateIsActive = false;
+			return;
+		}
+		if (!activateIsActive)
+		{
+			GTDev.Log("[CustomMapManager::Activate] Entry was cancelled while resolving the featured map; not activating.");
+			return;
+		}
+		if (instance.defaultTeleporter.IsNull())
+		{
+			GTDev.LogError("[CustomMapManager::Activate] Default Teleporter is not set; cannot activate.");
+			activateIsActive = false;
+			return;
+		}
+		activateSkipTeleport = true;
+		activateDeferZoneToNode = hasEntryTeleportNode;
+		activateHasAutoLoadOverride = true;
+		activateAutoLoadModIdOverride = arg;
+		if (IsInFeaturedMode())
+		{
+			OnFeaturedMapChanged.Invoke(arg);
+		}
+		ActivateVStumpRoot();
+		instance.StartCoroutine(Internal_TeleportToVirtualStump(instance.defaultTeleporter, null));
 	}
 
 	public static void ExitVStump()
@@ -735,22 +821,25 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 
 	public static void ExitVHallway()
 	{
-		if (hasInstance)
+		if (!hasInstance)
 		{
-			CustomMapsTerminal.ReleaseLocalTerminalControl();
-			inVStumpOrVHallway = false;
-			activateIsActive = false;
-			ClearPendingActivateMode();
-			if (!exitVirtualStumpPending && IsPlayerInVStump())
-			{
-				activateSkipTeleport = true;
-				ExitVirtualStump(null);
-			}
-			else
-			{
-				DeactivateVStumpRoot("Player left the VStump hallway");
-			}
+			return;
 		}
+		CustomMapsTerminal.ReleaseLocalTerminalControl();
+		inVStumpOrVHallway = false;
+		activateIsActive = false;
+		ClearPendingActivateMode();
+		if (!exitVirtualStumpPending && IsPlayerInVStump())
+		{
+			activateSkipTeleport = true;
+			ExitVirtualStump(null);
+			return;
+		}
+		if (!exitVirtualStumpPending)
+		{
+			RestorePreVStumpGamemode(applyTeleporterReturnMode: false);
+		}
+		DeactivateVStumpRoot("Player left the VStump hallway");
 	}
 
 	public static bool IsInFeaturedMode()
@@ -856,6 +945,23 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 		return lastSelectedMapModId;
 	}
 
+	private static bool IsRememberedTerminalPick(ModId autoLoadModId)
+	{
+		if (autoLoadModId != lastSelectedMapModId)
+		{
+			return false;
+		}
+		if (activateHasAutoLoadOverride)
+		{
+			return !IsInFeaturedMode();
+		}
+		if (!lastUsedTeleporter.IsNull())
+		{
+			return lastUsedTeleporter.GetAutoLoadMapModId() == ModId.Null;
+		}
+		return true;
+	}
+
 	public static void ClearLastSelectedMap()
 	{
 		lastSelectedMapModId = ModId.Null;
@@ -872,11 +978,6 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 	private static IEnumerator Internal_TeleportToVirtualStump(VirtualStumpTeleporter fromTeleporter, Action<bool> callback)
 	{
 		lastUsedTeleporter = fromTeleporter;
-		preVStumpGamemode = GorillaComputer.instance.currentGameMode.Value;
-		if (lastUsedTeleporter.GetAutoLoadGamemode() != GameModeType.None && lastUsedTeleporter.GetAutoLoadGamemode() != GameModeType.Count)
-		{
-			GorillaComputer.instance.SetGameModeWithoutButton(lastUsedTeleporter.GetAutoLoadGamemode().ToString());
-		}
 		GTDev.Log("[CustomMapManager::TeleportToVirtualStump] Teleporting to Virtual Stump...");
 		if (!activateSkipTeleport)
 		{
@@ -1049,15 +1150,7 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 				gameObject.gameObject.SetActive(value: true);
 			}
 		}
-		if (lastUsedTeleporter.GetReturnGamemode() != GameModeType.None && lastUsedTeleporter.GetReturnGamemode() != GameModeType.Count)
-		{
-			GorillaComputer.instance.SetGameModeWithoutButton(lastUsedTeleporter.GetReturnGamemode().ToString());
-		}
-		else if (preVStumpGamemode != "")
-		{
-			GorillaComputer.instance.SetGameModeWithoutButton(preVStumpGamemode);
-			preVStumpGamemode = "";
-		}
+		RestorePreVStumpGamemode(applyTeleporterReturnMode: true);
 		if (VRRig.LocalRig.IsNotNull())
 		{
 			GRPlayer component = VRRig.LocalRig.GetComponent<GRPlayer>();
@@ -1170,12 +1263,49 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 		}
 	}
 
+	private static bool IsInVStumpRoom()
+	{
+		if (NetworkSystem.Instance != null && NetworkSystem.Instance.InRoom && GorillaComputer.hasInstance)
+		{
+			return GorillaComputer.instance.IsVStumpRoomName(NetworkSystem.Instance.RoomName);
+		}
+		return false;
+	}
+
+	public static bool IsRemotePlayerAtMapTerminal(string playerID)
+	{
+		if (!IsInVStumpRoom())
+		{
+			return IsRemotePlayerInVirtualStumpOrHallway(playerID);
+		}
+		return true;
+	}
+
+	public static bool AreAllPlayersAtMapTerminal()
+	{
+		if (!IsInVStumpRoom())
+		{
+			return AreAllPlayersInVirtualStump();
+		}
+		return true;
+	}
+
+	public static bool CanUnloadSharedMap()
+	{
+		if (!IsInVStumpRoom() || !NetworkSystem.Instance.SessionIsPrivate)
+		{
+			return true;
+		}
+		return AreAllPlayersInVirtualStump();
+	}
+
 	public static bool AreAllPlayersInVirtualStump()
 	{
-		if (!hasInstance)
+		if (!hasInstance || instance.virtualStumpPlayerDetector.IsNull())
 		{
 			return false;
 		}
+		instance.virtualStumpPlayerDetector.RefreshPlayersWithinBounds();
 		foreach (VRRig activeRig in VRRigCache.ActiveRigs)
 		{
 			if (!instance.virtualStumpPlayerDetector.playerIDsCurrentlyTouching.Contains(activeRig.creator.UserId))
@@ -1370,6 +1500,11 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 	{
 		if (autoLoadModId == ModId.Null)
 		{
+			return;
+		}
+		if (NetworkSystem.Instance.InRoom && NetworkSystem.Instance.SessionIsPrivate && IsRememberedTerminalPick(autoLoadModId))
+		{
+			GTDev.Log("[CustomMapManager::RunAutoLoad] Private room: not auto-loading the remembered pick " + $"{autoLoadModId}, maps load from the tent terminal.");
 			return;
 		}
 		if (!IsInFeaturedMode() && !lastSelectedMapApproved && autoLoadModId == lastSelectedMapModId)
@@ -1637,7 +1772,6 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 		waitingForModDownload = false;
 		waitingForModInstall = false;
 		waitingForModInstallId = ModId.Null;
-		CustomMapLoader.OpenTunnelDoor();
 		ResetModFileProgressTracking();
 		BroadcastMapLoadProgress(MapLoadStatus.Loading, 0, "PREPARING MAP");
 		_ = Error.None;
@@ -1769,6 +1903,11 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 
 	private static void OnMapLoadProgress(MapLoadStatus loadStatus, int progress, string message)
 	{
+		if (loadStatus != lastLoggedLoadStatus || message != lastLoggedLoadMessage)
+		{
+			lastLoggedLoadStatus = loadStatus;
+			lastLoggedLoadMessage = message;
+		}
 		BroadcastMapLoadProgress(loadStatus, progress, message);
 	}
 

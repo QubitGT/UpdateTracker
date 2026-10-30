@@ -3,6 +3,7 @@ using GorillaLocomotion;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Wing")]
 public class SIGadgetWing : SIGadget
 {
 	[SerializeField]

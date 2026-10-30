@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Clock Controller")]
 public class ClockController : MonoBehaviour
 {
 	public Transform Pendulum;

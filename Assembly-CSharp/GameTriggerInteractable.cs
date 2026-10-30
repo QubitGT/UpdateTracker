@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(GameEntity))]
+[AddComponentMenu("GorillaTag/Game Entity/Game Trigger Interactable")]
 public class GameTriggerInteractable : MonoBehaviour
 {
 	public GameEntity gameEntity;

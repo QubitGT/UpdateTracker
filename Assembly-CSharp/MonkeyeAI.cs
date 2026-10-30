@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using GorillaLocomotion;
 using JetBrains.Annotations;
@@ -7,7 +8,8 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 [RequireComponent(typeof(NetworkView))]
-public class MonkeyeAI : MonoBehaviour, IGorillaSliceableSimple
+[AddComponentMenu("GorillaTag/Environment/Monkeye AI")]
+public class MonkeyeAI : MonoBehaviour
 {
 	public List<Transform> patrolPts;
 
@@ -151,6 +153,10 @@ public class MonkeyeAI : MonoBehaviour, IGorillaSliceableSimple
 	public AudioClip attackSound;
 
 	public float attackVolume = 0.5f;
+
+	private Coroutine _sleepCoroutine;
+
+	private float _sleepStartTime = float.MinValue;
 
 	public float overlapRadius;
 
@@ -338,7 +344,8 @@ public class MonkeyeAI : MonoBehaviour, IGorillaSliceableSimple
 				return;
 			}
 		}
-		if (Distance2D(base.transform.position, path.vectorPath[currentWaypoint]) < 0.01f)
+		float num = Distance2D(base.transform.position, path.vectorPath[currentWaypoint]);
+		if (num < 0.01f)
 		{
 			if (currentWaypoint + 1 == path.vectorPath.Count)
 			{
@@ -347,15 +354,22 @@ public class MonkeyeAI : MonoBehaviour, IGorillaSliceableSimple
 			}
 			currentWaypoint++;
 		}
-		Vector3 normalized = (path.vectorPath[currentWaypoint] - base.transform.position).normalized;
-		normalized.y = 0f;
-		if (animController.GetCurrentAnimatorStateInfo(0).IsName("Move"))
+		bool flag = animController.GetCurrentAnimatorStateInfo(0).IsName("Move");
+		float num2 = (flag ? (speed * deltaTime) : 0f);
+		while (currentWaypoint + 1 < path.vectorPath.Count && Distance2D(base.transform.position, path.vectorPath[currentWaypoint]) <= num2)
 		{
-			Vector3 vector = normalized * speed;
-			base.transform.position += vector * deltaTime;
+			currentWaypoint++;
 		}
-		Mathf.Clamp01(Vector3.Dot(base.transform.forward, normalized) / (MathF.PI / 2f));
-		if (Mathf.Sign(Vector3.Cross(base.transform.forward, normalized).y) > 0f)
+		num = Distance2D(base.transform.position, path.vectorPath[currentWaypoint]);
+		Vector3 vector = path.vectorPath[currentWaypoint] - base.transform.position;
+		vector.y = 0f;
+		vector.Normalize();
+		if (flag)
+		{
+			base.transform.position += vector * Mathf.Min(num2, num);
+		}
+		Mathf.Clamp01(Vector3.Dot(base.transform.forward, vector) / (MathF.PI / 2f));
+		if (Mathf.Sign(Vector3.Cross(base.transform.forward, vector).y) > 0f)
 		{
 			animController.SetLayerWeight(layerRight, 0f);
 		}
@@ -364,8 +378,11 @@ public class MonkeyeAI : MonoBehaviour, IGorillaSliceableSimple
 			animController.SetLayerWeight(layerLeft, 0f);
 		}
 		animController.SetLayerWeight(layerForward, 0f);
-		Vector3 forward = Vector3.RotateTowards(base.transform.forward, normalized, rotationSpeed * deltaTime, 0f);
-		base.transform.rotation = Quaternion.LookRotation(forward);
+		if (vector != Vector3.zero)
+		{
+			Vector3 forward = Vector3.RotateTowards(base.transform.forward, vector, rotationSpeed * deltaTime, 0f);
+			base.transform.rotation = Quaternion.LookRotation(forward);
+		}
 	}
 
 	private bool PlayerNear(VRRig rig, float dist, out float playerDist)
@@ -385,12 +402,27 @@ public class MonkeyeAI : MonoBehaviour, IGorillaSliceableSimple
 
 	private void Sleeping()
 	{
-		audioSource.volume = Mathf.Min(sleepLoopVolume, audioSource.volume + deltaTime / sleepDuration);
-		if (audioSource.volume == sleepLoopVolume)
+		if (_sleepCoroutine == null)
 		{
-			SetState(MonkeyeAI_ReplState.EStates.Patrolling);
-			PickNewPath();
+			audioSource.volume = sleepLoopVolume;
+			_sleepStartTime = Time.time;
+			_sleepCoroutine = StartCoroutine(SleepCoroutine());
 		}
+	}
+
+	private IEnumerator SleepCoroutine()
+	{
+		while (Time.time - _sleepStartTime < sleepDuration)
+		{
+			if (replState.state != 0)
+			{
+				_sleepCoroutine = null;
+				yield break;
+			}
+			yield return null;
+		}
+		_sleepCoroutine = null;
+		SetState(MonkeyeAI_ReplState.EStates.Patrolling);
 	}
 
 	private bool ClosestPlayer(in Vector3 myPos, out VRRig outRig)
@@ -788,7 +820,7 @@ public class MonkeyeAI : MonoBehaviour, IGorillaSliceableSimple
 		return validRigs;
 	}
 
-	public void SliceUpdate()
+	public void Update()
 	{
 		wasConnectedToRoom = NetworkSystem.Instance.InRoom;
 		deltaTime = Time.time - lastTime;
@@ -860,16 +892,6 @@ public class MonkeyeAI : MonoBehaviour, IGorillaSliceableSimple
 			velocity = base.transform.position - prevPosition;
 			prevPosition = base.transform.position;
 		}
-	}
-
-	public void OnEnable()
-	{
-		GorillaSlicerSimpleManager.RegisterSliceable(this, GorillaSlicerSimpleManager.UpdateStep.Update);
-	}
-
-	public void OnDisable()
-	{
-		GorillaSlicerSimpleManager.UnregisterSliceable(this, GorillaSlicerSimpleManager.UpdateStep.Update);
 	}
 
 	private void AntiOverlapAssurance()

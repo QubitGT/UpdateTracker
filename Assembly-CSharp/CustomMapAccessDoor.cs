@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Map Access Door")]
 public class CustomMapAccessDoor : MonoBehaviour
 {
 	public GameObject openDoorObject;

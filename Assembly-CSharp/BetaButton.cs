@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Beta Button")]
 public class BetaButton : GorillaPressableButton
 {
 	public GameObject betaParent;

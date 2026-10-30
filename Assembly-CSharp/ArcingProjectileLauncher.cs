@@ -2,6 +2,7 @@ using System;
 using GorillaTag.Cosmetics;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Arcing Projectile Launcher")]
 public class ArcingProjectileLauncher : ElfLauncher
 {
 	[SerializeField]

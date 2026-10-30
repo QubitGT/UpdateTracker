@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Age Appeal Email Error")]
 public class KIDUI_AgeAppealEmailError : MonoBehaviour
 {
 	[SerializeField]

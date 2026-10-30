@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using GorillaTag;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Gorilla Velocity Estimator Manager")]
 public class GorillaVelocityEstimatorManager : MonoBehaviour
 {
 	public static GorillaVelocityEstimatorManager instance;

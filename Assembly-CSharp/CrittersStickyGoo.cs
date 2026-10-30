@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Sticky Goo")]
 public class CrittersStickyGoo : CrittersActor
 {
 	[Header("Sticky Goo")]

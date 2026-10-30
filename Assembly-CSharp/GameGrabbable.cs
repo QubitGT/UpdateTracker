@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Grabbable")]
 public class GameGrabbable : MonoBehaviour
 {
 	[Serializable]

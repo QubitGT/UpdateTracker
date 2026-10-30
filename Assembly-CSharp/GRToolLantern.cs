@@ -4,6 +4,7 @@ using Photon.Pun;
 using UnityEngine;
 
 [RequireComponent(typeof(GameEntity))]
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Lantern")]
 public class GRToolLantern : MonoBehaviour, IGRSummoningEntity
 {
 	private enum State

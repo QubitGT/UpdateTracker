@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Dockable")]
 public class GameDockable : MonoBehaviour
 {
 	public GameEntity gameEntity;

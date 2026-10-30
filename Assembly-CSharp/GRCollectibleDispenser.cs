@@ -2,6 +2,7 @@ using System;
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Collectible Dispenser")]
 public class GRCollectibleDispenser : MonoBehaviour, IGameEntityComponent
 {
 	public GameEntity gameEntity;

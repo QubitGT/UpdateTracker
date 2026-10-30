@@ -682,12 +682,12 @@ public static class ModInstallationManagement
 	internal static async Task Shutdown()
 	{
 		Mod.RemoveChangeListener(ModChangeType.IsSubscribed, OnModSubscriptionChange);
-		_index?.Shutdown();
-		_index = null;
 		while (_currentOperation != null)
 		{
 			await Task.Yield();
 		}
+		_index?.Shutdown();
+		_index = null;
 	}
 
 	internal static void WakeUp()

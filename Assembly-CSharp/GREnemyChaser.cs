@@ -6,6 +6,7 @@ using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.AI;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Enemy Chaser")]
 public class GREnemyChaser : MonoBehaviour, IGameEntityComponent, IGameEntitySerialize, IGameHittable, IGameAgentComponent, IGameEntityDebugComponent
 {
 	public enum Behavior
@@ -464,7 +465,7 @@ public class GREnemyChaser : MonoBehaviour, IGameEntityComponent, IGameEntitySer
 		senseNearby.UpdateNearby(tempRigs, senseLineOfSight);
 		float outDistanceSq;
 		VRRig vRRig = senseNearby.PickClosest(out outDistanceSq);
-		agent.RequestTarget((vRRig == null) ? null : vRRig.OwningNetPlayer);
+		agent.RequestTarget((vRRig == null) ? null : vRRig.Creator);
 		switch (currBehavior)
 		{
 		case Behavior.Idle:

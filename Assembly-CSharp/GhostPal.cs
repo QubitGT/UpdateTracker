@@ -4,6 +4,7 @@ using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Ghost Pal")]
 public class GhostPal : MonoBehaviour
 {
 	[SerializeField]
@@ -91,7 +92,7 @@ public class GhostPal : MonoBehaviour
 		float num2 = vector.magnitude + minDistanceFromPlayer;
 		vector = vector.normalized * num2;
 		vector.y = num + bounceHeight;
-		double num3 = (double)orbitSpeed * (PhotonNetwork.InRoom ? ((PhotonNetwork.Time - (double)rig.OwningNetPlayer.UserId.GetStaticHash()) * (double)((rig.OwningNetPlayer.ActorNumber % 2 == 0) ? 1 : (-1))) : Time.timeAsDouble);
+		double num3 = (double)orbitSpeed * (PhotonNetwork.InRoom ? ((PhotonNetwork.Time - (double)rig.Creator.UserId.GetStaticHash()) * (double)((rig.Creator.ActorNumber % 2 == 0) ? 1 : (-1))) : Time.timeAsDouble);
 		Vector3 vector2 = new Vector3(orbitRadius * (float)Math.Cos(num3), 0f, orbitRadius * (float)Math.Sin(num3));
 		Vector3 vector3 = position + vector + vector2;
 		Vector3 vector4 = vector3 - rig.head.rigTarget.position;

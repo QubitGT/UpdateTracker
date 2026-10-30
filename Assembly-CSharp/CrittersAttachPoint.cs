@@ -1,3 +1,6 @@
+using UnityEngine;
+
+[AddComponentMenu("GorillaTag/Critters/Critters Attach Point")]
 public class CrittersAttachPoint : CrittersActor
 {
 	public enum AnchoredLocationTypes

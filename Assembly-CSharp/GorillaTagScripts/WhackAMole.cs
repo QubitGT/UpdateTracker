@@ -1,18 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using Fusion;
-using Fusion.CodeGen;
 using GorillaExtensions;
 using Photon.Pun;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Scripting;
 
 namespace GorillaTagScripts;
 
-[NetworkBehaviourWeaved(210)]
 public class WhackAMole : NetworkComponent
 {
 	public enum GameState
@@ -31,75 +26,6 @@ public class WhackAMole : NetworkComponent
 		Win,
 		LevelComplete,
 		Unknown
-	}
-
-	[StructLayout(LayoutKind.Explicit, Size = 840)]
-	[NetworkStructWeaved(210)]
-	public struct WhackAMoleData : INetworkStruct
-	{
-		[FieldOffset(24)]
-		public NetworkString<_128> HighScorePlayerName;
-
-		[FieldOffset(556)]
-		[FixedBufferProperty(typeof(NetworkDictionary<int, int>), typeof(UnityDictionarySurrogate_0040ElementReaderWriterInt32_0040ElementReaderWriterInt32), 17, order = -2147483647)]
-		[WeaverGenerated]
-		[SerializeField]
-		private FixedStorage_004071 _PickedMolesIndex;
-
-		[field: FieldOffset(0)]
-		public GameState CurrentState { get; set; }
-
-		[field: FieldOffset(4)]
-		public int CurrentLevelIndex { get; set; }
-
-		[field: FieldOffset(8)]
-		public int CurrentScore { get; set; }
-
-		[field: FieldOffset(12)]
-		public int TotalScore { get; set; }
-
-		[field: FieldOffset(16)]
-		public int BestScore { get; set; }
-
-		[field: FieldOffset(20)]
-		public int RightPlayerScore { get; set; }
-
-		[field: FieldOffset(540)]
-		public float RemainingTime { get; set; }
-
-		[field: FieldOffset(544)]
-		public float GameEndedTime { get; set; }
-
-		[field: FieldOffset(548)]
-		public int GameId { get; set; }
-
-		[field: FieldOffset(552)]
-		public int PickedMolesIndexCount { get; set; }
-
-		[Networked]
-		[Capacity(10)]
-		[NetworkedWeavedDictionary(17, 1, 1, typeof(Fusion.ElementReaderWriterInt32), typeof(Fusion.ElementReaderWriterInt32))]
-		[NetworkedWeaved(139, 71)]
-		public unsafe NetworkDictionary<int, int> PickedMolesIndex => new NetworkDictionary<int, int>((int*)Native.ReferenceToPointer(ref _PickedMolesIndex), 17, Fusion.ElementReaderWriterInt32.GetInstance(), Fusion.ElementReaderWriterInt32.GetInstance());
-
-		public WhackAMoleData(GameState state, int currentLevelIndex, int cScore, int tScore, int bScore, int rPScore, string hScorePName, float remainingTime, float endedTime, int gameId, Dictionary<int, int> moleIndexs)
-		{
-			CurrentState = state;
-			CurrentLevelIndex = currentLevelIndex;
-			CurrentScore = cScore;
-			TotalScore = tScore;
-			BestScore = bScore;
-			RightPlayerScore = rPScore;
-			HighScorePlayerName = hScorePName;
-			RemainingTime = remainingTime;
-			GameEndedTime = endedTime;
-			GameId = gameId;
-			PickedMolesIndexCount = moleIndexs.Count;
-			foreach (KeyValuePair<int, int> moleIndex in moleIndexs)
-			{
-				PickedMolesIndex.Set(moleIndex.Key, moleIndex.Value);
-			}
-		}
 	}
 
 	public string machineId = "default";
@@ -255,34 +181,6 @@ public class WhackAMole : NetworkComponent
 
 	private bool wasLocalPlayerInZone = true;
 
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("Data", 0, 210)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private WhackAMoleData _Data;
-
-	[Networked]
-	[NetworkedWeaved(0, 210)]
-	public unsafe WhackAMoleData Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing WhackAMole.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(WhackAMoleData*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing WhackAMole.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(WhackAMoleData*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
-
 	private void UpdateMeshRendererList()
 	{
 		List<MeshRenderer> list = new List<MeshRenderer>();
@@ -364,7 +262,6 @@ public class WhackAMole : NetworkComponent
 
 	private void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		foreach (Mole moles in molesList)
 		{
 			moles.OnTapped -= OnMoleTapped;
@@ -778,50 +675,6 @@ public class WhackAMole : NetworkComponent
 		WhackAMoleButtonPressedShared(info);
 	}
 
-	[Rpc]
-	private unsafe void RPC_WhackAMoleButtonPressed(RpcInfo info = default(RpcInfo))
-	{
-		if (((NetworkBehaviour)this).InvokeRpc)
-		{
-			((NetworkBehaviour)this).InvokeRpc = false;
-		}
-		else
-		{
-			NetworkBehaviourUtils.ThrowIfBehaviourNotInitialized(this);
-			if (base.Runner.Stage == SimulationStages.Resimulate)
-			{
-				return;
-			}
-			int localAuthorityMask = base.Object.GetLocalAuthorityMask();
-			if ((localAuthorityMask & 7) == 0)
-			{
-				NetworkBehaviourUtils.NotifyLocalSimulationNotAllowedToSendRpc("System.Void GorillaTagScripts.WhackAMole::RPC_WhackAMoleButtonPressed(Fusion.RpcInfo)", base.Object, 7);
-				return;
-			}
-			int num = 8;
-			if (!SimulationMessage.CanAllocateUserPayload(num))
-			{
-				NetworkBehaviourUtils.NotifyRpcPayloadSizeExceeded("System.Void GorillaTagScripts.WhackAMole::RPC_WhackAMoleButtonPressed(Fusion.RpcInfo)", num);
-				return;
-			}
-			if (base.Runner.HasAnyActiveConnections())
-			{
-				SimulationMessage* ptr = SimulationMessage.Allocate(base.Runner.Simulation, num);
-				byte* ptr2 = (byte*)ptr + 28;
-				*(RpcHeader*)ptr2 = RpcHeader.Create(base.Object.Id, ((NetworkBehaviour)this).ObjectIndex, 1);
-				int num2 = 8;
-				ptr->Offset = num2 * 8;
-				base.Runner.SendRpc(ptr);
-			}
-			if ((localAuthorityMask & 7) == 0)
-			{
-				return;
-			}
-			info = RpcInfo.FromLocal(base.Runner, RpcChannel.Reliable, RpcHostMode.SourceIsServer);
-		}
-		WhackAMoleButtonPressedShared(info);
-	}
-
 	private void WhackAMoleButtonPressedShared(PhotonMessageInfoWrapped info)
 	{
 		MonkeAgent.IncrementRPCCall(info, "WhackAMoleButtonPressedShared");
@@ -870,25 +723,6 @@ public class WhackAMole : NetworkComponent
 			return allLevels.Length;
 		}
 		return 0;
-	}
-
-	public override void WriteDataFusion()
-	{
-		Data = new WhackAMoleData(currentState, currentLevelIndex, currentScore, totalScore, bestScore, rightPlayerScore, highScorePlayerName, timer.GetRemainingTime(), gameEndedTime, gameId, pickedMolesIndex);
-		pickedMolesIndex.Clear();
-	}
-
-	public override void ReadDataFusion()
-	{
-		ReadDataShared(Data.CurrentState, Data.CurrentLevelIndex, Data.CurrentScore, Data.TotalScore, Data.BestScore, Data.RightPlayerScore, Data.HighScorePlayerName.Value, Data.RemainingTime, Data.GameEndedTime, Data.GameId);
-		for (int i = 0; i < Data.PickedMolesIndexCount; i++)
-		{
-			int randomMoleTypeIndex = Data.PickedMolesIndex[i];
-			if (i >= 0 && i < molesList.Count && (bool)currentLevel)
-			{
-				molesList[i].ShowMole(currentLevel.showMoleDuration, randomMoleTypeIndex);
-			}
-		}
 	}
 
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
@@ -946,31 +780,5 @@ public class WhackAMole : NetworkComponent
 			}
 			SwitchState(currentState);
 		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
-	}
-
-	[NetworkRpcWeavedInvoker(1, 7, 7)]
-	[Preserve]
-	[WeaverGenerated]
-	protected unsafe static void RPC_WhackAMoleButtonPressed_0040Invoker(NetworkBehaviour behaviour, SimulationMessage* message)
-	{
-		byte* ptr = (byte*)message + 28;
-		int num = 8;
-		RpcInfo info = RpcInfo.FromMessage(behaviour.Runner, message, RpcHostMode.SourceIsServer);
-		behaviour.InvokeRpc = true;
-		((WhackAMole)behaviour).RPC_WhackAMoleButtonPressed(info);
 	}
 }

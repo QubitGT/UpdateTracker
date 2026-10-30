@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Pinwheel Animator")]
 public class PinwheelAnimator : MonoBehaviour
 {
 	public Transform spinnerTransform;

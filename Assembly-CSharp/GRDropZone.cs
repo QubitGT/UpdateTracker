@@ -2,6 +2,7 @@ using System.Collections;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Drop Zone")]
 public class GRDropZone : MonoBehaviour
 {
 	[SerializeField]

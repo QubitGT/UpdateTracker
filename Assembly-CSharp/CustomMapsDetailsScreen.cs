@@ -10,6 +10,7 @@ using Modio.Users;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Details Screen")]
 public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 {
 	[SerializeField]
@@ -83,6 +84,12 @@ public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 
 	[SerializeField]
 	private CustomMapsScreenButton deleteButton;
+
+	[SerializeField]
+	private TMP_Text loadInTentText;
+
+	[SerializeField]
+	private string loadInTentString = "MUST BE INSIDE THE TENT TO LOAD THIS MAP.";
 
 	[SerializeField]
 	private string modAvailableString = "AVAILABLE";
@@ -205,7 +212,38 @@ public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 
 	private bool isFavorite;
 
+	private CustomMapsTerminal ownerTerminal;
+
 	public Mod currentMapMod { get; private set; }
+
+	private bool CanLoadFromThisTerminal()
+	{
+		if (!NetworkSystem.Instance.InRoom || !NetworkSystem.Instance.SessionIsPrivate)
+		{
+			return true;
+		}
+		if (ownerTerminal == null)
+		{
+			ownerTerminal = GetComponentInParent<CustomMapsTerminal>(includeInactive: true);
+		}
+		if (ownerTerminal != null)
+		{
+			return ownerTerminal.IsTentTerminal;
+		}
+		return false;
+	}
+
+	private void ShowLoadInTentText(bool show)
+	{
+		if (!(loadInTentText == null))
+		{
+			if (show)
+			{
+				loadInTentText.text = loadInTentString;
+			}
+			loadInTentText.gameObject.SetActive(show);
+		}
+	}
 
 	public override void Initialize()
 	{
@@ -452,6 +490,10 @@ public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 		{
 			if (currentMapMod.File.State == ModFileState.Installed)
 			{
+				if (!CanLoadFromThisTerminal())
+				{
+					return;
+				}
 				if (!CanChangeMapState(load: true, out var disallowedReason2))
 				{
 					modDescriptionText.gameObject.SetActive(value: false);
@@ -525,22 +567,15 @@ public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 					if (state == ModFileState.Queued || state == ModFileState.Installed)
 					{
 						flag = true;
-						goto IL_040d;
+						goto IL_0416;
 					}
 				}
 			}
 			flag = false;
-			goto IL_040d;
+			goto IL_0416;
 		}
-		goto IL_0424;
-		IL_040d:
-		if (flag)
-		{
-			currentMapMod.UninstallOtherUserMod(force: true);
-			UpdateStatus();
-		}
-		goto IL_0424;
-		IL_0424:
+		goto IL_042d;
+		IL_042d:
 		if (buttonPressed == CustomMapKeyboardBinding.rateUp)
 		{
 			currentMapMod.RateMod((currentMapMod.CurrentUserRating != ModRating.Positive) ? ModRating.Positive : ModRating.None);
@@ -549,6 +584,14 @@ public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 		{
 			currentMapMod.RateMod((currentMapMod.CurrentUserRating != ModRating.Negative) ? ModRating.Negative : ModRating.None);
 		}
+		return;
+		IL_0416:
+		if (flag)
+		{
+			currentMapMod.UninstallOtherUserMod(force: true);
+			UpdateStatus();
+		}
+		goto IL_042d;
 	}
 
 	private void RefreshCurrentMapMod()
@@ -595,6 +638,7 @@ public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 		outdatedText.gameObject.SetActive(value: false);
 		unloadPromptText.gameObject.SetActive(value: false);
 		playerCountText.gameObject.SetActive(value: false);
+		ShowLoadInTentText(show: false);
 		loadingText.gameObject.SetActive(value: true);
 		if (CustomMapLoader.IsMapLoaded() || CustomMapManager.IsLoading() || CustomMapManager.IsUnloading())
 		{
@@ -731,6 +775,7 @@ public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 		modSubscriptionStatusText.gameObject.SetActive(value: false);
 		modStatusLabelText?.gameObject.SetActive(value: false);
 		modStatusText.gameObject.SetActive(value: false);
+		ShowLoadInTentText(show: false);
 		if (mapLoadError || CustomMapManager.IsUnloading() || CustomMapManager.IsLoading() || CustomMapLoader.IsMapLoaded() || CustomMapManager.GetRoomMapId() != ModId.Null || IsCurrentModHidden())
 		{
 			loadButton?.gameObject.SetActive(value: false);
@@ -766,6 +811,11 @@ public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 		case ModFileState.Installed:
 		{
 			loadButton?.SetButtonText(loadMapString);
+			if (!CanLoadFromThisTerminal())
+			{
+				loadButton?.gameObject.SetActive(value: false);
+				ShowLoadInTentText(show: true);
+			}
 			deleteButton.gameObject.SetActive(CustomMapsTerminal.IsDriver);
 			bool item = (await ModIOManager.IsModOutdated(GetModId())).Item1;
 			outdatedText.gameObject.SetActive(item);
@@ -797,6 +847,11 @@ public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 	private bool CanChangeMapState(bool load, out string disallowedReason)
 	{
 		disallowedReason = "";
+		if (!load && !CustomMapManager.CanUnloadSharedMap())
+		{
+			disallowedReason = "ALL PLAYERS MUST BE IN THE TENT BEFORE UNLOADING THE MAP.";
+			return false;
+		}
 		return true;
 	}
 

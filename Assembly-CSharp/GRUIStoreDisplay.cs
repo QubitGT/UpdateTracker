@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GRUI Store Display")]
 public class GRUIStoreDisplay : MonoBehaviour
 {
 	[Serializable]

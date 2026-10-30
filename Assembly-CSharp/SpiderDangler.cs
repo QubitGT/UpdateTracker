@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Spider Dangler")]
 public class SpiderDangler : MonoBehaviour
 {
 	public struct RopeSegment

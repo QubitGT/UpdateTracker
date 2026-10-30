@@ -15,17 +15,15 @@ public class GtLckServiceInitializer : MonoBehaviour
 	private void Awake()
 	{
 		LckDiContainer instance = LckDiContainer.Instance;
-		if (instance.HasService<ILckService>())
+		if (!instance.HasService<ILckService>())
 		{
-			Debug.LogWarning("LCK: Service already configured. Skipping custom GT initialisation.");
-			return;
+			Debug.Log("LCK: Initializing with GT-SPECIFIC overrides.");
+			LckServiceInitializer.ConfigureServices(instance, _qualityConfig, delegate(LckDiContainer container)
+			{
+				container.AddSingleton<ILckCosmeticsFeatureFlagManager, LckCosmeticsFeatureFlagManagerPlayFab>();
+				container.AddSingleton<ILckCosmeticsCoordinator, LckCoreCosmeticsCoordinator>();
+				container.AddSingleton<ILckCosmeticsManager, LckCosmeticsManager>();
+			});
 		}
-		Debug.Log("LCK: Initializing with GT-SPECIFIC overrides.");
-		LckServiceInitializer.ConfigureServices(instance, _qualityConfig, delegate(LckDiContainer container)
-		{
-			container.AddSingleton<ILckCosmeticsFeatureFlagManager, LckCosmeticsFeatureFlagManagerPlayFab>();
-			container.AddSingleton<ILckCosmeticsCoordinator, LckCoreCosmeticsCoordinator>();
-			container.AddSingleton<ILckCosmeticsManager, LckCosmeticsManager>();
-		});
 	}
 }

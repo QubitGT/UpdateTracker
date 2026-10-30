@@ -2,6 +2,7 @@ using System;
 using TagEffects;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Hand Tap Reactor")]
 public class HandTapReactor : MonoBehaviour
 {
 	[Flags]

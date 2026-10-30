@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Revive Station")]
 public class GRReviveStation : MonoBehaviour
 {
 	public AudioSource audioSource;
@@ -53,7 +54,7 @@ public class GRReviveStation : MonoBehaviour
 		{
 			return;
 		}
-		int actorNumber = player.gamePlayer.rig.OwningNetPlayer.ActorNumber;
+		int actorNumber = player.gamePlayer.rig.Creator.ActorNumber;
 		cooldownStartTime[actorNumber] = GorillaComputer.instance.GetServerTime();
 		if (player.State == GRPlayer.GRPlayerState.Alive && player.Hp >= player.MaxHp)
 		{
@@ -92,7 +93,7 @@ public class GRReviveStation : MonoBehaviour
 			{
 				RevivePlayer(component2);
 			}
-			if (reactor.grManager.IsAuthority() && CalculateRemainingReviveCooldownSeconds(component2.gamePlayer.rig.OwningNetPlayer.ActorNumber) <= 0.0)
+			if (reactor.grManager.IsAuthority() && CalculateRemainingReviveCooldownSeconds(component2.gamePlayer.rig.Creator.ActorNumber) <= 0.0)
 			{
 				reactor.grManager.RequestPlayerRevive(this, component2);
 			}

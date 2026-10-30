@@ -1,10 +1,8 @@
 using ExitGames.Client.Photon;
-using Fusion;
 using Photon.Pun;
 using Photon.Realtime;
 
-[NetworkBehaviourWeaved(0)]
-public abstract class NetworkComponent : NetworkView, IPunObservable, IStateAuthorityChanged, IPublicFacingInterface, IOnPhotonViewOwnerChange, IPhotonViewCallback, IInRoomCallbacks, IPunInstantiateMagicCallback
+public abstract class NetworkComponent : NetworkView, IPunObservable, IOnPhotonViewOwnerChange, IPhotonViewCallback, IInRoomCallbacks, IPunInstantiateMagicCallback
 {
 	public bool IsLocallyOwned => base.IsMine;
 
@@ -16,13 +14,11 @@ public abstract class NetworkComponent : NetworkView, IPunObservable, IStateAuth
 
 	internal virtual void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		AddToNetwork();
 	}
 
 	internal virtual void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		PhotonNetwork.RemoveCallbackTarget(this);
 	}
 
@@ -36,31 +32,6 @@ public abstract class NetworkComponent : NetworkView, IPunObservable, IStateAuth
 	{
 		PhotonNetwork.AddCallbackTarget(this);
 	}
-
-	public override void Spawned()
-	{
-		if (NetworkSystem.Instance.InRoom)
-		{
-			OnSpawned();
-		}
-	}
-
-	public override void FixedUpdateNetwork()
-	{
-		WriteDataFusion();
-	}
-
-	public override void Render()
-	{
-		if (!base.HasStateAuthority)
-		{
-			ReadDataFusion();
-		}
-	}
-
-	public abstract void WriteDataFusion();
-
-	public abstract void ReadDataFusion();
 
 	public virtual void OnPhotonInstantiate(PhotonMessageInfo info)
 	{
@@ -96,27 +67,6 @@ public abstract class NetworkComponent : NetworkView, IPunObservable, IStateAuth
 		OnOwnerSwitched(NetworkSystem.Instance.GetPlayer(newMasterClient));
 	}
 
-	public override void StateAuthorityChanged()
-	{
-		base.StateAuthorityChanged();
-		if (!(base.Object == null) && !(base.Object.StateAuthority == default(PlayerRef)))
-		{
-			if (NetworkSystem.Instance.InRoom)
-			{
-				OnOwnerSwitched(NetworkSystem.Instance.GetPlayer(base.Object.StateAuthority));
-			}
-			else
-			{
-				OnOwnerSwitched(NetworkSystem.Instance.LocalPlayer);
-			}
-		}
-	}
-
-	public void OnMasterClientSwitch(NetPlayer newMaster)
-	{
-		StateAuthorityChanged();
-	}
-
 	void IInRoomCallbacks.OnPlayerEnteredRoom(Player newPlayer)
 	{
 	}
@@ -135,17 +85,5 @@ public abstract class NetworkComponent : NetworkView, IPunObservable, IStateAuth
 
 	public virtual void OnOwnerChange(Player newOwner, Player previousOwner)
 	{
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
 	}
 }

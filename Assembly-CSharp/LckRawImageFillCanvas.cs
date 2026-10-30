@@ -18,7 +18,7 @@ public class LckRawImageFillCanvas : UIBehaviour
 	[SerializeField]
 	private ScaleType _scaleType;
 
-	private new void OnEnable()
+	protected override void OnEnable()
 	{
 		UpdateSizeDelta();
 	}

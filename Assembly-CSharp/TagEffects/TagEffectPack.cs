@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TagEffects;
 
-[CreateAssetMenu(fileName = "New Tag Effect Pack", menuName = "Tag Effect Pack")]
+[CreateAssetMenu(fileName = "New Tag Effect Pack", menuName = "GorillaTag/Tag Effect Pack")]
 public class TagEffectPack : ScriptableObject
 {
 	public GameObject thirdPerson;

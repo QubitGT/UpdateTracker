@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Test Manipulatable Cube")]
 public class TestManipulatableCube : ManipulatableObject
 {
 	public float breakDistance = 0.2f;

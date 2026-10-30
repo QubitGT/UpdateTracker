@@ -1,11 +1,8 @@
-using System;
 using System.Collections.Generic;
-using Fusion;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Events;
 
-[NetworkBehaviourWeaved(337)]
 public class FlockingManager : NetworkComponent
 {
 	public class FishArea
@@ -50,34 +47,6 @@ public class FlockingManager : NetworkComponent
 
 	public static readonly List<GameObject> avoidPoints = new List<GameObject>();
 
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("Data", 0, 337)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private FlockingData _Data;
-
-	[Networked]
-	[NetworkedWeaved(0, 337)]
-	public unsafe FlockingData Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing FlockingManager.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(FlockingData*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing FlockingManager.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(FlockingData*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
-
 	protected override void Awake()
 	{
 		base.Awake();
@@ -118,7 +87,6 @@ public class FlockingManager : NetworkComponent
 
 	private void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		fishAreaList.Clear();
 		areaToWaypointDict.Clear();
 		allFish.Clear();
@@ -135,7 +103,7 @@ public class FlockingManager : NetworkComponent
 
 	private void Update()
 	{
-		if (UnityEngine.Random.Range(0, 10000) >= 50)
+		if (Random.Range(0, 10000) >= 50)
 		{
 			return;
 		}
@@ -153,10 +121,10 @@ public class FlockingManager : NetworkComponent
 
 	public Vector3 GetRandomPointInsideCollider(FishArea fishArea)
 	{
-		int num = UnityEngine.Random.Range(0, fishArea.colliders.Length);
+		int num = Random.Range(0, fishArea.colliders.Length);
 		BoxCollider obj = fishArea.colliders[num];
 		Vector3 vector = obj.size / 2f;
-		Vector3 position = new Vector3(UnityEngine.Random.Range(0f - vector.x, vector.x), UnityEngine.Random.Range(0f - vector.y, vector.y), UnityEngine.Random.Range(0f - vector.z, vector.z));
+		Vector3 position = new Vector3(Random.Range(0f - vector.x, vector.x), Random.Range(0f - vector.y, vector.y), Random.Range(0f - vector.z, vector.z));
 		return obj.transform.TransformPoint(position);
 	}
 
@@ -233,21 +201,6 @@ public class FlockingManager : NetworkComponent
 		onFoodDestroyed?.Invoke(collider2 as BoxCollider);
 	}
 
-	public override void WriteDataFusion()
-	{
-		Data = new FlockingData(allFish);
-	}
-
-	public override void ReadDataFusion()
-	{
-		for (int i = 0; i < Data.count; i++)
-		{
-			Vector3 syncPos = Data.Positions[i];
-			Quaternion syncRot = Data.Rotations[i];
-			allFish[i].SetSyncPosRot(syncPos, syncRot);
-		}
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 	}
@@ -264,19 +217,5 @@ public class FlockingManager : NetworkComponent
 	public static void UnregisterAvoidPoint(GameObject obj)
 	{
 		avoidPoints.Remove(obj);
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
 	}
 }

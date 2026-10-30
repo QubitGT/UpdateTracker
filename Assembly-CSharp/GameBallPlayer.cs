@@ -127,7 +127,7 @@ public class GameBallPlayer : MonoBehaviour
 
 	public bool IsLocalPlayer()
 	{
-		return VRRigCache.Instance.localRig.Creator.ActorNumber == rig.OwningNetPlayer.ActorNumber;
+		return VRRigCache.Instance.localRig.Creator.ActorNumber == rig.Creator.ActorNumber;
 	}
 
 	public static bool IsLeftHand(int handIndex)

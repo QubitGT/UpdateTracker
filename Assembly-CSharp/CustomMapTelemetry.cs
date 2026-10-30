@@ -4,6 +4,7 @@ using Modio.Mods;
 using Unity.Profiling;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Map Telemetry")]
 public class CustomMapTelemetry : MonoBehaviour
 {
 	[OnEnterPlay_SetNull]

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Hittable")]
 public class GameHittable : MonoBehaviour
 {
 	[Serializable]

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Debug Ftue Reset Button")]
 public class GRDebugFtueResetButton : GorillaPressableReleaseButton
 {
 	public bool availableOnLive;

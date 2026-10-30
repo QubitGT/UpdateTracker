@@ -5,6 +5,7 @@ using GorillaTag.CosmeticSystem;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Rotating Quest Badge")]
 public class RotatingQuestBadge : MonoBehaviour, ISpawnable
 {
 	[Serializable]

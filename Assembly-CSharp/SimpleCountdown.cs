@@ -8,6 +8,7 @@ using TMPro;
 using UnityEngine;
 
 [RequireComponent(typeof(TextMeshPro))]
+[AddComponentMenu("GorillaTag/Environment/Simple Countdown")]
 public class SimpleCountdown : ObservableBehavior
 {
 	private enum Mode

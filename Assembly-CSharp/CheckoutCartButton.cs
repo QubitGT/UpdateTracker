@@ -2,6 +2,7 @@ using GorillaExtensions;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Checkout Cart Button")]
 public class CheckoutCartButton : GorillaPressableButton
 {
 	public CosmeticsController.CosmeticItem currentCosmeticItem;

@@ -4,6 +4,7 @@ using GorillaTag.CosmeticSystem;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Radio Button Group Wearable")]
 public class RadioButtonGroupWearable : MonoBehaviour, ISpawnable
 {
 	[SerializeField]

@@ -2,6 +2,7 @@ using GorillaTagScripts.Builder;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Artillery Cannon")]
 public class ArtilleryCannon : MonoBehaviour
 {
 	[Header("Network State")]

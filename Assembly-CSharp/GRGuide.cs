@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Guide")]
 public class GRGuide : MonoBehaviourTick
 {
 	public Transform tempTarget;

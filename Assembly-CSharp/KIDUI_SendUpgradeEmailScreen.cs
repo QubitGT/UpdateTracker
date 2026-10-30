@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using KID.Model;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Send Upgrade Email Screen")]
 public class KIDUI_SendUpgradeEmailScreen : MonoBehaviour
 {
 	[SerializeField]

@@ -3,6 +3,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Hose Simulator")]
 public class HoseSimulator : MonoBehaviour, ISpawnable
 {
 	[SerializeField]

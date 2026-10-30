@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/KID/Message Box")]
 public class MessageBox : MonoBehaviour
 {
 	[SerializeField]

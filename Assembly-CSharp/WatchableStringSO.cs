@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "WatchableStringSO", menuName = "ScriptableObjects/WatchableStringSO")]
+[CreateAssetMenu(fileName = "WatchableStringSO", menuName = "ScriptableObjects/Data/WatchableStringSO")]
 public class WatchableStringSO : ScriptableObject
 {
 	[TextArea]

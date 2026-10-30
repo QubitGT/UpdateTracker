@@ -6,6 +6,7 @@ using NexusSDK;
 using UnityEngine;
 using UnityEngine.Networking;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Nexus Manager")]
 public class NexusManager : MonoBehaviour
 {
 	public enum Environment

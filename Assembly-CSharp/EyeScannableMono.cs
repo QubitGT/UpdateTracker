@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Eye Scannable Mono")]
 public class EyeScannableMono : MonoBehaviour, IEyeScannable
 {
 	[SerializeField]
@@ -20,7 +21,15 @@ public class EyeScannableMono : MonoBehaviour, IEyeScannable
 
 	IList<KeyValueStringPair> IEyeScannable.Entries => data.Entries;
 
-	public event Action OnDataChange;
+	public event Action OnDataChange
+	{
+		add
+		{
+		}
+		remove
+		{
+		}
+	}
 
 	private void Awake()
 	{

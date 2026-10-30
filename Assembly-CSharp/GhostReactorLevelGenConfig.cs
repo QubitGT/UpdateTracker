@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "GhostReactorLevelGenConfig", menuName = "ScriptableObjects/GhostReactorLevelGenConfig")]
+[CreateAssetMenu(fileName = "GhostReactorLevelGenConfig", menuName = "ScriptableObjects/Ghost Reactor/GhostReactorLevelGenConfig")]
 public class GhostReactorLevelGenConfig : ScriptableObject
 {
 	public int shiftDuration;

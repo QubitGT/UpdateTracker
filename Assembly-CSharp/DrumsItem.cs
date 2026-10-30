@@ -4,6 +4,7 @@ using GorillaTag.CosmeticSystem;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Drums Item")]
 public class DrumsItem : MonoBehaviour, ISpawnable
 {
 	[Tooltip("Array of colliders for this specific drum.")]

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GorillaLocomotion.Swimming;
 
-[CreateAssetMenu(fileName = "Data", menuName = "ScriptableObjects/PlayerSwimmingParameters", order = 1)]
+[CreateAssetMenu(fileName = "Data", menuName = "ScriptableObjects/Locomotion/PlayerSwimmingParameters", order = 1)]
 public class PlayerSwimmingParameters : ScriptableObject
 {
 	[Header("Base Settings")]

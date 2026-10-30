@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Resource Collection Deposit Trigger")]
 public class SIResourceCollectionDepositTrigger : MonoBehaviour
 {
 	public GameObject parentCollection;

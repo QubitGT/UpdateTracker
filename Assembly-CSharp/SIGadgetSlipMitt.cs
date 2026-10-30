@@ -6,6 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(GameGrabbable))]
 [RequireComponent(typeof(GameSnappable))]
 [RequireComponent(typeof(GameButtonActivatable))]
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Slip Mitt")]
 public class SIGadgetSlipMitt : SIGadget
 {
 	private enum EState
@@ -75,18 +76,6 @@ public class SIGadgetSlipMitt : SIGadget
 	private float m_slipperySurfacesTime = 0.25f;
 
 	[SerializeField]
-	private float m_maxInfluenceAngleDefault = 10f;
-
-	[SerializeField]
-	private float m_maxInfluenceAngleUpgrade = 15f;
-
-	[SerializeField]
-	private float m_cooldownDurationDefault = 6f;
-
-	[SerializeField]
-	private float m_cooldownDurationUpgrade = 5f;
-
-	[SerializeField]
 	private Transform m_airGrabXform;
 
 	private bool _isActivated;
@@ -94,8 +83,6 @@ public class SIGadgetSlipMitt : SIGadget
 	private bool _wasActivated;
 
 	private float _airGrabTime;
-
-	private float _airReleaseSpeed;
 
 	private Vector3 _airReleaseVector;
 
@@ -213,10 +200,8 @@ public class SIGadgetSlipMitt : SIGadget
 			{
 				SetStateAuthority(EState.Idle);
 				GTPlayer.Instance.UnsetGravityOverride(this);
-				break;
 			}
-			_airReleaseSpeed = 0f;
-			if (_HandIndex == 0)
+			else if (_HandIndex == 0)
 			{
 				GTPlayer.Instance.SetLeftMaximumSlipThisFrame();
 				_attachedHandState = GTPlayer.Instance.LeftHand;

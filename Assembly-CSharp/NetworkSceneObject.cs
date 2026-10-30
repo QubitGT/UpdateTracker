@@ -1,9 +1,8 @@
-using Fusion;
 using Photon.Pun;
 using UnityEngine;
 
 [RequireComponent(typeof(PhotonView))]
-public class NetworkSceneObject : SimulationBehaviour
+public class NetworkSceneObject : MonoBehaviour
 {
 	public PhotonView photonView;
 
@@ -19,29 +18,9 @@ public class NetworkSceneObject : SimulationBehaviour
 
 	protected virtual void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 	}
 
 	protected virtual void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
-	}
-
-	private void RegisterOnRunner()
-	{
-		NetworkRunner runner = (NetworkSystem.Instance as NetworkSystemFusion).runner;
-		if (runner != null && runner.IsRunning)
-		{
-			runner.AddGlobal(this);
-		}
-	}
-
-	private void RemoveFromRunner()
-	{
-		NetworkRunner runner = (NetworkSystem.Instance as NetworkSystemFusion).runner;
-		if (runner != null && runner.IsRunning)
-		{
-			runner.RemoveGlobal(this);
-		}
 	}
 }

@@ -6,6 +6,7 @@ using GorillaNetworking;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Seed Extractor")]
 public class GRSeedExtractor : MonoBehaviour
 {
 	public struct PlayerData
@@ -495,7 +496,7 @@ public class GRSeedExtractor : MonoBehaviour
 			if (player != null && VRRigCache.Instance.TryGetVrrig(player, out var playerRig))
 			{
 				float num = 5f;
-				if (playerRig.Rig != null && playerRig.Rig.OwningNetPlayer == player && (playerRig.Rig.GetMouthPosition() - base.transform.position).sqrMagnitude < num * num)
+				if (playerRig.Rig != null && playerRig.Rig.Creator == player && (playerRig.Rig.GetMouthPosition() - base.transform.position).sqrMagnitude < num * num)
 				{
 					flag = true;
 				}
@@ -510,7 +511,7 @@ public class GRSeedExtractor : MonoBehaviour
 	public void TriggerEntered(TriggerEventNotifier notifier, Collider other)
 	{
 		VRRig component = other.GetComponent<VRRig>();
-		if (component != null && component.OwningNetPlayer != null && component.OwningNetPlayer.ActorNumber == NetworkSystem.Instance.LocalPlayer.ActorNumber && NetworkSystem.Instance.InRoom)
+		if (component != null && component.Creator != null && component.Creator.ActorNumber == NetworkSystem.Instance.LocalPlayer.ActorNumber && NetworkSystem.Instance.InRoom)
 		{
 			ProgressionManager.Instance.GetJuicerStatus();
 		}
@@ -519,13 +520,13 @@ public class GRSeedExtractor : MonoBehaviour
 	public void TriggerExited(TriggerEventNotifier notifier, Collider other)
 	{
 		VRRig component = other.GetComponent<VRRig>();
-		if (component != null && component.OwningNetPlayer != null)
+		if (component != null && component.Creator != null)
 		{
-			if (component.OwningNetPlayer.ActorNumber == currentPlayerActorNumber && stationOpen && ghostReactor.grManager.IsAuthority() && NetworkSystem.Instance.InRoom)
+			if (component.Creator.ActorNumber == currentPlayerActorNumber && stationOpen && ghostReactor.grManager.IsAuthority() && NetworkSystem.Instance.InRoom)
 			{
 				ghostReactor.grManager.RequestPlayerAction(GhostReactorManager.GRPlayerAction.SeedExtractorCloseStation, NetworkSystem.Instance.LocalPlayer.ActorNumber, 0);
 			}
-			if (component.OwningNetPlayer.ActorNumber == NetworkSystem.Instance.LocalPlayer.ActorNumber)
+			if (component.Creator.ActorNumber == NetworkSystem.Instance.LocalPlayer.ActorNumber)
 			{
 				localPlayerData = default(PlayerData);
 			}

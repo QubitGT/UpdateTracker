@@ -1,6 +1,7 @@
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Critter Catcher Shade")]
 public class CosmeticCritterCatcherShade : CosmeticCritterCatcher
 {
 	[SerializeField]

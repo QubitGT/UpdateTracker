@@ -1,14 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Fusion;
 using Photon.Pun;
 using UnityEngine;
 
 namespace GorillaTag.Sports;
 
 [RequireComponent(typeof(AudioSource))]
-[NetworkBehaviourWeaved(2)]
 public class SportScoreboard : NetworkComponent
 {
 	[Serializable]
@@ -42,28 +40,6 @@ public class SportScoreboard : NetworkComponent
 	private AudioSource audioSource;
 
 	private SportScoreboardVisuals[] scoreVisuals;
-
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("Data", 0, 2)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private int[] _Data;
-
-	[Networked]
-	[Capacity(2)]
-	[NetworkedWeaved(0, 2)]
-	[NetworkedWeavedArray(2, 1, typeof(Fusion.ElementReaderWriterInt32))]
-	public unsafe NetworkArray<int> Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing SportScoreboard.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return new NetworkArray<int>((byte*)((NetworkBehaviour)this).Ptr + 0, 2, Fusion.ElementReaderWriterInt32.GetInstance());
-		}
-	}
 
 	protected override void Awake()
 	{
@@ -163,18 +139,6 @@ public class SportScoreboard : NetworkComponent
 		ResetScores();
 	}
 
-	public override void WriteDataFusion()
-	{
-		Data.CopyFrom(teamScores, 0, teamScores.Count);
-	}
-
-	public override void ReadDataFusion()
-	{
-		teamScores.Clear();
-		Data.CopyTo(teamScores);
-		OnScoreUpdated();
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		for (int i = 0; i < teamScores.Count; i++)
@@ -190,19 +154,5 @@ public class SportScoreboard : NetworkComponent
 			teamScores[i] = (int)stream.ReceiveNext();
 		}
 		OnScoreUpdated();
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		NetworkBehaviourUtils.InitializeNetworkArray(Data, _Data, "Data");
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		NetworkBehaviourUtils.CopyFromNetworkArray(Data, ref _Data);
 	}
 }

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Tool Throwable")]
 public class CrittersToolThrowable : CrittersActor
 {
 	[Header("Throwable")]

@@ -2,7 +2,9 @@ using System;
 using GorillaNetworking;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Environment/VOD Target")]
 public class VODTarget : ObservableBehavior, IBuildValidation
 {
 	[Serializable]
@@ -45,9 +47,20 @@ public class VODTarget : ObservableBehavior, IBuildValidation
 	[SerializeField]
 	private bool unmutable;
 
+	[SerializeField]
+	private bool replayOnObservable;
+
+	[SerializeField]
+	private UnityEvent OnBusy;
+
+	[SerializeField]
+	private UnityEvent OnFree;
+
 	public static Action<VODTarget> AlertEnabled;
 
 	public static Action<VODTarget> AlertDisabled;
+
+	public static Action<VODTarget> RequestReplay;
 
 	private VODPlayer.VODNextStreamData upNextData;
 
@@ -74,11 +87,13 @@ public class VODTarget : ObservableBehavior, IBuildValidation
 	public void SetNext(VODPlayer.VODNextStreamData data)
 	{
 		upNextData = data;
+		OnFree?.Invoke();
 	}
 
 	public void ClearNext()
 	{
 		upNextData = default(VODPlayer.VODNextStreamData);
+		OnBusy?.Invoke();
 	}
 
 	public bool VerifyChannel(VODPlayer.VODStream.VODStreamChannel ch)
@@ -110,6 +125,10 @@ public class VODTarget : ObservableBehavior, IBuildValidation
 		if (!staticScreen.activeInHierarchy && AlertEnabled != null)
 		{
 			AlertEnabled(this);
+		}
+		if (replayOnObservable && !staticScreen.activeInHierarchy && RequestReplay != null)
+		{
+			RequestReplay(this);
 		}
 	}
 
@@ -154,6 +173,10 @@ public class VODTarget : ObservableBehavior, IBuildValidation
 
 	protected override void ObservableSliceUpdate()
 	{
+		if (!(upNext != null))
+		{
+			return;
+		}
 		if (upNextData.Title.IsNullOrEmpty())
 		{
 			if (upNext.text.Length > 0)
@@ -181,6 +204,14 @@ public class VODTarget : ObservableBehavior, IBuildValidation
 		else if (observable && AlertEnabled != null)
 		{
 			AlertEnabled(this);
+		}
+	}
+
+	public void Replay(bool playOverStatic)
+	{
+		if (observable && (playOverStatic || !staticScreen.activeInHierarchy) && RequestReplay != null)
+		{
+			RequestReplay(this);
 		}
 	}
 }

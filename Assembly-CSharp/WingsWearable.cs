@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Wings Wearable")]
 public class WingsWearable : MonoBehaviour, IGorillaSliceableSimple
 {
 	[Tooltip("This animator must have a parameter called 'FlapSpeed'")]

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Club")]
 public class GRToolClub : MonoBehaviourTick, IGameHitter, IGameEntityDebugComponent, IGameEntityComponent
 {
 	private enum State

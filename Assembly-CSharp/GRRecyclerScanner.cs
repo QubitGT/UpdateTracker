@@ -2,6 +2,7 @@ using GorillaTagScripts.GhostReactor;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Recycler Scanner")]
 public class GRRecyclerScanner : MonoBehaviour
 {
 	public GRRecycler recycler;

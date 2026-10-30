@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Seasonal/Snowball Throwable")]
 public class SnowballThrowable : HoldableObject, IHeldItem
 {
 	[GorillaSoundLookup]

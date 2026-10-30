@@ -4,6 +4,7 @@ using GorillaExtensions;
 using UnityEngine;
 using UnityEngine.Pool;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Player Colored Cosmetic")]
 public class PlayerColoredCosmetic : MonoBehaviour
 {
 	[Serializable]

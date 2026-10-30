@@ -2,6 +2,7 @@ using GorillaNetworking;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GRUI Scoreboard Entry")]
 public class GRUIScoreboardEntry : MonoBehaviour
 {
 	[SerializeField]

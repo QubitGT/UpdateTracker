@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 
 [DefaultExecutionOrder(1)]
+[AddComponentMenu("GorillaTag/Super Infection/Super Infection")]
 public class SuperInfection : MonoBehaviour, IGorillaSliceableSimple
 {
 	private const string preLog = "[GT/SuperInfection]  ";
@@ -365,6 +366,18 @@ public class SuperInfection : MonoBehaviour, IGorillaSliceableSimple
 			}
 		}
 		sIPlayer.activePlayerGadgets.Clear();
+		ClearTerminalsActivePlayer(sIPlayer);
+	}
+
+	private void ClearTerminalsActivePlayer(SIPlayer siPlayer)
+	{
+		for (int i = 0; i < siTerminals.Length; i++)
+		{
+			if (siTerminals[i] != null && siTerminals[i].activePlayer == siPlayer)
+			{
+				siTerminals[i].activePlayer = null;
+			}
+		}
 	}
 
 	public void RefreshStations(int actorNr)

@@ -161,18 +161,18 @@ public class SizeManager : MonoBehaviour
 		{
 		case SizeChangerType.LocalOnline:
 			num *= ScaleFromChanger(sizeChanger, targetRig.transform, Time.fixedDeltaTime);
-			targetRig.ScaleMultiplier = ((num == 1f) ? SizeOverTime(num, 0.33f, Time.fixedDeltaTime) : num);
+			targetRig.ScaleMultiplier = (Mathf.Approximately(num, 1f) ? SizeOverTime(num, 0.33f, Time.fixedDeltaTime) : num);
 			break;
 		case SizeChangerType.OtherOnline:
 			num *= ScaleFromChanger(sizeChanger, targetRig.transform, Time.fixedDeltaTime);
-			targetRig.ScaleMultiplier = ((num == 1f) ? SizeOverTime(num, 0.33f, Time.fixedDeltaTime) : num);
+			targetRig.ScaleMultiplier = (Mathf.Approximately(num, 1f) ? SizeOverTime(num, 0.33f, Time.fixedDeltaTime) : num);
 			break;
 		case SizeChangerType.LocalOffline:
 			num *= ScaleFromChanger(sizeChanger, mainCameraTransform, Time.fixedDeltaTime);
-			targetPlayer.SetScaleMultiplier((num == 1f) ? SizeOverTime(num, 0.33f, Time.fixedDeltaTime) : num);
+			targetPlayer.SetScaleMultiplier(Mathf.Approximately(num, 1f) ? SizeOverTime(num, 0.33f, Time.fixedDeltaTime) : num);
 			break;
 		}
-		if (num != lastScale)
+		if (!Mathf.Approximately(num, lastScale))
 		{
 			for (int i = 0; i < lineRenderers.Length; i++)
 			{

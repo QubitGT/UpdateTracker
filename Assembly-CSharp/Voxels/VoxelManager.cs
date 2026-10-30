@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Fusion;
 using GorillaExtensions;
 using K4os.Compression.LZ4;
 using Photon.Pun;
@@ -12,7 +11,6 @@ using UnityEngine.Profiling;
 
 namespace Voxels;
 
-[NetworkBehaviourWeaved(0)]
 public class VoxelManager : NetworkComponent
 {
 	public class StateInitQueue
@@ -259,7 +257,6 @@ public class VoxelManager : NetworkComponent
 
 	internal override void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		base.OnEnable();
 		RoomSystem.JoinedRoomEvent += new Action(OnNetworkJoinedRoom);
 		RoomSystem.LeftRoomEvent += new Action(OnNetworkLeftRoom);
@@ -269,7 +266,6 @@ public class VoxelManager : NetworkComponent
 
 	internal override void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		base.OnDisable();
 		RoomSystem.JoinedRoomEvent -= new Action(OnNetworkJoinedRoom);
 		RoomSystem.LeftRoomEvent -= new Action(OnNetworkLeftRoom);
@@ -428,14 +424,6 @@ public class VoxelManager : NetworkComponent
 		{
 			RequestVoxelWorldStates();
 		}
-	}
-
-	public override void WriteDataFusion()
-	{
-	}
-
-	public override void ReadDataFusion()
-	{
 	}
 
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
@@ -1191,17 +1179,5 @@ public class VoxelManager : NetworkComponent
 				Debug.LogError("[VOX][HPTest] Can't text HitPoint without at least one VoxelWorld in scene!");
 			}
 		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
 	}
 }

@@ -3,6 +3,7 @@ using GorillaTag.CosmeticSystem;
 using Unity.Cinemachine;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Floppy Fold")]
 public class FloppyFold : MonoBehaviour, ISpawnable
 {
 	public enum Axis

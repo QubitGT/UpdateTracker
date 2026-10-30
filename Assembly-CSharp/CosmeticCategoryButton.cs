@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Category Button")]
 public class CosmeticCategoryButton : CosmeticButton
 {
 	[SerializeField]

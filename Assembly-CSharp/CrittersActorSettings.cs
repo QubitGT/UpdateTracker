@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Actor Settings")]
 public class CrittersActorSettings : MonoBehaviour
 {
 	public CrittersActor parentActor;

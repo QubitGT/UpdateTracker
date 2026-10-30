@@ -2,6 +2,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Pressable Button")]
 public class GamePressableButton : MonoBehaviour, IClickable
 {
 	[SerializeField]

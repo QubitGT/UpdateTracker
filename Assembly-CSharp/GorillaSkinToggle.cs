@@ -4,6 +4,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Gorilla Skin Toggle")]
 public class GorillaSkinToggle : MonoBehaviour, ISpawnable
 {
 	[Serializable]

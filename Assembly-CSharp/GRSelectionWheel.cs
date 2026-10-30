@@ -4,6 +4,7 @@ using GorillaExtensions;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Selection Wheel")]
 public class GRSelectionWheel : MonoBehaviour, ITickSystemTick
 {
 	private List<TMP_Text> shelfNames = new List<TMP_Text>();

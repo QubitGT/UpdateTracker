@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Grabbing Color Picker")]
 public class GrabbingColorPicker : MonoBehaviour, IGorillaSliceableSimple
 {
 	[SerializeField]

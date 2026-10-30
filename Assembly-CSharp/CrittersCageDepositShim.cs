@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Cage Deposit Shim")]
 public class CrittersCageDepositShim : MonoBehaviour
 {
 	public BoxCollider cageBoxCollider;

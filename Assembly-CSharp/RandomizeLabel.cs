@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Randomize Label")]
 public class RandomizeLabel : MonoBehaviour
 {
 	public TMP_Text label;

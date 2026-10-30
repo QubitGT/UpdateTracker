@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Upgrade Purchase Station Shelf")]
 public class GRToolUpgradePurchaseStationShelf : MonoBehaviour
 {
 	[Serializable]

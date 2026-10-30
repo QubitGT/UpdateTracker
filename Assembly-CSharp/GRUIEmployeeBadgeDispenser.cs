@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GRUI Employee Badge Dispenser")]
 public class GRUIEmployeeBadgeDispenser : MonoBehaviour
 {
 	[SerializeField]

@@ -1,6 +1,7 @@
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Rubber Duck Events")]
 public class RubberDuckEvents : MonoBehaviour
 {
 	public int PlayerId;

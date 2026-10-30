@@ -5,6 +5,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Status Material Mirror")]
 public class CosmeticStatusMaterialMirror : MonoBehaviour, ISpawnable
 {
 	[Serializable]

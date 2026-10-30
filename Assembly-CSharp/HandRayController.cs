@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
+[AddComponentMenu("GorillaTag/KID/Hand Ray Controller")]
 public class HandRayController : MonoBehaviour
 {
 	private enum HandSide

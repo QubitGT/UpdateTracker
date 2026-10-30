@@ -1,6 +1,7 @@
 using Unity.XR.CoreUtils;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Barrier Spectral")]
 public class GRBarrierSpectral : MonoBehaviour, IGameEntityComponent, IGameHittable
 {
 	public GameEntity entity;

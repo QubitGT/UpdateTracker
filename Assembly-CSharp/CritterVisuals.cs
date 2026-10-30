@@ -1,6 +1,7 @@
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critter Visuals")]
 public class CritterVisuals : MonoBehaviour
 {
 	public int critterType;

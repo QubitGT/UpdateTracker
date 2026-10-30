@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Magic Ring Cosmetic")]
 public class MagicRingCosmetic : MonoBehaviour
 {
 	private enum FadeState

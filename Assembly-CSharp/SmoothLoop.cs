@@ -2,6 +2,7 @@ using System.Collections;
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Smooth Loop")]
 public class SmoothLoop : MonoBehaviour, IGorillaSliceableSimple, IBuildValidation
 {
 	public AudioSource source;

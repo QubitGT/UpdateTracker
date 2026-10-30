@@ -1,12 +1,10 @@
 using System;
 using Cysharp.Threading.Tasks;
-using Fusion;
 using Photon.Pun;
 using Unity.Mathematics;
 using UnityEngine;
 using Voxels;
 
-[NetworkBehaviourWeaved(0)]
 public class RandomCarveableObject : NetworkComponent
 {
 	[SerializeField]
@@ -67,7 +65,6 @@ public class RandomCarveableObject : NetworkComponent
 
 	private void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		proximityTrigger.OnCountChanged -= OnPlayerCountChanged;
 	}
 
@@ -212,14 +209,6 @@ public class RandomCarveableObject : NetworkComponent
 		return false;
 	}
 
-	public override void WriteDataFusion()
-	{
-	}
-
-	public override void ReadDataFusion()
-	{
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		stream.SendNext(_carveableIndex);
@@ -248,17 +237,5 @@ public class RandomCarveableObject : NetworkComponent
 		{
 			SpawnCarveable(_carveableIndex);
 		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
 	}
 }

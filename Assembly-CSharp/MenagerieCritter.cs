@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Menagerie Critter")]
 public class MenagerieCritter : MonoBehaviour, IHoldableObject, IEyeScannable
 {
 	public enum MenagerieCritterState

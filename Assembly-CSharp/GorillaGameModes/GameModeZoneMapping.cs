@@ -44,12 +44,23 @@ public class GameModeZoneMapping : ScriptableObject
 
 	private HashSet<GameModeType> allModes;
 
+	private HashSet<GameModeType> allMainZoneModes;
+
 	public HashSet<GameModeType> AllModes
 	{
 		get
 		{
 			Init();
 			return allModes;
+		}
+	}
+
+	public HashSet<GameModeType> AllMainZoneModes
+	{
+		get
+		{
+			Init();
+			return allMainZoneModes;
 		}
 	}
 
@@ -60,9 +71,11 @@ public class GameModeZoneMapping : ScriptableObject
 			return;
 		}
 		allModes = new HashSet<GameModeType>();
+		allMainZoneModes = new HashSet<GameModeType>();
 		for (int i = 0; i < defaultGameModes.Length; i++)
 		{
 			allModes.Add(defaultGameModes[i]);
+			allMainZoneModes.Add(defaultGameModes[i]);
 		}
 		bigRoomZoneGameModesLookup = new Dictionary<GTZone, HashSet<GameModeType>>();
 		publicZoneGameModesLookup = new Dictionary<GTZone, HashSet<GameModeType>>();
@@ -72,6 +85,12 @@ public class GameModeZoneMapping : ScriptableObject
 			for (int k = 0; k < zoneGameModes[j].zone.Length; k++)
 			{
 				publicZoneGameModesLookup.Add(zoneGameModes[j].zone[k], new HashSet<GameModeType>(zoneGameModes[j].modes));
+				GTZone gTZone = zoneGameModes[j].zone[k];
+				if (gTZone != GTZone.customMaps && gTZone != GTZone.rotating)
+				{
+					allMainZoneModes.UnionWith(zoneGameModes[j].modes);
+					allMainZoneModes.UnionWith(zoneGameModes[j].privateModes);
+				}
 				for (int l = 0; l < zoneGameModes[j].modes.Length; l++)
 				{
 					if (!allModes.Contains(zoneGameModes[j].modes[l]))
@@ -175,6 +194,7 @@ public class GameModeZoneMapping : ScriptableObject
 			}
 			return GameModeType.Casual;
 		}
+		HashSet<GameModeType> hashSet = ((isPrivate && privateZoneGameModesLookup.ContainsKey(zone)) ? privateZoneGameModesLookup[zone] : ((!publicZoneGameModesLookup.ContainsKey(zone)) ? new HashSet<GameModeType>(defaultGameModes) : publicZoneGameModesLookup[zone]));
 		bool flag = PlayerPrefFlags.Check(PlayerPrefFlags.Flag.GAME_MODE_SELECTOR_IS_SUPER);
 		if (!flag)
 		{
@@ -188,7 +208,14 @@ public class GameModeZoneMapping : ScriptableObject
 				break;
 			}
 		}
-		HashSet<GameModeType> hashSet = ((isPrivate && privateZoneGameModesLookup.ContainsKey(zone)) ? privateZoneGameModesLookup[zone] : ((!publicZoneGameModesLookup.ContainsKey(zone)) ? new HashSet<GameModeType>(defaultGameModes) : publicZoneGameModesLookup[zone]));
+		else if (mode == GameModeType.Casual && hashSet.Contains(GameModeType.SuperCasual))
+		{
+			mode = GameModeType.SuperCasual;
+		}
+		else if (mode == GameModeType.Infection && hashSet.Contains(GameModeType.SuperInfect))
+		{
+			mode = GameModeType.SuperInfect;
+		}
 		if (hashSet.Contains(mode))
 		{
 			return mode;

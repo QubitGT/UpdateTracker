@@ -4,6 +4,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Seasonal/Finger Torch")]
 public class FingerTorch : MonoBehaviour, ISpawnable
 {
 	[Header("Wearable Settings")]

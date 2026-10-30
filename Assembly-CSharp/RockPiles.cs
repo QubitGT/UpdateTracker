@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Rock Piles")]
 public class RockPiles : MonoBehaviour
 {
 	[Serializable]

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Animation Scrubber")]
 public class AnimationScrubber : MonoBehaviour
 {
 	public bool scrubberActive;

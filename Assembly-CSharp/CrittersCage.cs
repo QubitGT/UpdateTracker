@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Cage")]
 public class CrittersCage : CrittersActor
 {
 	public Transform grabPosition;

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GorillaTagScripts;
 
-[CreateAssetMenu(fileName = "Data", menuName = "ScriptableObjects/WhackAMoleLevelSetting", order = 1)]
+[CreateAssetMenu(fileName = "Data", menuName = "ScriptableObjects/Gameplay/WhackAMoleLevelSetting", order = 1)]
 public class WhackAMoleLevelSO : ScriptableObject
 {
 	public int levelNumber;

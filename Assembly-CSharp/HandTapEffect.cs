@@ -3,6 +3,7 @@ using GorillaTag;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Hand Tap Effect")]
 public class HandTapEffect : MonoBehaviour
 {
 	[Serializable]

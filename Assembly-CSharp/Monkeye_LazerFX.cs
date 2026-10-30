@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Monkeye_Lazer FX")]
 public class Monkeye_LazerFX : MonoBehaviour
 {
 	private Transform[] eyeBones;

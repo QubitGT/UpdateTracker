@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Mirror When Equipped")]
 public class GameMirrorWhenEquipped : MonoBehaviour
 {
 	[SerializeField]

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Voxels;
 
-[CreateAssetMenu(fileName = "VoxelMaterialSet", menuName = "Voxels/VoxelMaterialSet")]
+[CreateAssetMenu(fileName = "VoxelMaterialSet", menuName = "GorillaTag/VoxelMaterialSet")]
 public class VoxelMaterialSet : ScriptableObject
 {
 	public VoxelMaterial[] Materials;

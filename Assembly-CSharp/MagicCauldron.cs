@@ -2,15 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using Fusion;
 using GorillaLocomotion;
 using GorillaLocomotion.Gameplay;
 using Photon.Pun;
 using UnityEngine;
-using UnityEngine.Scripting;
 
-[NetworkBehaviourWeaved(4)]
 public class MagicCauldron : NetworkComponent
 {
 	private enum CauldronState
@@ -50,31 +46,6 @@ public class MagicCauldron : NetworkComponent
 		void IFXContextParems<IngredientArgs>.OnPlayFX(IngredientArgs args)
 		{
 			fxCallBack(args.key);
-		}
-	}
-
-	[StructLayout(LayoutKind.Explicit, Size = 16)]
-	[NetworkStructWeaved(4)]
-	private struct MagicCauldronData : INetworkStruct
-	{
-		[field: FieldOffset(0)]
-		public float CurrentStateElapsedTime { get; set; }
-
-		[field: FieldOffset(4)]
-		public int CurrentRecipeIndex { get; set; }
-
-		[field: FieldOffset(8)]
-		public CauldronState CurrentState { get; set; }
-
-		[field: FieldOffset(12)]
-		public int IngredientIndex { get; set; }
-
-		public MagicCauldronData(float stateElapsedTime, int recipeIndex, CauldronState state, int ingredientIndex)
-		{
-			CurrentStateElapsedTime = stateElapsedTime;
-			CurrentRecipeIndex = recipeIndex;
-			CurrentState = state;
-			IngredientIndex = ingredientIndex;
 		}
 	}
 
@@ -158,33 +129,6 @@ public class MagicCauldron : NetworkComponent
 	public float levitationBonusOffAtYSpeed;
 
 	public float levitationBonusFullAtYSpeed;
-
-	[WeaverGenerated]
-	[DefaultForProperty("Data", 0, 4)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private MagicCauldronData _Data;
-
-	[Networked]
-	[NetworkedWeaved(0, 4)]
-	private unsafe MagicCauldronData Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing MagicCauldron.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(MagicCauldronData*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing MagicCauldron.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(MagicCauldronData*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	private new void Awake()
 	{
@@ -352,53 +296,6 @@ public class MagicCauldron : NetworkComponent
 		OnIngredientAddShared(_ingredientIndex, info);
 	}
 
-	[Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-	public unsafe void RPC_OnIngredientAdd(int _ingredientIndex, RpcInfo info = default(RpcInfo))
-	{
-		if (((NetworkBehaviour)this).InvokeRpc)
-		{
-			((NetworkBehaviour)this).InvokeRpc = false;
-		}
-		else
-		{
-			NetworkBehaviourUtils.ThrowIfBehaviourNotInitialized(this);
-			if (base.Runner.Stage == SimulationStages.Resimulate)
-			{
-				return;
-			}
-			int localAuthorityMask = base.Object.GetLocalAuthorityMask();
-			if ((localAuthorityMask & 1) == 0)
-			{
-				NetworkBehaviourUtils.NotifyLocalSimulationNotAllowedToSendRpc("System.Void MagicCauldron::RPC_OnIngredientAdd(System.Int32,Fusion.RpcInfo)", base.Object, 1);
-				return;
-			}
-			int num = 8;
-			num += 4;
-			if (!SimulationMessage.CanAllocateUserPayload(num))
-			{
-				NetworkBehaviourUtils.NotifyRpcPayloadSizeExceeded("System.Void MagicCauldron::RPC_OnIngredientAdd(System.Int32,Fusion.RpcInfo)", num);
-				return;
-			}
-			if (base.Runner.HasAnyActiveConnections())
-			{
-				SimulationMessage* ptr = SimulationMessage.Allocate(base.Runner.Simulation, num);
-				byte* ptr2 = (byte*)ptr + 28;
-				*(RpcHeader*)ptr2 = RpcHeader.Create(base.Object.Id, ((NetworkBehaviour)this).ObjectIndex, 1);
-				int num2 = 8;
-				*(int*)(ptr2 + num2) = _ingredientIndex;
-				num2 += 4;
-				ptr->Offset = num2 * 8;
-				base.Runner.SendRpc(ptr);
-			}
-			if ((localAuthorityMask & 7) == 0)
-			{
-				return;
-			}
-			info = RpcInfo.FromLocal(base.Runner, RpcChannel.Reliable, RpcHostMode.SourceIsServer);
-		}
-		OnIngredientAddShared(_ingredientIndex, info);
-	}
-
 	private void OnIngredientAddShared(int _ingredientIndex, PhotonMessageInfoWrapped info)
 	{
 		MonkeAgent.IncrementRPCCall(info, "OnIngredientAdd");
@@ -522,19 +419,8 @@ public class MagicCauldron : NetworkComponent
 
 	internal override void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		base.OnDisable();
 		currentIngredients.Clear();
-	}
-
-	public override void WriteDataFusion()
-	{
-		Data = new MagicCauldronData(currentStateElapsedTime, currentRecipeIndex, currentState, ingredientIndex);
-	}
-
-	public override void ReadDataFusion()
-	{
-		ReadDataShared(Data.CurrentStateElapsedTime, Data.CurrentRecipeIndex, Data.CurrentState, Data.IngredientIndex);
 	}
 
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
@@ -575,34 +461,5 @@ public class MagicCauldron : NetworkComponent
 		{
 			UpdateCauldronColor(allIngredients[ingredientIndex].color);
 		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
-	}
-
-	[NetworkRpcWeavedInvoker(1, 1, 7)]
-	[Preserve]
-	[WeaverGenerated]
-	protected unsafe static void RPC_OnIngredientAdd_0040Invoker(NetworkBehaviour behaviour, SimulationMessage* message)
-	{
-		byte* ptr = (byte*)message + 28;
-		int num = 8;
-		int num2 = *(int*)(ptr + num);
-		num += 4;
-		int num3 = num2;
-		RpcInfo info = RpcInfo.FromMessage(behaviour.Runner, message, RpcHostMode.SourceIsServer);
-		behaviour.InvokeRpc = true;
-		((MagicCauldron)behaviour).RPC_OnIngredientAdd(num3, info);
 	}
 }

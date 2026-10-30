@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Corn On Cob Cosmetic")]
 public class CornOnCobCosmetic : MonoBehaviour
 {
 	[Tooltip("The corn will start popping based on the temperature from this ThermalReceiver.")]

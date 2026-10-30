@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Photon.Voice.Unity;
 using UnityEngine;
@@ -20,6 +21,8 @@ public class LoudSpeakerNetwork : MonoBehaviour
 	private RigContainer _rigContainer;
 
 	private GTRecorder _localRecorder;
+
+	private bool _localEchoActive;
 
 	public AudioSource[] SpeakerSources => _speakerSources;
 
@@ -68,6 +71,47 @@ public class LoudSpeakerNetwork : MonoBehaviour
 		{
 			rigContainer.RemoveLoudSpeakerNetwork(this);
 		}
+		ResetBroadcastState();
+	}
+
+	private void ResetBroadcastState()
+	{
+		if (GetParentRigContainer(out var rigContainer) && rigContainer.isActiveAndEnabled && rigContainer.Voice != null && rigContainer.Voice.SpeakerInUse != null && rigContainer.Voice.SpeakerInUse.transform.IsChildOf(base.transform))
+		{
+			rigContainer.StartCoroutine(RestoreSpeakerParentNextFrame(rigContainer, base.transform));
+		}
+		if (_localEchoActive && _localRecorder != null)
+		{
+			_localRecorder.DebugEchoMode = false;
+		}
+		_localEchoActive = false;
+		if (_currentSpeakerActor == -1)
+		{
+			return;
+		}
+		foreach (Speaker currentSpeaker in _currentSpeakers)
+		{
+			if (currentSpeaker is GTSpeaker gTSpeaker && gTSpeaker != null)
+			{
+				gTSpeaker.ToggleAudioSource(toggle: false);
+				gTSpeaker.BroadcastExternal = false;
+			}
+		}
+		_currentSpeakerActor = -1;
+	}
+
+	private static IEnumerator RestoreSpeakerParentNextFrame(RigContainer rigContainer, Transform loudSpeaker)
+	{
+		yield return null;
+		if (!(rigContainer == null) && !(rigContainer.Voice == null) && !(rigContainer.Voice.SpeakerInUse == null) && (!(loudSpeaker != null) || !loudSpeaker.gameObject.activeInHierarchy))
+		{
+			Transform transform = rigContainer.Voice.SpeakerInUse.transform;
+			if (!(loudSpeaker == null) && transform.IsChildOf(loudSpeaker))
+			{
+				transform.SetParent(rigContainer.SpeakerHead, worldPositionStays: false);
+				transform.localPosition = Vector3.zero;
+			}
+		}
 	}
 
 	public void AddSpeaker(Speaker speaker)
@@ -85,7 +129,10 @@ public class LoudSpeakerNetwork : MonoBehaviour
 
 	public void StartBroadcastSpeakerOutput(VRRig player)
 	{
-		GorillaTagger.Instance.rigSerializer.BroadcastLoudSpeakerNetwork(toggleBroadcast: true, player.Creator.ActorNumber);
+		if (!(player == null) && player.Creator != null)
+		{
+			GorillaTagger.Instance.rigSerializer.BroadcastLoudSpeakerNetwork(toggleBroadcast: true, player.Creator.ActorNumber);
+		}
 	}
 
 	public void BroadcastLoudSpeakerNetwork(int actorNumber, bool isLocal = false)
@@ -99,6 +146,7 @@ public class LoudSpeakerNetwork : MonoBehaviour
 			if (_localRecorder != null)
 			{
 				_localRecorder.DebugEchoMode = true;
+				_localEchoActive = true;
 				if (ReparentLocalSpeaker)
 				{
 					Transform obj = _rigContainer.Voice.SpeakerInUse.transform;
@@ -128,7 +176,10 @@ public class LoudSpeakerNetwork : MonoBehaviour
 
 	public void StopBroadcastSpeakerOutput(VRRig player)
 	{
-		GorillaTagger.Instance.rigSerializer.BroadcastLoudSpeakerNetwork(toggleBroadcast: false, player.Creator.ActorNumber);
+		if (!(player == null) && player.Creator != null)
+		{
+			GorillaTagger.Instance.rigSerializer.BroadcastLoudSpeakerNetwork(toggleBroadcast: false, player.Creator.ActorNumber);
+		}
 	}
 
 	public void StopBroadcastLoudSpeakerNetwork(int actorNumber, bool isLocal = false)
@@ -142,6 +193,7 @@ public class LoudSpeakerNetwork : MonoBehaviour
 			if (_localRecorder != null)
 			{
 				_localRecorder.DebugEchoMode = false;
+				_localEchoActive = false;
 				if (ReparentLocalSpeaker && GetParentRigContainer(out var rigContainer))
 				{
 					Transform obj = rigContainer.Voice.SpeakerInUse.transform;

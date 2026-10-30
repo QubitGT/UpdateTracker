@@ -6,6 +6,7 @@ using Photon.Pun;
 using UnityEngine;
 
 [DefaultExecutionOrder(9999)]
+[AddComponentMenu("GorillaTag/Critters/Critters Actor Grabber")]
 public class CrittersActorGrabber : MonoBehaviour
 {
 	public bool isGrabbing;

@@ -113,11 +113,11 @@ public class GhostReactorSoak
 
 	private int GetActorNumber()
 	{
-		if (grPlayer.gamePlayer.rig.OwningNetPlayer == null)
+		if (grPlayer.gamePlayer.rig.Creator == null)
 		{
 			return -1;
 		}
-		return grPlayer.gamePlayer.rig.OwningNetPlayer.ActorNumber;
+		return grPlayer.gamePlayer.rig.Creator.ActorNumber;
 	}
 
 	public void SetState(State newState)

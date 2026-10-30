@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Meter Energy")]
 public class GRMeterEnergy : MonoBehaviour
 {
 	public enum MeterType

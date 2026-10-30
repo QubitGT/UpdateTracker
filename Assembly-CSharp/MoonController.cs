@@ -4,6 +4,7 @@ using CjLib;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Moon Controller")]
 public class MoonController : MonoBehaviour
 {
 	public enum Scenes

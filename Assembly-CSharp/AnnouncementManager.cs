@@ -3,6 +3,7 @@ using LitJson;
 using PlayFab;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/Announcement Manager")]
 public class AnnouncementManager : MonoBehaviour
 {
 	private const string ANNOUNCEMENT_ID_PLAYERPREF_PREFIX = "announcement-id-";

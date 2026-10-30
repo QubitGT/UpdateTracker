@@ -1,11 +1,9 @@
 using System;
 using System.Collections;
-using Fusion;
 using GorillaTag;
 using Photon.Pun;
 using UnityEngine;
 
-[NetworkBehaviourWeaved(1)]
 public class HitTargetNetworkState : NetworkComponent
 {
 	[SerializeField]
@@ -35,34 +33,6 @@ public class HitTargetNetworkState : NetworkComponent
 	private Coroutine resetCoroutine;
 
 	private static readonly WaitForSeconds TestPressCheckWait = new WaitForSeconds(1f);
-
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("Data", 0, 1)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private int _Data;
-
-	[Networked]
-	[NetworkedWeaved(0, 1)]
-	public unsafe int Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing HitTargetNetworkState.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(int*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing HitTargetNetworkState.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(int*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	protected override void Awake()
 	{
@@ -100,7 +70,6 @@ public class HitTargetNetworkState : NetworkComponent
 
 	internal override void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		base.OnEnable();
 		if (Application.isEditor)
 		{
@@ -161,21 +130,6 @@ public class HitTargetNetworkState : NetworkComponent
 		nextHittableTimestamp = Time.time + (float)hitCooldownTime;
 	}
 
-	public override void WriteDataFusion()
-	{
-		Data = networkedScore.Value;
-	}
-
-	public override void ReadDataFusion()
-	{
-		int data = Data;
-		if (data != networkedScore.Value)
-		{
-			PlayAudio(networkedScore.Value, data);
-		}
-		networkedScore.Value = data;
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (info.Sender.IsMasterClient)
@@ -218,19 +172,5 @@ public class HitTargetNetworkState : NetworkComponent
 		networkedScore.Value = 0;
 		PlayAudio(networkedScore.Value, 0);
 		resetCoroutine = null;
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
 	}
 }

@@ -2,6 +2,7 @@ using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/DJ Scratchtable")]
 public class DJScratchtable : MonoBehaviour
 {
 	[SerializeField]

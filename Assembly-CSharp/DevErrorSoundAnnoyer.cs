@@ -14,6 +14,4 @@ public class DevErrorSoundAnnoyer : MonoBehaviour
 
 	[SerializeField]
 	private Font errorFont;
-
-	public string displayedText;
 }

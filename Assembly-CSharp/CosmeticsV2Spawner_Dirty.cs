@@ -428,22 +428,24 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 		{
 			overrides[registry] = new List<bool>();
 		}
-		List<LoadOpInfo> list = _g_loadOpInfosForRigAndCosmeticIDDicts[_gVRRigDatasIndexByRig[rig]][playfabId];
-		for (int i = 0; i < list.Count; i++)
+		if (_g_loadOpInfosForRigAndCosmeticIDDicts[_gVRRigDatasIndexByRig[rig]].TryGetValue(playfabId, out var value))
 		{
-			int currentIndex = _g_loadOp_to_index.Count;
-			_ProcessLoadOpInfo(currentIndex, list[i]);
-			LoadOpInfo loadOpInfo2 = _g_loadOpInfos[currentIndex];
-			loadOpInfo2.loadOp.Completed += AddToRegistryWhenCompleted;
-			void AddToRegistryWhenCompleted(AsyncOperationHandle<GameObject> loadOp)
+			for (int i = 0; i < value.Count; i++)
 			{
-				GameObject item = ObjectToInitialize(_g_loadOpInfos[currentIndex]);
-				overrides[registry].Add(_g_loadOpInfos[currentIndex].part.partType == ECosmeticPartType.LocalRig || _g_loadOpInfos[currentIndex].part.partType == ECosmeticPartType.FirstPerson);
-				sides[registry].Add(_g_loadOpInfos[currentIndex].attachInfo.selectSide);
-				currentGOBatchByRegistry[registry].Add(item);
-				if (_g_loadOpsCountCompleted >= _g_loadOp_to_index.Count)
+				int currentIndex = _g_loadOp_to_index.Count;
+				_ProcessLoadOpInfo(currentIndex, value[i]);
+				LoadOpInfo loadOpInfo2 = _g_loadOpInfos[currentIndex];
+				loadOpInfo2.loadOp.Completed += AddToRegistryWhenCompleted;
+				void AddToRegistryWhenCompleted(AsyncOperationHandle<GameObject> loadOp)
 				{
-					PostCompletionProcess();
+					GameObject item = ObjectToInitialize(_g_loadOpInfos[currentIndex]);
+					overrides[registry].Add(_g_loadOpInfos[currentIndex].part.partType == ECosmeticPartType.LocalRig || _g_loadOpInfos[currentIndex].part.partType == ECosmeticPartType.FirstPerson);
+					sides[registry].Add(_g_loadOpInfos[currentIndex].attachInfo.selectSide);
+					currentGOBatchByRegistry[registry].Add(item);
+					if (_g_loadOpsCountCompleted >= _g_loadOp_to_index.Count)
+					{
+						PostCompletionProcess();
+					}
 				}
 			}
 		}
@@ -481,49 +483,49 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 		{
 			foreach (KeyValuePair<CosmeticItemRegistry, List<GameObject>> item2 in currentGOBatchByRegistry)
 			{
-				List<GameObject> value = item2.Value;
+				List<GameObject> value2 = item2.Value;
 				CosmeticItemRegistry key = item2.Key;
-				for (int j = 0; j < value.Count; j++)
+				for (int j = 0; j < value2.Count; j++)
 				{
-					if (!(value[j] == null))
+					if (!(value2[j] == null))
 					{
 						try
 						{
 							if (overrides[key][j])
 							{
-								key.InitializeCosmetic(value[j], isOverride: true);
+								key.InitializeCosmetic(value2[j], isOverride: true);
 							}
 						}
 						catch (Exception exception)
 						{
-							UnityEngine.Debug.LogError("CosmeticsV2Spawner_Dirty.PostCompletionProcess: InitializeCosmetic (override) threw for \"" + value[j].name + "\" on rig \"" + ((key.Rig != null) ? key.Rig.name : "<null rig>") + "\". Skipping this cosmetic so the rest of the batch still initializes. Exception follows:", value[j]);
-							UnityEngine.Debug.LogException(exception, value[j]);
+							UnityEngine.Debug.LogError("CosmeticsV2Spawner_Dirty.PostCompletionProcess: InitializeCosmetic (override) threw for \"" + value2[j].name + "\" on rig \"" + ((key.Rig != null) ? key.Rig.name : "<null rig>") + "\". Skipping this cosmetic so the rest of the batch still initializes. Exception follows:", value2[j]);
+							UnityEngine.Debug.LogException(exception, value2[j]);
 						}
 					}
 				}
-				for (int k = 0; k < value.Count; k++)
+				for (int k = 0; k < value2.Count; k++)
 				{
-					if (!(value[k] == null))
+					if (!(value2[k] == null))
 					{
 						try
 						{
 							if (!overrides[key][k])
 							{
-								key.InitializeCosmetic(value[k], isOverride: false);
+								key.InitializeCosmetic(value2[k], isOverride: false);
 							}
 						}
 						catch (Exception exception2)
 						{
-							UnityEngine.Debug.LogError("CosmeticsV2Spawner_Dirty.PostCompletionProcess: InitializeCosmetic threw for \"" + value[k].name + "\" on rig \"" + ((key.Rig != null) ? key.Rig.name : "<null rig>") + "\". Skipping this cosmetic so the rest of the batch still initializes. Exception follows:", value[k]);
-							UnityEngine.Debug.LogException(exception2, value[k]);
+							UnityEngine.Debug.LogError("CosmeticsV2Spawner_Dirty.PostCompletionProcess: InitializeCosmetic threw for \"" + value2[k].name + "\" on rig \"" + ((key.Rig != null) ? key.Rig.name : "<null rig>") + "\". Skipping this cosmetic so the rest of the batch still initializes. Exception follows:", value2[k]);
+							UnityEngine.Debug.LogException(exception2, value2[k]);
 						}
 					}
 				}
-				for (int l = 0; l < value.Count; l++)
+				for (int l = 0; l < value2.Count; l++)
 				{
-					if (!(value[l] == null))
+					if (!(value2[l] == null))
 					{
-						ISpawnable[] componentsInChildren = value[l].GetComponentsInChildren<ISpawnable>(includeInactive: true);
+						ISpawnable[] componentsInChildren = value2[l].GetComponentsInChildren<ISpawnable>(includeInactive: true);
 						for (int m = 0; m < componentsInChildren.Length; m++)
 						{
 							if (!componentsInChildren[m].IsSpawned)
@@ -542,7 +544,7 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 						}
 					}
 				}
-				value.Clear();
+				value2.Clear();
 				sides[key].Clear();
 				overrides[key].Clear();
 				key.RefreshRig();

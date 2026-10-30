@@ -7,6 +7,7 @@ using Photon.Pun;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/Ghost Reactor Shift Manager")]
 public class GhostReactorShiftManager : MonoBehaviourTick
 {
 	[Serializable]
@@ -669,7 +670,7 @@ public class GhostReactorShiftManager : MonoBehaviourTick
 			GRPlayer gRPlayer = GRPlayer.Get(reactor.vrRigs[i]);
 			if (reactor.vrRigs[i] != null && gRPlayer != null)
 			{
-				if (reactor.vrRigs[i].OwningNetPlayer == null)
+				if (reactor.vrRigs[i].Creator == null)
 				{
 					gRPlayer.ShiftPlayTime = 0.1f;
 				}
@@ -697,7 +698,7 @@ public class GhostReactorShiftManager : MonoBehaviourTick
 			if (reactor.vrRigs[i] != null && gRPlayer != null)
 			{
 				shiftTotalEarned += gRPlayer.ShiftCredits;
-				if (reactor.vrRigs[i].OwningNetPlayer == null)
+				if (reactor.vrRigs[i].Creator == null)
 				{
 					gRPlayer.ShiftPlayTime = 0.1f;
 				}

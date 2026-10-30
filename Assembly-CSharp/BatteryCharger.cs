@@ -3,6 +3,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Environment/Battery Charger")]
 public class BatteryCharger : MonoBehaviour
 {
 	[Serializable]

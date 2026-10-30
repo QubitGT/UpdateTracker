@@ -7,6 +7,7 @@ using UnityEngine.Serialization;
 [RequireComponent(typeof(GameGrabbable))]
 [RequireComponent(typeof(GameSnappable))]
 [RequireComponent(typeof(GameButtonActivatable))]
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Dash Yoyo")]
 public class SIGadgetDashYoyo : SIGadget
 {
 	[Serializable]

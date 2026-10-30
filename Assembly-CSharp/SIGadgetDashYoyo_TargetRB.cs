@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Dash Yoyo_Target RB")]
 public class SIGadgetDashYoyo_TargetRB : MonoBehaviour
 {
 	[SerializeField]

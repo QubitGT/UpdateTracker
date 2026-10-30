@@ -4,6 +4,7 @@ using GorillaTag;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Elf Launcher")]
 public class ElfLauncher : MonoBehaviour, PrefabNameSerialized
 {
 	[SerializeField]

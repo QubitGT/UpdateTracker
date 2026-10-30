@@ -2,6 +2,7 @@ using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Upgrade Station Deposit Box")]
 public class GRToolUpgradeStationDepositBox : MonoBehaviour
 {
 	public GRToolUpgradeStation upgradeStation;

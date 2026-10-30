@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Environment/Blinking Text")]
 public class BlinkingText : MonoBehaviour
 {
 	public float cycleTime;

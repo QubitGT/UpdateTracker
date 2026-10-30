@@ -51,7 +51,6 @@ public abstract class VoxelGenerator
 
 	public ChunkTask CreateMeshDataJob(Chunk chunk)
 	{
-		NativeCounter triangleCounter = new NativeCounter(Allocator.TempJob);
 		Action onComplete = null;
 		JobHandle handle = meshParameters.MeshGenerationMode switch
 		{
@@ -65,6 +64,7 @@ public abstract class VoxelGenerator
 			int length = math.min(chunk.VoxelCount * 15, 65535);
 			chunk.AllocateVertexData(length);
 			chunk.AllocateTriangleData(length);
+			NativeCounter triangleCounter = new NativeCounter(Allocator.TempJob);
 			onComplete = delegate
 			{
 				chunk.IsMeshGenerated = true;

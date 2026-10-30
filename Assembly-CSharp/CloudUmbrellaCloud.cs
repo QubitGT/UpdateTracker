@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Cloud Umbrella Cloud")]
 public class CloudUmbrellaCloud : MonoBehaviour
 {
 	public UmbrellaItem umbrella;

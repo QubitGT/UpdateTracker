@@ -2,6 +2,7 @@ using GorillaLocomotion;
 using GorillaTagScripts.VirtualStumpCustomMaps;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/V Hallway Exit Trigger")]
 public class VHallwayExitTrigger : MonoBehaviour
 {
 	private bool armed = true;

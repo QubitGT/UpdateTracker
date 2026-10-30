@@ -8,6 +8,7 @@ using Modio.Mods;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Search Screen")]
 public class CustomMapsSearchScreen : CustomMapsTerminalScreen
 {
 	[SerializeField]

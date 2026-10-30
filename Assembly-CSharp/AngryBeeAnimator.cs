@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Angry Bee Animator")]
 public class AngryBeeAnimator : MonoBehaviour
 {
 	[SerializeField]

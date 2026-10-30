@@ -4,6 +4,7 @@ using GorillaLocomotion;
 using GorillaLocomotion.Climbing;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Laser Zipline")]
 public class SIGadgetLaserZipline : SIGadget, ICallBack
 {
 	[SerializeField]

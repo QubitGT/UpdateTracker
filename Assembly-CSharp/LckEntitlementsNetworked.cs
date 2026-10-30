@@ -33,18 +33,18 @@ public class LckEntitlementsNetworked : MonoBehaviour
 			Debug.LogError("LCK: LckEntitlementsManager.Instance is not available in the scene!");
 			return;
 		}
-		string userId = m_rigNetworkController.VRRig.OwningNetPlayer.UserId;
-		if (userId.IsNullOrEmpty())
+		string text = rig.Creator?.UserId;
+		if (text.IsNullOrEmpty())
 		{
 			Debug.LogError("LCK: owningUserId is null on spawn. Cannot process entitlements.");
 		}
 		else if (rig.Rig.isLocal)
 		{
-			LckEntitlementsManager.Instance.OnLocalPlayerSpawned(userId);
+			LckEntitlementsManager.Instance.OnLocalPlayerSpawned(text);
 		}
 		else
 		{
-			LckEntitlementsManager.Instance.OnRemotePlayerSpawned(userId);
+			LckEntitlementsManager.Instance.OnRemotePlayerSpawned(text);
 		}
 	}
 

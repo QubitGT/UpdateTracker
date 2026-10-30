@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GorillaTag;
 
-[CreateAssetMenu(fileName = "MaterialDatasSO", menuName = "Gorilla Tag/MaterialDatasSO")]
+[CreateAssetMenu(fileName = "MaterialDatasSO", menuName = "GorillaTag/MaterialDatasSO")]
 public class MaterialDatasSO : ScriptableObject
 {
 	public List<GTPlayer.MaterialData> datas;

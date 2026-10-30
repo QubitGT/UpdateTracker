@@ -2,6 +2,7 @@ using GorillaTag.Cosmetics;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Seasonal/RC Ship")]
 public class RCShip : RCHoverboard
 {
 	[Header("RCShip - Events")]

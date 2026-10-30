@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Fusion;
 using GorillaNetworking;
 using GorillaTag;
 using GorillaTagScripts;
@@ -305,7 +304,7 @@ public abstract class NetworkSystem : MonoBehaviour
 
 	public abstract GameObject NetInstantiate(GameObject prefab, Vector3 position, Quaternion rotation, int playerAuthID, bool isRoomObject = false);
 
-	public abstract GameObject NetInstantiate(GameObject prefab, Vector3 position, Quaternion rotation, bool isRoomObject, byte group = 0, object[] data = null, NetworkRunner.OnBeforeSpawned callback = null);
+	public abstract GameObject NetInstantiate(GameObject prefab, Vector3 position, Quaternion rotation, bool isRoomObject, byte group = 0, object[] data = null);
 
 	public abstract void SetPlayerObject(GameObject playerInstance, int? owningPlayerID = null);
 
@@ -489,11 +488,6 @@ public abstract class NetworkSystem : MonoBehaviour
 				return netPlayerCache[i];
 			}
 		}
-		return null;
-	}
-
-	public NetPlayer GetPlayer(PlayerRef playerRef)
-	{
 		return null;
 	}
 

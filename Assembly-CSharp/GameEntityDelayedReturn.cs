@@ -2,6 +2,7 @@ using System;
 using GorillaTag.Audio;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Entity Delayed Return")]
 public class GameEntityDelayedReturn : MonoBehaviour, IGameEntityComponent, IDelayedExecListener
 {
 	[Serializable]

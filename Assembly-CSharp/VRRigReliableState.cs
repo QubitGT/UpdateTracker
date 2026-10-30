@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Fusion;
 using GorillaNetworking;
 using GorillaTagScripts;
 using Photon.Pun;
 using UnityEngine;
 
-public class VRRigReliableState : MonoBehaviour, IWrappedSerializable, INetworkStruct
+public class VRRigReliableState : MonoBehaviour, IWrappedSerializable
 {
 	public enum StateSyncSlots
 	{
@@ -103,8 +102,6 @@ public class VRRigReliableState : MonoBehaviour, IWrappedSerializable, INetworkS
 	[NonSerialized]
 	public bool isBuilderWatchEnabled;
 
-	private ReliableStateData Data;
-
 	public bool HasBracelet => braceletBeadColors.Count > 0;
 
 	public bool isDirty { get; private set; } = true;
@@ -198,96 +195,6 @@ public class VRRigReliableState : MonoBehaviour, IWrappedSerializable, INetworkS
 			return -1;
 		}
 		return m_cosmeticStates[(int)slot];
-	}
-
-	void IWrappedSerializable.OnSerializeRead(object newData)
-	{
-		Data = (ReliableStateData)newData;
-		long header = Data.Header;
-		SetHeader(header, out var numBeadsToRead);
-		for (int i = 0; i < activeTransferrableObjectIndex.Length; i++)
-		{
-			if ((header & (1 << i)) != 0L)
-			{
-				long num = Data.TransferrableStates[i];
-				activeTransferrableObjectIndex[i] = (int)num;
-				transferrablePosStates[i] = (TransferrableObject.PositionState)((num >> 32) & 0xFF);
-				transferrableItemStates[i] = (TransferrableObject.ItemStates)((num >> 40) & 0xFF);
-				transferableDockPositions[i] = (BodyDockPositions.DropPositions)((num >> 48) & 0xFF);
-			}
-			else
-			{
-				activeTransferrableObjectIndex[i] = -1;
-				transferrablePosStates[i] = TransferrableObject.PositionState.None;
-				transferrableItemStates[i] = (TransferrableObject.ItemStates)0;
-				transferableDockPositions[i] = BodyDockPositions.DropPositions.None;
-			}
-		}
-		wearablesPackedStates = Data.WearablesPackedState;
-		lThrowableProjectileIndex = Data.LThrowableProjectileIndex;
-		rThrowableProjectileIndex = Data.RThrowableProjectileIndex;
-		sizeLayerMask = Data.SizeLayerMask;
-		randomThrowableIndex = Data.RandomThrowableIndex;
-		braceletBeadColors.Clear();
-		if (numBeadsToRead > 0)
-		{
-			if (numBeadsToRead <= 3)
-			{
-				int num2 = (int)Data.PackedBeads;
-				braceletSelfIndex = num2 >> 30;
-				UnpackBeadColors(num2, 0, numBeadsToRead, braceletBeadColors);
-			}
-			else
-			{
-				long packedBeads = Data.PackedBeads;
-				braceletSelfIndex = (int)(packedBeads >> 60);
-				if (numBeadsToRead <= 6)
-				{
-					UnpackBeadColors(packedBeads, 0, numBeadsToRead, braceletBeadColors);
-				}
-				else
-				{
-					UnpackBeadColors(packedBeads, 0, 6, braceletBeadColors);
-					UnpackBeadColors(Data.PackedBeadsMoreThan6, 6, numBeadsToRead, braceletBeadColors);
-				}
-			}
-		}
-		bDock.RefreshTransferrableItems();
-		bDock.myRig.UpdateFriendshipBracelet();
-	}
-
-	object IWrappedSerializable.OnSerializeWrite()
-	{
-		isDirty = false;
-		ReliableStateData reliableStateData = default(ReliableStateData);
-		long header2 = (reliableStateData.Header = GetHeader());
-		long[] array = GetTransferrableStates(header2).ToArray();
-		reliableStateData.TransferrableStates.CopyFrom(array, 0, array.Length);
-		reliableStateData.WearablesPackedState = wearablesPackedStates;
-		reliableStateData.LThrowableProjectileIndex = lThrowableProjectileIndex;
-		reliableStateData.RThrowableProjectileIndex = rThrowableProjectileIndex;
-		reliableStateData.SizeLayerMask = sizeLayerMask;
-		reliableStateData.RandomThrowableIndex = randomThrowableIndex;
-		if (braceletBeadColors.Count > 0)
-		{
-			long num = PackBeadColors(braceletBeadColors, 0);
-			if (braceletBeadColors.Count <= 3)
-			{
-				num |= (long)braceletSelfIndex << 30;
-				reliableStateData.PackedBeads = num;
-			}
-			else
-			{
-				num |= (long)braceletSelfIndex << 60;
-				reliableStateData.PackedBeads = num;
-				if (braceletBeadColors.Count > 6)
-				{
-					reliableStateData.PackedBeadsMoreThan6 = PackBeadColors(braceletBeadColors, 6);
-				}
-			}
-		}
-		Data = reliableStateData;
-		return reliableStateData;
 	}
 
 	void IWrappedSerializable.OnSerializeWrite(PhotonStream stream, PhotonMessageInfo info)

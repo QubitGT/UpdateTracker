@@ -4,6 +4,7 @@ using GorillaTag.Cosmetics;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Sticky Projectile")]
 public class StickyProjectile : MonoBehaviour, IProjectile, ITickSystemTick
 {
 	[Flags]

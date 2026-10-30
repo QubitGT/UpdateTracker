@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/KID/Age Slider")]
 public class AgeSlider : MonoBehaviour, IBuildValidation
 {
 	[Serializable]

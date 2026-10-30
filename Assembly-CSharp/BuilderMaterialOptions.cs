@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "BuilderMaterialOptions01a", menuName = "Gorilla Tag/Builder/Options", order = 0)]
+[CreateAssetMenu(fileName = "BuilderMaterialOptions01a", menuName = "GorillaTag/Builder/Options", order = 0)]
 public class BuilderMaterialOptions : ScriptableObject
 {
 	[Serializable]

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Exclusion Zone")]
 public class SIExclusionZone : MonoBehaviour
 {
 	public SIExclusionType exclusionType = SIExclusionType.AffectsOthers;

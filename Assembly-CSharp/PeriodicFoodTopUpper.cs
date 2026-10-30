@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Periodic Food Top Upper")]
 public class PeriodicFoodTopUpper : MonoBehaviour
 {
 	private CrittersFood food;

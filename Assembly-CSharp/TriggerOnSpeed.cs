@@ -2,6 +2,7 @@ using GorillaExtensions;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Trigger On Speed")]
 public class TriggerOnSpeed : MonoBehaviour, ITickSystemTick
 {
 	[SerializeField]

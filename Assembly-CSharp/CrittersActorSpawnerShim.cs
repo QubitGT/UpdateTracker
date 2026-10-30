@@ -1,6 +1,7 @@
 using Critters.Scripts;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Actor Spawner Shim")]
 public class CrittersActorSpawnerShim : MonoBehaviour
 {
 	public Transform spawnerPointTransform;

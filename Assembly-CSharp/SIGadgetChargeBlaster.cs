@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Charge Blaster")]
 public class SIGadgetChargeBlaster : MonoBehaviour, SIGadgetBlasterType
 {
 	[Serializable]

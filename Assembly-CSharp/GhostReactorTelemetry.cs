@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/Ghost Reactor Telemetry")]
 public class GhostReactorTelemetry : MonoBehaviour
 {
 	public const string SHIFT_START_EVENT_NAME = "ghost_game_start";

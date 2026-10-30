@@ -2,6 +2,7 @@ using GorillaTagScripts.VirtualStumpCustomMaps;
 using UnityEngine;
 
 [RequireComponent(typeof(TeleportNode))]
+[AddComponentMenu("GorillaTag/Virtual Stump/Stump Return Router")]
 public class StumpReturnRouter : MonoBehaviour
 {
 	[Tooltip("Where the return node drops the player back into the Custom hallway.")]

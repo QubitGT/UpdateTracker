@@ -24,6 +24,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Mod IO Manager")]
 public class ModIOManager : MonoBehaviour, ISteamCredentialProvider, IOculusCredentialProvider
 {
 	public enum ModIOAuthMethod
@@ -595,12 +596,7 @@ public class ModIOManager : MonoBehaviour, ISteamCredentialProvider, IOculusCred
 		}
 		try
 		{
-			DirectoryInfo directoryInfo = new DirectoryInfo(ModIODirectory);
-			if (!directoryInfo.Exists)
-			{
-				ModioLog.Error?.Log("[ModIOManager::SaveFavoriteMods] ModIO Directory for GorillaTag does not exist!");
-				return;
-			}
+			DirectoryInfo directoryInfo = Directory.CreateDirectory(ModIODirectory);
 			long[] array = new long[favoriteMods.Count];
 			int num = 0;
 			foreach (KeyValuePair<ModId, Mod> favoriteMod in favoriteMods)
@@ -637,20 +633,13 @@ public class ModIOManager : MonoBehaviour, ISteamCredentialProvider, IOculusCred
 		try
 		{
 			DirectoryInfo directoryInfo = new DirectoryInfo(ModIODirectory);
-			if (!directoryInfo.Exists)
+			FileInfo[] array = (directoryInfo.Exists ? directoryInfo.GetFiles("favoriteMods.json") : Array.Empty<FileInfo>());
+			if (array.Length == 0)
 			{
-				GTDev.LogWarning("ModIOManager::GetFavoriteMods Directory " + directoryInfo.ToString() + " does not exist");
 				favoriteModsLoaded = true;
-				return (error: new Error(ErrorCode.FILE_NOT_FOUND), favoriteMods: favoriteMods.Values.ToList());
+				return (error: Error.None, favoriteMods: favoriteMods.Values.ToList());
 			}
-			FileInfo[] files = directoryInfo.GetFiles("favoriteMods.json");
-			if (files.Length == 0)
-			{
-				GTDev.LogWarning("ModIOManager::GetFavoriteMods could not find file " + ModIODirectory + "favoriteMods.json");
-				favoriteModsLoaded = true;
-				return (error: new Error(ErrorCode.FILE_NOT_FOUND), favoriteMods: favoriteMods.Values.ToList());
-			}
-			var (error, collection) = await GetMods(JsonConvert.DeserializeObject<long[]>(File.ReadAllText(files[0].FullName)), forceRefresh);
+			var (error, collection) = await GetMods(JsonConvert.DeserializeObject<long[]>(File.ReadAllText(array[0].FullName)), forceRefresh);
 			if (!error)
 			{
 				foreach (Mod item in collection)
@@ -1493,7 +1482,7 @@ public class ModIOManager : MonoBehaviour, ISteamCredentialProvider, IOculusCred
 
 	public static IEnumerator AssociateMothershipAndModIOAccounts(AssociateMotherhsipAndModIOAccountsRequest data, Action<AssociateMotherhsipAndModIOAccountsResponse> callback)
 	{
-		UnityWebRequest request = new UnityWebRequest(PlayFabAuthenticatorSettings.AuthApiBaseUrl + "/api/AssociatePlayFabAndModIO", "POST");
+		UnityWebRequest request = new UnityWebRequest(BackendApiUrl.Build(PlayFabAuthenticatorSettings.AuthApiBaseUrl, "/api/AssociatePlayFabAndModIO"), "POST");
 		string s = JsonUtility.ToJson(data);
 		byte[] bytes = Encoding.UTF8.GetBytes(s);
 		bool retry = false;

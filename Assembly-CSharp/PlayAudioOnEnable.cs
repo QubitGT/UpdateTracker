@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/Play Audio On Enable")]
 public class PlayAudioOnEnable : MonoBehaviour
 {
 	[SerializeField]

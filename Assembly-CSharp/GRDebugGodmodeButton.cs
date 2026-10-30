@@ -1,3 +1,6 @@
+using UnityEngine;
+
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Debug Godmode Button")]
 public class GRDebugGodmodeButton : GorillaPressableReleaseButton
 {
 	private void Awake()

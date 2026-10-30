@@ -4,6 +4,7 @@ using Photon.Realtime;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Coconut Mystic")]
 public class CoconutMystic : MonoBehaviour
 {
 	public VRRig rig;
@@ -47,8 +48,8 @@ public class CoconutMystic : MonoBehaviour
 		if (array[0] is int num && num == kUpdateLabelEvent)
 		{
 			NetPlayer player = NetworkSystem.Instance.GetPlayer(evData.Sender);
-			NetPlayer owningNetPlayer = rig.OwningNetPlayer;
-			if (player == owningNetPlayer)
+			NetPlayer creator = rig.Creator;
+			if (player == creator)
 			{
 				int index = (int)array[1];
 				label.text = answers.GetItem(index).GetLocalizedString();

@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Seasonal/Monke Vote Option")]
 public class MonkeVoteOption : MonoBehaviour
 {
 	[SerializeField]

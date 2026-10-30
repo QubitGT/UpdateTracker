@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/On Squeeze Trigger")]
 public class OnSqueezeTrigger : MonoBehaviour
 {
 	[SerializeField]

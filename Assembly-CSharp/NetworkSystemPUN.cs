@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ExitGames.Client.Photon;
-using Fusion;
 using GorillaNetworking;
 using GorillaTag;
 using GorillaTag.Audio;
@@ -571,7 +570,10 @@ public class NetworkSystemPUN : NetworkSystem
 			}
 			base.netState = NetSystemState.InGame;
 			PlayerJoined(base.LocalPlayer);
-			localRecorder.StartRecording();
+			if (!localRecorder.IsRecording)
+			{
+				localRecorder.StartRecording();
+			}
 			return netJoinResult;
 		}
 	}
@@ -818,7 +820,7 @@ public class NetworkSystemPUN : NetworkSystem
 		return NetInstantiate(prefab, position, rotation, isRoomObject);
 	}
 
-	public override GameObject NetInstantiate(GameObject prefab, Vector3 position, Quaternion rotation, bool isRoomObject, byte group = 0, object[] data = null, NetworkRunner.OnBeforeSpawned callback = null)
+	public override GameObject NetInstantiate(GameObject prefab, Vector3 position, Quaternion rotation, bool isRoomObject, byte group = 0, object[] data = null)
 	{
 		if (PhotonNetwork.CurrentRoom == null)
 		{

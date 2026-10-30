@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Photon.Pun;
+using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Actor Spawner Point")]
 public class CrittersActorSpawnerPoint : CrittersActor
 {
 	private CrittersActor spawnedActor;

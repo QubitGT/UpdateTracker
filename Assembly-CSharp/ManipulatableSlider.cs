@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Manipulatable Slider")]
 public class ManipulatableSlider : ManipulatableObject
 {
 	public float breakDistance = 0.2f;

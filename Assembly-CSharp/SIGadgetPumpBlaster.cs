@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(GameTriggerInteractable))]
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Pump Blaster")]
 public class SIGadgetPumpBlaster : MonoBehaviour, SIGadgetBlasterType
 {
 	public SIGadgetBlasterProjectile projectilePrefab;

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PerformanceSystems;
 
-[CreateAssetMenu(menuName = "PerformanceTools/TimeSlicer/TimeSliceController", fileName = "TimeSliceController")]
+[CreateAssetMenu(menuName = "ScriptableObjects/Visuals and Audio/TimeSliceController", fileName = "TimeSliceController")]
 public class TimeSliceControllerAsset : ScriptableObject
 {
 	private readonly List<ITimeSlice> _currentTimeSliceBehaviours = new List<ITimeSlice>();

@@ -17,6 +17,6 @@ public enum EEdCosBrowserCategoryFilter
 	Arms = 0x100,
 	Pants = 0x200,
 	TagEffect = 0x400,
-	Set = 0x1000,
-	All = 0x17FF
+	Set = 0x800000,
+	All = 0x8007FF
 }

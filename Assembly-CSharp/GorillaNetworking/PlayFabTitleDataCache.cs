@@ -239,7 +239,7 @@ public class PlayFabTitleDataCache : MonoBehaviour
 						}
 						catch (Exception ex)
 						{
-							UnityEngine.Debug.LogError("[PlayFabTitleDataCache::UpdateDataCo] Error running callback for key: '" + text3 + "' value: '" + text6 + "' exception: " + ex.Message);
+							UnityEngine.Debug.LogError("[PlayFabTitleDataCache::UpdateDataCo] Error running callback for key: '" + text3 + "' value: '" + text6 + "' exception: " + ex.Message + " \n" + ex.StackTrace);
 						}
 						requests.RemoveAt(num);
 					}

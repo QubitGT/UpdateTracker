@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Bee Avoid Point")]
 public class BeeAvoidPoint : MonoBehaviour
 {
 	private void Start()

@@ -1,8 +1,10 @@
 using System;
 using GT_CustomMapSupportRuntime;
 using GorillaExtensions;
+using GorillaTag.Gravity;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Grabbables Controller")]
 public class CustomMapsGrabbablesController : MonoBehaviour, IGameEntityComponent
 {
 	public GameEntity entity;
@@ -62,6 +64,10 @@ public class CustomMapsGrabbablesController : MonoBehaviour, IGameEntityComponen
 			for (int i = 0; i < componentsInChildren.Length; i++)
 			{
 				componentsInChildren[i].gameObject.layer = LayerMask.NameToLayer("Prop");
+			}
+			if (componentsInChildren.Length != 0 && entity.TryGetComponent<Rigidbody>(out var _) && entity.gravityController == null && !entity.TryGetComponent<MonkeGravityController>(out entity.gravityController))
+			{
+				entity.gravityController = entity.gameObject.AddComponent<MonkeGravityController>();
 			}
 		}
 	}

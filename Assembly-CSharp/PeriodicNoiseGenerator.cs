@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Periodic Noise Generator")]
 public class PeriodicNoiseGenerator : MonoBehaviour
 {
 	public float sleepDuration;

@@ -3,6 +3,7 @@ using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Loud Noise")]
 public class CrittersLoudNoise : CrittersActor
 {
 	public float soundVolume;

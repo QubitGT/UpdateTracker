@@ -4,6 +4,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(SIGadgetProjectileType))]
 [RequireComponent(typeof(Rigidbody))]
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Blaster Projectile")]
 public class SIGadgetBlasterProjectile : MonoBehaviourTick
 {
 	[OnEnterPlay_SetNull]

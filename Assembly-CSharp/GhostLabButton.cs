@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Ghost Lab Button")]
 public class GhostLabButton : GorillaPressableButton, IBuildValidation
 {
 	public GhostLab ghostLab;

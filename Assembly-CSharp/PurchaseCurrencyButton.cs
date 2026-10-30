@@ -2,6 +2,7 @@ using System.Collections;
 using GorillaNetworking.Store;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Purchase Currency Button")]
 public class PurchaseCurrencyButton : GorillaPressableButton
 {
 	public string purchaseCurrencySize;

@@ -3,6 +3,7 @@ using GorillaLocomotion;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Second Look Skeleton")]
 public class SecondLookSkeleton : MonoBehaviour
 {
 	public enum GhostState
@@ -146,12 +147,20 @@ public class SecondLookSkeleton : MonoBehaviour
 		rHits = new RaycastHit[20];
 		lookedAway = false;
 		firstLookActivated = false;
-		animator.Play("ArmsOut");
+		PlayAnimation("ArmsOut");
 	}
 
 	private void Update()
 	{
 		ProcessGhostState();
+	}
+
+	private void PlayAnimation(string stateName)
+	{
+		if (animator.gameObject.activeInHierarchy)
+		{
+			animator.Play(stateName);
+		}
 	}
 
 	public void ChangeState(GhostState newState)
@@ -187,7 +196,7 @@ public class SecondLookSkeleton : MonoBehaviour
 				}
 				spookyGhost.SetActive(value: true);
 			}
-			animator.Play("ArmsOut");
+			PlayAnimation("ArmsOut");
 			spookyGhost.transform.rotation = Quaternion.LookRotation(playerTransform.position - spookyGhost.transform.position, Vector3.up);
 			if (IsMine())
 			{
@@ -199,7 +208,7 @@ public class SecondLookSkeleton : MonoBehaviour
 			if (tapped)
 			{
 				spookyGhost.SetActive(value: true);
-				animator.Play("CrawlPatrol");
+				PlayAnimation("CrawlPatrol");
 				audioSource.loop = true;
 				audioSource.clip = patrolLoop;
 				audioSource.GTPlay();
@@ -216,7 +225,7 @@ public class SecondLookSkeleton : MonoBehaviour
 		case GhostState.Chasing:
 			currentState = GhostState.Chasing;
 			resetChaseHistory.Clear();
-			animator.Play("CrawlChase");
+			PlayAnimation("CrawlChase");
 			localThrown = false;
 			localCaught = false;
 			if (tapped)
@@ -235,7 +244,7 @@ public class SecondLookSkeleton : MonoBehaviour
 				audioSource.loop = true;
 				audioSource.clip = carryingLoop;
 				audioSource.GTPlay();
-				animator.Play("ArmsOut");
+				PlayAnimation("ArmsOut");
 			}
 			if (!IsMine())
 			{
@@ -391,10 +400,10 @@ public class SecondLookSkeleton : MonoBehaviour
 				spookyGhost.SetActive(value: false);
 				break;
 			case GhostState.Activated:
-				animator.Play("ArmsOut");
+				PlayAnimation("ArmsOut");
 				break;
 			case GhostState.Patrolling:
-				animator.Play("CrawlPatrol");
+				PlayAnimation("CrawlPatrol");
 				audioSource.loop = true;
 				audioSource.clip = patrolLoop;
 				audioSource.GTPlay();
@@ -403,18 +412,18 @@ public class SecondLookSkeleton : MonoBehaviour
 				audioSource.clip = chaseLoop;
 				audioSource.loop = true;
 				audioSource.GTPlay();
-				animator.Play("CrawlChase");
+				PlayAnimation("CrawlChase");
 				spookyGhost.SetActive(value: true);
 				break;
 			case GhostState.PlayerThrown:
-				animator.Play("ArmsOut");
+				PlayAnimation("ArmsOut");
 				break;
 			case GhostState.CaughtPlayer:
 				audioSource.GTPlayOneShot(grabbedSound);
 				audioSource.loop = true;
 				audioSource.clip = carryingLoop;
 				audioSource.GTPlay();
-				animator.Play("ArmsOut");
+				PlayAnimation("ArmsOut");
 				break;
 			case GhostState.Reset:
 				break;

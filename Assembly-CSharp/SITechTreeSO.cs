@@ -125,6 +125,15 @@ public class SITechTreeSO : ScriptableObject
 		}
 	}
 
+	private void OnDisable()
+	{
+		if (_upgradeTypeByEntityTypeId.IsCreated)
+		{
+			_upgradeTypeByEntityTypeId.Dispose();
+		}
+		Initialized = false;
+	}
+
 	private void InitTechTree()
 	{
 		Debug.Log("[SI] SITechTreeSO.InitTechTree");

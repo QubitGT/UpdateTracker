@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Code Redemption")]
 public class CodeRedemption : MonoBehaviour
 {
 	[Serializable]
@@ -65,7 +66,7 @@ public class CodeRedemption : MonoBehaviour
 			mothershipEnvId = MothershipClientApiUnity.EnvironmentId
 		});
 		Debug.Log("[CodeRedemption] Sending redemption request for code: " + code);
-		StartCoroutine(ProcessWebRequest(PlayFabAuthenticatorSettings.HpPromoApiBaseUrl + "/api/ConsumeCodeItem", data, "application/json", OnCodeRedemptionResponse));
+		StartCoroutine(ProcessWebRequest(BackendApiUrl.Build(PlayFabAuthenticatorSettings.HpPromoApiBaseUrl, "/api/ConsumeCodeItem"), data, "application/json", OnCodeRedemptionResponse));
 	}
 
 	private void OnCodeRedemptionResponse(UnityWebRequest completedRequest)

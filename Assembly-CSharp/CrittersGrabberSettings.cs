@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Grabber Settings")]
 public class CrittersGrabberSettings : CrittersActorSettings
 {
 	public Transform _grabPosition;

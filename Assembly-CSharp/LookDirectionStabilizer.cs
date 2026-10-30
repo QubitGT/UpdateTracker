@@ -3,6 +3,7 @@ using GorillaTag.CosmeticSystem;
 using Unity.Cinemachine;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Look Direction Stabilizer")]
 public class LookDirectionStabilizer : MonoBehaviour, ISpawnable
 {
 	private VRRig myRig;

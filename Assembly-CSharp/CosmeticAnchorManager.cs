@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Anchor Manager")]
 public class CosmeticAnchorManager : MonoBehaviour, IGorillaSliceableSimple
 {
 	public static CosmeticAnchorManager instance;

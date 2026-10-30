@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 
 [DefaultExecutionOrder(0)]
+[AddComponentMenu("GorillaTag/KID/KID Audio Manager")]
 public class KIDAudioManager : MonoBehaviour
 {
 	public enum KIDSoundType

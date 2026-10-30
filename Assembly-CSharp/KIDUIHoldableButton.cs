@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI Holdable Button")]
 public class KIDUIHoldableButton : MonoBehaviour, IPointerDownHandler, IEventSystemHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
 {
 	[Serializable]

@@ -2,6 +2,7 @@ using System;
 using GorillaLocomotion;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Stilt")]
 public class SIGadgetStilt : SIGadget
 {
 	[SerializeField]

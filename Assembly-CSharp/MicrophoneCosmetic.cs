@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Microphone Cosmetic")]
 public class MicrophoneCosmetic : MonoBehaviour
 {
 	[SerializeField]

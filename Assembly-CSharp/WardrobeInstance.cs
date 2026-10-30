@@ -1,6 +1,7 @@
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Wardrobe Instance")]
 public class WardrobeInstance : MonoBehaviour
 {
 	public WardrobeItemButton[] wardrobeItemButtons;

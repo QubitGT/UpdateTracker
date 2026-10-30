@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Health Meter Node")]
 public class GRHealthMeterNode : MonoBehaviour
 {
 	public GameObject showFull;

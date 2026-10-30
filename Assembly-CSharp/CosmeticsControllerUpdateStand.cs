@@ -1,6 +1,7 @@
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetics Controller Update Stand")]
 public class CosmeticsControllerUpdateStand : MonoBehaviour
 {
 	public CosmeticsController cosmeticsController;

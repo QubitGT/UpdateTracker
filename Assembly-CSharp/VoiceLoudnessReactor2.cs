@@ -2,6 +2,7 @@ using GorillaTag;
 using GorillaTag.Cosmetics;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Voice Loudness Reactor2")]
 public class VoiceLoudnessReactor2 : MonoBehaviour, ITickSystemTick, IDynamicFloat
 {
 	[Tooltip("Multiply the microphone input by this value. A good default is 15.")]

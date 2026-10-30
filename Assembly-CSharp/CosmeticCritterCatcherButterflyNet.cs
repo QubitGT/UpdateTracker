@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Critter Catcher Butterfly Net")]
 public class CosmeticCritterCatcherButterflyNet : CosmeticCritterCatcher
 {
 	[Tooltip("Use this for calculating the catch position and velocity.")]

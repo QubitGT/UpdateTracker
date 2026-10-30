@@ -56,6 +56,10 @@ public class ConsentHoldButton : MonoBehaviour
 	[SerializeField]
 	private Feedback feedback = Feedback.Default;
 
+	[Tooltip("Alpha applied to the button while it is not interactable.")]
+	[SerializeField]
+	private float disabledAlpha = 0.35f;
+
 	private bool pressing;
 
 	private float elapsed;
@@ -66,7 +70,29 @@ public class ConsentHoldButton : MonoBehaviour
 
 	private float cooldownUntil;
 
+	private bool interactable = true;
+
+	private CanvasGroup canvasGroup;
+
 	public event Action HoldComplete;
+
+	public void SetInteractable(bool value)
+	{
+		interactable = value;
+		if (!value)
+		{
+			ResetHold();
+		}
+		if (canvasGroup == null)
+		{
+			canvasGroup = GetComponent<CanvasGroup>();
+			if (canvasGroup == null)
+			{
+				canvasGroup = base.gameObject.AddComponent<CanvasGroup>();
+			}
+		}
+		canvasGroup.alpha = (value ? 1f : disabledAlpha);
+	}
 
 	public void ResetHold()
 	{
@@ -86,7 +112,7 @@ public class ConsentHoldButton : MonoBehaviour
 
 	private void OnTriggerEnter(Collider other)
 	{
-		if (pressing || Time.time < cooldownUntil)
+		if (!interactable || pressing || Time.time < cooldownUntil)
 		{
 			return;
 		}

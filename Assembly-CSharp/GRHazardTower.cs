@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Hazard Tower")]
 public class GRHazardTower : MonoBehaviour, IGameEntityComponent, IGameProjectileLauncher
 {
 	public GameEntity gameEntity;

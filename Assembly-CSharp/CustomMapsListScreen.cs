@@ -13,6 +13,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps List Screen")]
 public class CustomMapsListScreen : CustomMapsTerminalScreen
 {
 	public enum ListScreenState

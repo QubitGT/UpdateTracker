@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Debug Test Grabber")]
 public class DebugTestGrabber : MonoBehaviour
 {
 	public bool isGrabbing;

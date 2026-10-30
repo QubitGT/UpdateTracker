@@ -7,6 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Resource Collection")]
 public class SIResourceCollection : MonoBehaviour, ITouchScreenStation
 {
 	public enum FailReason

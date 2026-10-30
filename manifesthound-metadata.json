@@ -1,32 +1,32 @@
 {
   "generator": "ManifestHound",
-  "eventId": "d712d885-1ba1-4ab8-a837-df4cde312754",
+  "eventId": "68123551-a4c5-49c9-ab82-d4d00a714f89",
   "appId": 1533390,
   "gameName": "Gorilla Tag",
-  "buildId": "26061329",
-  "previousBuildId": "25996962",
+  "buildId": "26328977",
+  "previousBuildId": "26061329",
   "manifestIds": {
-    "1533391": "7743295053010941759",
-    "1533392": "7183827441048024305"
+    "1533391": "2321915915864505402",
+    "1533392": "5869743786309850587"
   },
   "depots": [
     {
       "depotId": "1533391",
       "change": "changed",
-      "from": "6568145729038118915",
-      "to": "7743295053010941759",
+      "from": "7743295053010941759",
+      "to": "2321915915864505402",
       "tracked": false
     },
     {
       "depotId": "1533392",
       "change": "changed",
-      "from": "2848252615781833950",
-      "to": "7183827441048024305",
+      "from": "7183827441048024305",
+      "to": "5869743786309850587",
       "tracked": false
     }
   ],
-  "updateTime": "2026-10-20T16:26:56.000Z",
-  "detectedAt": "2026-10-20T16:27:30.741Z",
+  "updateTime": "2026-10-30T17:33:35.000Z",
+  "detectedAt": "2026-10-30T18:48:43.545Z",
   "tools": {
     "git": "git version 2.39.5",
     "ilspycmd": "ilspycmd: 8.2.0.7535",
@@ -152,6 +152,7 @@
     "Unity.Multiplayer.Center.Common",
     "Unity.Multiplayer.Playmode.Common.Runtime",
     "Unity.Multiplayer.Playmode",
+    "Unity.Pipeline.Attributes",
     "Unity.ProBuilder.Csg",
     "Unity.ProBuilder.KdTree",
     "Unity.ProBuilder.Poly2Tri",
@@ -199,8 +200,8 @@
     "XNode",
     "ZString"
   ],
-  "filesChanged": 8,
-  "added": 0,
-  "modified": 8,
-  "removed": 0
+  "filesChanged": 917,
+  "added": 21,
+  "modified": 829,
+  "removed": 67
 }

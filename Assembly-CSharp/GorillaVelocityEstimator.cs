@@ -2,6 +2,7 @@ using System;
 using GorillaLocomotion;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Gorilla Velocity Estimator")]
 public class GorillaVelocityEstimator : MonoBehaviour
 {
 	public struct VelocityHistorySample

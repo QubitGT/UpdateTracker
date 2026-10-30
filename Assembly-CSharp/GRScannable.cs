@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Scannable")]
 public class GRScannable : MonoBehaviour
 {
 	public GameEntity gameEntity;

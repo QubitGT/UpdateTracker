@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Critter Shade Hidden")]
 public class CosmeticCritterShadeHidden : CosmeticCritter
 {
 	[Space]

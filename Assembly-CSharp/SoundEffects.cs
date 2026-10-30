@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Sound Effects")]
 public class SoundEffects : MonoBehaviour
 {
 	public AudioSource source;

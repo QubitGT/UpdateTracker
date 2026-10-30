@@ -2,6 +2,7 @@ using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Voice Noise")]
 public class CrittersVoiceNoise : MonoBehaviour, IGorillaSliceableSimple
 {
 	[SerializeField]

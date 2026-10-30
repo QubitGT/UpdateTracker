@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Terminal Control Button")]
 public class CustomMapsTerminalControlButton : CustomMapsScreenTouchPoint
 {
 	[SerializeField]

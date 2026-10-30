@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Set Animator Bool Cosmetic")]
 public class SetAnimatorBoolCosmetic : MonoBehaviour
 {
 	[SerializeField]

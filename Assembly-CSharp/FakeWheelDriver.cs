@@ -2,6 +2,7 @@ using GorillaExtensions;
 using Unity.Cinemachine;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Fake Wheel Driver")]
 public class FakeWheelDriver : MonoBehaviour
 {
 	[SerializeField]

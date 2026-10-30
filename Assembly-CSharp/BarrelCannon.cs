@@ -1,11 +1,8 @@
-using System;
-using System.Runtime.InteropServices;
-using Fusion;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
-[NetworkBehaviourWeaved(3)]
+[AddComponentMenu("GorillaTag/Environment/Barrel Cannon")]
 public class BarrelCannon : NetworkComponent
 {
 	private enum BarrelCannonState
@@ -25,32 +22,6 @@ public class BarrelCannon : NetworkComponent
 		public bool hasAuthorityPassenger;
 
 		public float firingPositionLerpValue;
-	}
-
-	[StructLayout(LayoutKind.Explicit, Size = 12)]
-	[NetworkStructWeaved(3)]
-	private struct BarrelCannonSyncedStateData : INetworkStruct
-	{
-		[FieldOffset(0)]
-		public BarrelCannonState CurrentState;
-
-		[FieldOffset(4)]
-		public NetworkBool HasAuthorityPassenger;
-
-		[field: FieldOffset(8)]
-		public float FiringPositionLerpValue { get; set; }
-
-		private BarrelCannonSyncedStateData(BarrelCannonState state, bool hasAuthPassenger, float firingPosLerpVal)
-		{
-			CurrentState = state;
-			HasAuthorityPassenger = hasAuthPassenger;
-			FiringPositionLerpValue = firingPosLerpVal;
-		}
-
-		public static implicit operator BarrelCannonSyncedStateData(BarrelCannonSyncedState state)
-		{
-			return new BarrelCannonSyncedStateData(state.currentState, state.hasAuthorityPassenger, state.firingPositionLerpValue);
-		}
 	}
 
 	[SerializeField]
@@ -109,33 +80,6 @@ public class BarrelCannon : NetworkComponent
 	private float stateStartTime;
 
 	private float localFiringPositionLerpValue;
-
-	[WeaverGenerated]
-	[DefaultForProperty("Data", 0, 3)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private BarrelCannonSyncedStateData _Data;
-
-	[Networked]
-	[NetworkedWeaved(0, 3)]
-	private unsafe BarrelCannonSyncedStateData Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing BarrelCannon.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(BarrelCannonSyncedStateData*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing BarrelCannon.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(BarrelCannonSyncedStateData*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	private void Update()
 	{
@@ -326,17 +270,6 @@ public class BarrelCannon : NetworkComponent
 		pointB = capsule.transform.position - capsule.transform.up * num;
 	}
 
-	public override void WriteDataFusion()
-	{
-		Data = syncedState;
-	}
-
-	public override void ReadDataFusion()
-	{
-		syncedState.currentState = Data.CurrentState;
-		syncedState.hasAuthorityPassenger = Data.HasAuthorityPassenger;
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		stream.SendNext(syncedState.currentState);
@@ -355,19 +288,5 @@ public class BarrelCannon : NetworkComponent
 		{
 			targetView.TransferOwnership(requestingPlayer);
 		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
 	}
 }

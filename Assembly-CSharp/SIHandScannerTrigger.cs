@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Hand Scanner Trigger")]
 public class SIHandScannerTrigger : MonoBehaviour, IClickable
 {
 	public SIHandScanner parentScanner;

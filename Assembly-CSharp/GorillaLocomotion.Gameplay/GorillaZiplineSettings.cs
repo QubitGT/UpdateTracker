@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GorillaLocomotion.Gameplay;
 
-[CreateAssetMenu(fileName = "GorillaZiplineSettings", menuName = "ScriptableObjects/GorillaZiplineSettings", order = 0)]
+[CreateAssetMenu(fileName = "GorillaZiplineSettings", menuName = "ScriptableObjects/Locomotion/GorillaZiplineSettings", order = 0)]
 public class GorillaZiplineSettings : ScriptableObject
 {
 	public float minSlidePitch = 0.5f;

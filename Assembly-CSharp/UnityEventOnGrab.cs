@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [RequireComponent(typeof(TransferrableObject))]
+[AddComponentMenu("GorillaTag/Cosmetics/Unity Event On Grab")]
 public class UnityEventOnGrab : MonoBehaviour
 {
 	[SerializeField]

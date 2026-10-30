@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Fusion;
 using Photon.Pun;
 using UnityEngine;
 
@@ -32,14 +31,12 @@ public class CosmeticCritterManager : NetworkSceneObject, ITickSystemTick
 
 	private new void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		base.OnEnable();
 		TickSystem<object>.AddTickCallback(this);
 	}
 
 	private new void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		base.OnDisable();
 		TickSystem<object>.RemoveTickCallback(this);
 	}

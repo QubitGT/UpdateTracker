@@ -2,13 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Fusion;
 using GorillaExtensions;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
-[NetworkBehaviourWeaved(0)]
+[AddComponentMenu("GorillaTag/Ghost Reactor/Ghost Reactor Manager")]
 public class GhostReactorManager : NetworkComponent, IGameEntityZoneComponent
 {
 	public enum RPC
@@ -142,13 +141,11 @@ public class GhostReactorManager : NetworkComponent, IGameEntityZoneComponent
 
 	internal override void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		base.OnEnable();
 	}
 
 	internal override void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		base.OnDisable();
 	}
 
@@ -604,7 +601,7 @@ public class GhostReactorManager : NetworkComponent, IGameEntityZoneComponent
 	{
 		if ((NetworkSystem.Instance.InRoom && IsAuthority()) || !NetworkSystem.Instance.InRoom)
 		{
-			base.GetView.RPC("ApplyPlayerRevivedRPC", RpcTarget.All, reviveStation.Index, player.gamePlayer.rig.OwningNetPlayer.ActorNumber);
+			base.GetView.RPC("ApplyPlayerRevivedRPC", RpcTarget.All, reviveStation.Index, player.gamePlayer.rig.Creator.ActorNumber);
 		}
 	}
 
@@ -630,7 +627,7 @@ public class GhostReactorManager : NetworkComponent, IGameEntityZoneComponent
 	{
 		if (NetworkSystem.Instance.InRoom)
 		{
-			base.GetView.RPC("PlayerStateChangeRPC", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber, player.gamePlayer.rig.OwningNetPlayer.ActorNumber, (int)newState);
+			base.GetView.RPC("PlayerStateChangeRPC", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber, player.gamePlayer.rig.Creator.ActorNumber, (int)newState);
 		}
 		else
 		{
@@ -667,7 +664,7 @@ public class GhostReactorManager : NetworkComponent, IGameEntityZoneComponent
 
 	public void RequestGrantPlayerShield(GRPlayer player, int shieldHp, int shieldFlags)
 	{
-		base.GetView.RPC("RequestGrantPlayerShieldRPC", GetAuthorityPlayer(), PhotonNetwork.LocalPlayer.ActorNumber, player.gamePlayer.rig.OwningNetPlayer.ActorNumber, shieldHp, shieldFlags);
+		base.GetView.RPC("RequestGrantPlayerShieldRPC", GetAuthorityPlayer(), PhotonNetwork.LocalPlayer.ActorNumber, player.gamePlayer.rig.Creator.ActorNumber, shieldHp, shieldFlags);
 	}
 
 	[PunRPC]
@@ -2034,14 +2031,6 @@ public class GhostReactorManager : NetworkComponent, IGameEntityZoneComponent
 		}
 	}
 
-	public override void WriteDataFusion()
-	{
-	}
-
-	public override void ReadDataFusion()
-	{
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 	}
@@ -2347,7 +2336,15 @@ public class GhostReactorManager : NetworkComponent, IGameEntityZoneComponent
 	public void SerializeZonePlayerData(BinaryWriter writer, int actorNumber)
 	{
 		GRPlayer gRPlayer = GRPlayer.Get(actorNumber);
-		gRPlayer.SerializeNetworkState(writer, gRPlayer.gamePlayer.rig.OwningNetPlayer);
+		if (gRPlayer == null)
+		{
+			Debug.LogError($"GhostReactorManager.SerializeZonePlayerData: no GRPlayer for actor {actorNumber}, writing placeholder data.");
+			GRPlayer.SerializePlaceholderNetworkState(writer);
+		}
+		else
+		{
+			gRPlayer.SerializeNetworkState(writer, gRPlayer.gamePlayer.rig.Creator);
+		}
 	}
 
 	public void DeserializeZonePlayerData(BinaryReader reader, int actorNumber)
@@ -2359,17 +2356,5 @@ public class GhostReactorManager : NetworkComponent, IGameEntityZoneComponent
 	public bool DebugIsToolStationHacked()
 	{
 		return false;
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
 	}
 }

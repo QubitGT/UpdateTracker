@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Summoner Egg")]
 public class GRSummonerEgg : MonoBehaviour
 {
 	public GameEntity entity;

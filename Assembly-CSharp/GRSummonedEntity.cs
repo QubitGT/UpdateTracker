@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Summoned Entity")]
 public class GRSummonedEntity : MonoBehaviour, IGameEntityComponent
 {
 	private GameEntityId summonerEntityId = GameEntityId.Invalid;

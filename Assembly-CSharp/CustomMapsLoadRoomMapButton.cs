@@ -2,6 +2,7 @@ using System.Collections;
 using GorillaTagScripts.VirtualStumpCustomMaps;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Load Room Map Button")]
 public class CustomMapsLoadRoomMapButton : GorillaPressableButton
 {
 	[SerializeField]

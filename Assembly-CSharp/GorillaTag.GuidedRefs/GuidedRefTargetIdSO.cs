@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GorillaTag.GuidedRefs;
 
-[CreateAssetMenu(fileName = "Unnamed_GuidedRefTargetIdSO", menuName = "Gorilla Tag/GuidedRefTargetIdSO")]
+[CreateAssetMenu(fileName = "Unnamed_GuidedRefTargetIdSO", menuName = "GorillaTag/GuidedRefTargetIdSO")]
 public class GuidedRefTargetIdSO : GuidedRefIdBaseSO
 {
 }

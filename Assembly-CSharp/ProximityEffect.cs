@@ -4,6 +4,7 @@ using GorillaTag.Cosmetics;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Proximity Effect")]
 public class ProximityEffect : MonoBehaviour, ITickSystemTick
 {
 	[Serializable]

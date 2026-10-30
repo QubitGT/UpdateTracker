@@ -3,6 +3,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Grabby Tentacle Controller")]
 public class GrabbyTentacleController : MonoBehaviour
 {
 	[SerializeField]

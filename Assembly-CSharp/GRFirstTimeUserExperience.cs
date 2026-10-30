@@ -4,6 +4,7 @@ using GorillaLocomotion;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR First Time User Experience")]
 public class GRFirstTimeUserExperience : MonoBehaviour
 {
 	public enum TransitionState

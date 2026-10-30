@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.Pool;
 
 [DefaultExecutionOrder(0)]
+[AddComponentMenu("GorillaTag/Super Infection/Super Infection Manager")]
 public class SuperInfectionManager : MonoBehaviour, IGameEntityZoneComponent, IFactoryItemProvider
 {
 	public enum ClientToAuthorityRPC
@@ -258,7 +259,15 @@ public class SuperInfectionManager : MonoBehaviour, IGameEntityZoneComponent, IF
 	void IGameEntityZoneComponent.SerializeZonePlayerData(BinaryWriter writer, int actorNumber)
 	{
 		SIPlayer sIPlayer = SIPlayer.Get(actorNumber);
-		sIPlayer.SerializeNetworkState(writer, sIPlayer.gamePlayer.rig.OwningNetPlayer);
+		if (sIPlayer == null)
+		{
+			Debug.LogError($"SuperInfectionManager.SerializeZonePlayerData: no SIPlayer for actor {actorNumber}, writing placeholder data.");
+			SIPlayer.SerializePlaceholderNetworkState(writer);
+		}
+		else
+		{
+			sIPlayer.SerializeNetworkState(writer, sIPlayer.gamePlayer.rig.Creator);
+		}
 	}
 
 	void IGameEntityZoneComponent.DeserializeZonePlayerData(BinaryReader reader, int actorNumber)

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Player Game Event Location Trigger")]
 public class PlayerGameEventLocationTrigger : MonoBehaviour
 {
 	[SerializeField]

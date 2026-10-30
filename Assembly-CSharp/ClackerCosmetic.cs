@@ -2,6 +2,7 @@ using GorillaExtensions;
 using Unity.Cinemachine;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Clacker Cosmetic")]
 public class ClackerCosmetic : MonoBehaviour
 {
 	private struct PerArmData

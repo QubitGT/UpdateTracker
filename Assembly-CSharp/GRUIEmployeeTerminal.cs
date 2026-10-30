@@ -5,6 +5,7 @@ using PlayFab.ClientModels;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GRUI Employee Terminal")]
 public class GRUIEmployeeTerminal : MonoBehaviour
 {
 	[SerializeField]

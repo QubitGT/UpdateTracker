@@ -5,6 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(GameGrabbable))]
 [RequireComponent(typeof(GameSnappable))]
 [RequireComponent(typeof(GameButtonActivatable))]
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Air Grab")]
 public class SIGadgetAirGrab : SIGadget
 {
 	private enum EState
@@ -83,12 +84,6 @@ public class SIGadgetAirGrab : SIGadget
 	private float m_slipperySurfacesTime = 0.25f;
 
 	[SerializeField]
-	private float m_cooldownDurationDefault = 6f;
-
-	[SerializeField]
-	private float m_cooldownDurationUpgrade = 5f;
-
-	[SerializeField]
 	private int m_maxSuperchargeUses = 2;
 
 	[SerializeField]
@@ -102,8 +97,6 @@ public class SIGadgetAirGrab : SIGadget
 	private bool _wasActivated;
 
 	private float _airGrabTime;
-
-	private float _airReleaseSpeed;
 
 	private Vector3 _airReleaseVector;
 
@@ -198,8 +191,9 @@ public class SIGadgetAirGrab : SIGadget
 		hasGravityOverride = false;
 	}
 
-	private new void OnDisable()
+	protected override void OnDisable()
 	{
+		base.OnDisable();
 		if (hasGravityOverride)
 		{
 			ClearGravityOverride();
@@ -282,7 +276,6 @@ public class SIGadgetAirGrab : SIGadget
 			if (_isActivated)
 			{
 				_grabStartTime = Time.unscaledTime;
-				_airReleaseSpeed = 0f;
 				m_airGrabXform.SetParent(null, worldPositionStays: false);
 				m_airGrabXform.position = GTPlayer.Instance.GetControllerTransform(_HandIndex == 0).position;
 				m_airGrabXform.gameObject.SetActive(value: true);
@@ -408,7 +401,6 @@ public class SIGadgetAirGrab : SIGadget
 		instance.SetVelocity(Vector3.zero);
 		lastRequestedPlayerPos = instance.transform.position + vector2;
 		instance.RigidbodyMovePosition(lastRequestedPlayerPos);
-		_ = GamePlayerLocal.instance.GetHandVelocity(_HandIndex).magnitude;
 	}
 
 	private void _DoDash()

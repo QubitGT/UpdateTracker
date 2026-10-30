@@ -4,6 +4,7 @@ using GorillaLocomotion;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Ballista")]
 public class Ballista : MonoBehaviourPun
 {
 	public Animator animator;

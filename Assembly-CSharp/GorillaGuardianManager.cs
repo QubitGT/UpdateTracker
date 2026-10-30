@@ -1,4 +1,3 @@
-using Fusion;
 using GorillaGameModes;
 using GorillaLocomotion;
 using Photon.Pun;
@@ -106,19 +105,6 @@ public sealed class GorillaGuardianManager : GorillaGameManager
 		netSerializer.AddRPCComponent<GuardianRPCs>();
 	}
 
-	public override void AddFusionDataBehaviour(NetworkObject behaviour)
-	{
-	}
-
-	public override void OnSerializeRead(object newData)
-	{
-	}
-
-	public override object OnSerializeWrite()
-	{
-		return null;
-	}
-
 	public override bool LocalCanTag(NetPlayer myPlayer, NetPlayer otherPlayer)
 	{
 		if (IsPlayerGuardian(myPlayer))
@@ -162,7 +148,7 @@ public sealed class GorillaGuardianManager : GorillaGameManager
 		}
 		else
 		{
-			GorillaGameModes.GameMode.ActiveNetworkHandler.SendRPC("GuardianRequestEject", false);
+			GameMode.ActiveNetworkHandler.SendRPC("GuardianRequestEject", false);
 		}
 	}
 
@@ -190,9 +176,9 @@ public sealed class GorillaGuardianManager : GorillaGameManager
 		base.LocalTag(taggedPlayer, taggingPlayer, bodyHit, leftHand);
 		if (!bodyHit && VRRigCache.Instance.TryGetVrrig(taggedPlayer, out var playerRig) && CheckSlap(taggingPlayer, taggedPlayer, leftHand, out var velocity))
 		{
-			GorillaGameModes.GameMode.ActiveNetworkHandler.SendRPC("GuardianLaunchPlayer", taggedPlayer, velocity);
+			GameMode.ActiveNetworkHandler.SendRPC("GuardianLaunchPlayer", taggedPlayer, velocity);
 			playerRig.Rig.ApplyLocalTrajectoryOverride(velocity);
-			GorillaGameModes.GameMode.ActiveNetworkHandler.SendRPC("ShowSlapEffects", true, playerRig.Rig.transform.position, velocity.normalized);
+			GameMode.ActiveNetworkHandler.SendRPC("ShowSlapEffects", true, playerRig.Rig.transform.position, velocity.normalized);
 			LocalPlaySlapEffect(playerRig.Rig.transform.position, velocity.normalized);
 		}
 	}
@@ -276,12 +262,12 @@ public sealed class GorillaGuardianManager : GorillaGameManager
 				{
 					Vector3 vector3 = (position - vector2).normalized * t;
 					vector3 = Vector3.ClampMagnitude(vector3, maxLaunchVelocity);
-					GorillaGameModes.GameMode.ActiveNetworkHandler.SendRPC("GuardianLaunchPlayer", RoomSystem.PlayersInRoom[i], vector3);
+					GameMode.ActiveNetworkHandler.SendRPC("GuardianLaunchPlayer", RoomSystem.PlayersInRoom[i], vector3);
 				}
 			}
 		}
 		LocalPlaySlamEffect(vector2, Vector3.up);
-		GorillaGameModes.GameMode.ActiveNetworkHandler.SendRPC("ShowSlamEffect", true, vector2, Vector3.up);
+		GameMode.ActiveNetworkHandler.SendRPC("ShowSlamEffect", true, vector2, Vector3.up);
 	}
 
 	private bool CheckLaunchRetriggerDelay(VRRig launchedRig)

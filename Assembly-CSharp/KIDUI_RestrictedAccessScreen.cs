@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Restricted Access Screen")]
 public class KIDUI_RestrictedAccessScreen : MonoBehaviour
 {
 	[SerializeField]

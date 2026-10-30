@@ -1,6 +1,7 @@
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Grenade Stun")]
 public class SIGadgetGrenadeStun : SIGadgetGrenade
 {
 	private enum State
@@ -86,14 +87,14 @@ public class SIGadgetGrenadeStun : SIGadgetGrenade
 		for (int i = 0; i < array.Length; i++)
 		{
 			VRRig componentInParent = array[i].GetComponentInParent<VRRig>();
-			if (componentInParent != null)
+			if (componentInParent != null && componentInParent.Creator != null)
 			{
 				Vector3 vector = componentInParent.transform.position - base.transform.position;
 				float magnitude = vector.magnitude;
 				float num = 1f - magnitude / explosionRadius;
 				float num2 = knockbackStrength * num;
-				RoomSystem.LaunchPlayer(componentInParent.OwningNetPlayer, num2 * vector / magnitude);
-				RoomSystem.SendStatusEffectToPlayer(RoomSystem.StatusEffects.TaggedTime, componentInParent.OwningNetPlayer);
+				RoomSystem.LaunchPlayer(componentInParent.Creator, num2 * vector / magnitude);
+				RoomSystem.SendStatusEffectToPlayer(RoomSystem.StatusEffects.TaggedTime, componentInParent.Creator);
 			}
 		}
 		if (gameEntity.lastHeldByActorNumber == PhotonNetwork.LocalPlayer.ActorNumber)

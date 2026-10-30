@@ -5,6 +5,7 @@ using GorillaTag.CosmeticSystem;
 using UnityEngine;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
+[AddComponentMenu("GorillaTag/Seasonal/Prop Hunt Hand Follower")]
 public class PropHuntHandFollower : MonoBehaviour, ICallBack
 {
 	private const bool _k__GT_PROP_HUNT__USE_POOLING__ = true;

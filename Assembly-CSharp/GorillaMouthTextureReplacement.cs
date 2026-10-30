@@ -2,6 +2,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Gorilla Mouth Texture Replacement")]
 public class GorillaMouthTextureReplacement : MonoBehaviour, ISpawnable
 {
 	[SerializeField]

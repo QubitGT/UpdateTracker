@@ -1,3 +1,6 @@
+using UnityEngine;
+
+[AddComponentMenu("GorillaTag/Seasonal/Prop Hunt Game Mode RP Cs")]
 internal class PropHuntGameModeRPCs : RPCNetworkBase
 {
 	private GameModeSerializer serializer;

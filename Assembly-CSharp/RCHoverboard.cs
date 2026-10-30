@@ -8,6 +8,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Seasonal/RC Hoverboard")]
 public class RCHoverboard : RCVehicle
 {
 	private enum _EInputSource

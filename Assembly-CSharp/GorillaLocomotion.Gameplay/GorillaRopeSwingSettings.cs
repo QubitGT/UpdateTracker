@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GorillaLocomotion.Gameplay;
 
-[CreateAssetMenu(fileName = "GorillaRopeSwingSettings", menuName = "ScriptableObjects/GorillaRopeSwingSettings", order = 0)]
+[CreateAssetMenu(fileName = "GorillaRopeSwingSettings", menuName = "ScriptableObjects/Locomotion/GorillaRopeSwingSettings", order = 0)]
 public class GorillaRopeSwingSettings : ScriptableObject
 {
 	public float inheritVelocityMultiplier = 1f;

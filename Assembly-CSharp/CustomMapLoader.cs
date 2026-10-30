@@ -33,6 +33,7 @@ using UnityEngine.Serialization;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Map Loader")]
 public class CustomMapLoader : MonoBehaviour, IBuildValidation
 {
 	private struct LoadZoneRequest
@@ -66,7 +67,7 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 
 	public CustomMapAccessDoor accessDoor;
 
-	public CustomMapAccessDoor tunnelDoor;
+	public CustomMapSlidingDoor tunnelDoor;
 
 	[FormerlySerializedAs("networkTrigger")]
 	public GameObject publicJoinTrigger;
@@ -102,6 +103,9 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 
 	[SerializeField]
 	private GameObject atmNoShellPrefab;
+
+	[SerializeField]
+	private GameObject geodeAtmPrefab;
 
 	[SerializeField]
 	private GameObject storeDisplayStandPrefab;
@@ -267,7 +271,15 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 
 	private static List<GameObject> placeholderReplacements = new List<GameObject>();
 
+	private static HashSet<int> gameAudioClipIds = new HashSet<int>();
+
+	private static HashSet<AudioClip> mapAudioClips = new HashSet<AudioClip>();
+
 	private static GameObject customMapATM = null;
+
+	private static GameObject customMapGeodeATM = null;
+
+	private static Scene customMapGeodeATMScene;
 
 	private static List<GameObject> storeCheckouts = new List<GameObject>();
 
@@ -394,6 +406,30 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 
 	public const long LocalMapModId = 999999999L;
 
+	private const float AudioWatchdogDuration = 30f;
+
+	private const float AudioStallThreshold = 0.5f;
+
+	private const float AudioStallResetDelay = 3f;
+
+	private const bool AudioStallAutoReset = true;
+
+	private static Coroutine audioWatchdogCoroutine;
+
+	private static float audioWatchdogStartTime;
+
+	public static bool KeepTunnelDoorOpen
+	{
+		get
+		{
+			if (NetworkSystem.Instance != null && NetworkSystem.Instance.InRoom)
+			{
+				return NetworkSystem.Instance.SessionIsPrivate;
+			}
+			return false;
+		}
+	}
+
 	public static ModId LoadedMapModId => loadedMapModId;
 
 	public static long LoadedMapModFileId => loadedMapModFileId;
@@ -474,7 +510,11 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 		lightmaps = null;
 		lightmapsToKeep = new List<Texture2D>();
 		placeholderReplacements = new List<GameObject>();
+		gameAudioClipIds = new HashSet<int>();
+		mapAudioClips = new HashSet<AudioClip>();
+		audioWatchdogCoroutine = null;
 		customMapATM = null;
+		customMapGeodeATM = null;
 		storeCheckouts = new List<GameObject>();
 		storeDisplayStands = new List<GameObject>();
 		storeTryOnConsoles = new List<GameObject>();
@@ -585,7 +625,7 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 
 	public static bool CloseTunnelDoor()
 	{
-		if (!hasInstance)
+		if (!hasInstance || KeepTunnelDoorOpen)
 		{
 			return false;
 		}
@@ -636,6 +676,7 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 		mapLoadProgressCallback?.Invoke(MapLoadStatus.Loading, 3, "PACKAGE INFO LOADED");
 		string path = Path.GetDirectoryName(packageInfoFilePath) + "/" + loadedMapPackageInfo.pcFileName;
 		mapLoadProgressCallback?.Invoke(MapLoadStatus.Loading, 4, "LOADING MAP ASSET BUNDLE");
+		SnapshotGameAudioClips();
 		AssetBundleCreateRequest loadBundleRequest = AssetBundle.LoadFromFileAsync(path);
 		yield return loadBundleRequest;
 		mapBundle = loadBundleRequest.assetBundle;
@@ -1011,6 +1052,7 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 		pendingSceneActivation = null;
 		if (shouldAbortSceneLoad)
 		{
+			SilenceSceneAudio(SceneManager.GetSceneByName(sceneName));
 			yield return AbortSceneLoad(sceneIndex);
 			OnLoadComplete(LoadResult.Aborted, "");
 			yield break;
@@ -1847,17 +1889,17 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 			list = new List<Collider>(component.GetComponents<Collider>());
 			if (component.useDefaultPlaceholder || list.Count == 0)
 			{
-				GameObject gameObject2 = UnityEngine.Object.Instantiate(instance.gliderWindVolume, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-				if (gameObject2 != null)
+				GameObject gameObject12 = UnityEngine.Object.Instantiate(instance.gliderWindVolume, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+				if (gameObject12 != null)
 				{
-					placeholderReplacements.Add(gameObject2);
-					gameObject2.transform.localScale = placeholderGameObject.transform.localScale;
+					placeholderReplacements.Add(gameObject12);
+					gameObject12.transform.localScale = placeholderGameObject.transform.localScale;
 					placeholderGameObject.transform.localScale = Vector3.one;
-					gameObject2.transform.SetParent(placeholderGameObject.transform);
-					GliderWindVolume component3 = gameObject2.GetComponent<GliderWindVolume>();
-					if (!(component3 == null))
+					gameObject12.transform.SetParent(placeholderGameObject.transform);
+					GliderWindVolume component9 = gameObject12.GetComponent<GliderWindVolume>();
+					if (!(component9 == null))
 					{
-						component3.SetProperties(component.maxSpeed, component.maxAccel, component.SpeedVSAccelCurve, component.localWindDirection);
+						component9.SetProperties(component.maxSpeed, component.maxAccel, component.SpeedVSAccelCurve, component.localWindDirection);
 					}
 				}
 			}
@@ -1876,35 +1918,35 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 			list = new List<Collider>(component.GetComponents<Collider>());
 			if (component.useDefaultPlaceholder || list.Count == 0)
 			{
-				GameObject gameObject9 = UnityEngine.Object.Instantiate(instance.waterVolumePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-				if (!(gameObject9 != null))
+				GameObject gameObject3 = UnityEngine.Object.Instantiate(instance.waterVolumePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+				if (!(gameObject3 != null))
 				{
 					break;
 				}
-				placeholderReplacements.Add(gameObject9);
-				gameObject9.layer = UnityLayer.Water.ToLayerIndex();
-				gameObject9.transform.localScale = placeholderGameObject.transform.localScale;
+				placeholderReplacements.Add(gameObject3);
+				gameObject3.layer = UnityLayer.Water.ToLayerIndex();
+				gameObject3.transform.localScale = placeholderGameObject.transform.localScale;
 				placeholderGameObject.transform.localScale = Vector3.one;
-				gameObject9.transform.SetParent(placeholderGameObject.transform);
-				MeshRenderer component7 = gameObject9.GetComponent<MeshRenderer>();
-				if (component7.IsNull())
+				gameObject3.transform.SetParent(placeholderGameObject.transform);
+				MeshRenderer component4 = gameObject3.GetComponent<MeshRenderer>();
+				if (component4.IsNull())
 				{
 					break;
 				}
 				if (component.useWaterMesh)
 				{
-					component7.enabled = true;
-					WaterSurfaceMaterialController component8 = gameObject9.GetComponent<WaterSurfaceMaterialController>();
-					if (!component8.IsNull())
+					component4.enabled = true;
+					WaterSurfaceMaterialController component5 = gameObject3.GetComponent<WaterSurfaceMaterialController>();
+					if (!component5.IsNull())
 					{
-						component8.ScrollX = component.scrollTextureX;
-						component8.ScrollY = component.scrollTextureY;
-						component8.Scale = component.scaleTexture;
+						component5.ScrollX = component.scrollTextureX;
+						component5.ScrollY = component.scrollTextureY;
+						component5.Scale = component.scaleTexture;
 					}
 				}
 				else
 				{
-					component7.enabled = false;
+					component4.enabled = false;
 				}
 				break;
 			}
@@ -1932,17 +1974,17 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 			list = new List<Collider>(component.GetComponents<Collider>());
 			if (component.useDefaultPlaceholder || list.Count == 0)
 			{
-				GameObject gameObject12 = UnityEngine.Object.Instantiate(instance.forceVolumePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-				if (gameObject12.IsNotNull())
+				GameObject gameObject9 = UnityEngine.Object.Instantiate(instance.forceVolumePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+				if (gameObject9.IsNotNull())
 				{
-					placeholderReplacements.Add(gameObject12);
-					gameObject12.transform.localScale = placeholderGameObject.transform.localScale;
+					placeholderReplacements.Add(gameObject9);
+					gameObject9.transform.localScale = placeholderGameObject.transform.localScale;
 					placeholderGameObject.transform.localScale = Vector3.one;
-					gameObject12.transform.SetParent(placeholderGameObject.transform);
-					ForceVolume component9 = gameObject12.GetComponent<ForceVolume>();
-					if (!component9.IsNull())
+					gameObject9.transform.SetParent(placeholderGameObject.transform);
+					ForceVolume component7 = gameObject9.GetComponent<ForceVolume>();
+					if (!component7.IsNull())
 					{
-						component9.SetPropertiesFromPlaceholder(component.GetForceVolumeProperties(), null, null);
+						component7.SetPropertiesFromPlaceholder(component.GetForceVolumeProperties(), null, null);
 					}
 				}
 				break;
@@ -2002,28 +2044,28 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 				UnityEngine.Object.Destroy(component);
 				break;
 			}
-			GameObject gameObject4 = instance.atmPrefab;
+			GameObject gameObject7 = instance.atmPrefab;
 			if (component.useCustomMesh)
 			{
-				gameObject4 = instance.atmNoShellPrefab;
+				gameObject7 = instance.atmNoShellPrefab;
 			}
-			if (gameObject4.IsNull())
+			if (gameObject7.IsNull())
 			{
 				break;
 			}
-			GameObject gameObject5 = UnityEngine.Object.Instantiate(gameObject4, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-			if (!gameObject5.IsNotNull())
+			GameObject gameObject8 = UnityEngine.Object.Instantiate(gameObject7, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+			if (!gameObject8.IsNotNull())
 			{
 				break;
 			}
-			gameObject5.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
-			gameObject5.transform.localScale = Vector3.one;
-			customMapATM = gameObject5;
-			ATM_UI componentInChildren = gameObject5.GetComponentInChildren<ATM_UI>();
-			if (componentInChildren.IsNotNull() && ATM_Manager.instance.IsNotNull())
+			gameObject8.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
+			gameObject8.transform.localScale = Vector3.one;
+			customMapATM = gameObject8;
+			ATM_UI componentInChildren2 = gameObject8.GetComponentInChildren<ATM_UI>();
+			if (componentInChildren2.IsNotNull() && ATM_Manager.instance.IsNotNull())
 			{
-				componentInChildren.SetCustomMapScene(placeholderGameObject.scene);
-				ATM_Manager.instance.AddATM(componentInChildren, null);
+				componentInChildren2.SetCustomMapScene(placeholderGameObject.scene);
+				ATM_Manager.instance.AddATM(componentInChildren2, null);
 				if (!component.defaultCreatorCode.IsNullOrEmpty())
 				{
 					ATM_Manager.instance.SetTemporaryCreatorCode(component.defaultCreatorCode);
@@ -2031,6 +2073,27 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 			}
 			break;
 		}
+		case GTObject.GeodeATM:
+			if (customMapGeodeATM.IsNotNull())
+			{
+				UnityEngine.Object.Destroy(component);
+			}
+			else if (!ValidateStorePlaceholderPosition(placeholderGameObject))
+			{
+				UnityEngine.Object.Destroy(component);
+			}
+			else if (!instance.geodeAtmPrefab.IsNull())
+			{
+				GameObject gameObject6 = UnityEngine.Object.Instantiate(instance.geodeAtmPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+				if (gameObject6.IsNotNull())
+				{
+					gameObject6.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
+					gameObject6.transform.localScale = Vector3.one;
+					customMapGeodeATM = gameObject6;
+					customMapGeodeATMScene = placeholderGameObject.scene;
+				}
+			}
+			break;
 		case GTObject.HoverboardArea:
 		{
 			if (!component.AddComponent<HoverboardAreaTrigger>().IsNotNull())
@@ -2068,67 +2131,67 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 				Debug.LogError("[CustomMapLoader::ReplacePlaceholders] hoverboardDispenserPrefab is NULL!");
 				break;
 			}
-			GameObject gameObject3 = UnityEngine.Object.Instantiate(instance.hoverboardDispenserPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-			if (gameObject3.IsNotNull())
+			GameObject gameObject13 = UnityEngine.Object.Instantiate(instance.hoverboardDispenserPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+			if (gameObject13.IsNotNull())
 			{
-				placeholderReplacements.Add(gameObject3);
-				gameObject3.transform.SetParent(placeholderGameObject.transform);
+				placeholderReplacements.Add(gameObject13);
+				gameObject13.transform.SetParent(placeholderGameObject.transform);
 			}
 			break;
 		}
 		case GTObject.RopeSwing:
 		{
-			GameObject gameObject7 = UnityEngine.Object.Instantiate(instance.ropeSwingPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-			if (gameObject7.IsNull())
+			GameObject gameObject2 = UnityEngine.Object.Instantiate(instance.ropeSwingPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+			if (gameObject2.IsNull())
 			{
 				break;
 			}
-			gameObject7.transform.SetParent(placeholderGameObject.transform);
-			CustomMapsGorillaRopeSwing component5 = gameObject7.GetComponent<CustomMapsGorillaRopeSwing>();
-			if (component5.IsNull())
+			gameObject2.transform.SetParent(placeholderGameObject.transform);
+			CustomMapsGorillaRopeSwing component3 = gameObject2.GetComponent<CustomMapsGorillaRopeSwing>();
+			if (component3.IsNull())
 			{
-				UnityEngine.Object.Destroy(gameObject7);
+				UnityEngine.Object.Destroy(gameObject2);
 				break;
 			}
 			component.ropeLength = System.Math.Clamp(component.ropeLength, 3, 31);
 			if (component.useDefaultPlaceholder)
 			{
-				component5.SetRopeLength(component.ropeLength);
+				component3.SetRopeLength(component.ropeLength);
 			}
 			else
 			{
-				component5.SetRopeProperties(component);
+				component3.SetRopeProperties(component);
 			}
-			placeholderReplacements.Add(gameObject7);
+			placeholderReplacements.Add(gameObject2);
 			break;
 		}
 		case GTObject.ZipLine:
 		{
-			GameObject gameObject8 = UnityEngine.Object.Instantiate(instance.ziplinePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-			if (gameObject8.IsNull())
+			GameObject gameObject10 = UnityEngine.Object.Instantiate(instance.ziplinePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+			if (gameObject10.IsNull())
 			{
 				break;
 			}
-			gameObject8.transform.SetParent(placeholderGameObject.transform);
-			CustomMapsGorillaZipline component6 = gameObject8.GetComponent<CustomMapsGorillaZipline>();
-			if (component6.IsNull())
+			gameObject10.transform.SetParent(placeholderGameObject.transform);
+			CustomMapsGorillaZipline component8 = gameObject10.GetComponent<CustomMapsGorillaZipline>();
+			if (component8.IsNull())
 			{
-				UnityEngine.Object.Destroy(gameObject8);
+				UnityEngine.Object.Destroy(gameObject10);
 				break;
 			}
 			if (component.useDefaultPlaceholder)
 			{
-				if (!component6.GenerateZipline(component.spline))
+				if (!component8.GenerateZipline(component.spline))
 				{
-					UnityEngine.Object.Destroy(gameObject8);
+					UnityEngine.Object.Destroy(gameObject10);
 					break;
 				}
 			}
 			else
 			{
-				component6.Init(component);
+				component8.Init(component);
 			}
-			placeholderReplacements.Add(gameObject8);
+			placeholderReplacements.Add(gameObject10);
 			break;
 		}
 		case GTObject.Store_DisplayStand:
@@ -2152,20 +2215,20 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 				UnityEngine.Object.Destroy(component);
 				break;
 			}
-			GameObject gameObject6 = UnityEngine.Object.Instantiate(instance.storeDisplayStandPrefab, placeholderGameObject.transform);
-			if (!gameObject6.IsNull())
+			GameObject gameObject4 = UnityEngine.Object.Instantiate(instance.storeDisplayStandPrefab, placeholderGameObject.transform);
+			if (!gameObject4.IsNull())
 			{
-				gameObject6.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
-				gameObject6.transform.localScale = Vector3.one;
-				DynamicCosmeticStand component4 = gameObject6.GetComponent<DynamicCosmeticStand>();
-				if (component4.IsNull())
+				gameObject4.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
+				gameObject4.transform.localScale = Vector3.one;
+				DynamicCosmeticStand component6 = gameObject4.GetComponent<DynamicCosmeticStand>();
+				if (component6.IsNull())
 				{
-					UnityEngine.Object.Destroy(gameObject6);
+					UnityEngine.Object.Destroy(gameObject4);
 					break;
 				}
-				component4.InitializeForCustomMapCosmeticItem(component.CosmeticItem, placeholderGameObject.scene);
-				storeDisplayStands.Add(gameObject6);
-				placeholderReplacements.Add(gameObject6);
+				component6.InitializeForCustomMapCosmeticItem(component.CosmeticItem, placeholderGameObject.scene);
+				storeDisplayStands.Add(gameObject4);
+				placeholderReplacements.Add(gameObject4);
 			}
 			break;
 		}
@@ -2190,20 +2253,20 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 				UnityEngine.Object.Destroy(component);
 				break;
 			}
-			GameObject gameObject10 = UnityEngine.Object.Instantiate(instance.storeCheckoutCounterPrefab, placeholderGameObject.transform);
-			if (!gameObject10.IsNull())
+			GameObject gameObject5 = UnityEngine.Object.Instantiate(instance.storeCheckoutCounterPrefab, placeholderGameObject.transform);
+			if (!gameObject5.IsNull())
 			{
-				gameObject10.transform.SetParent(instance.compositeTryOnArea.transform);
-				gameObject10.transform.localScale = Vector3.one;
-				ItemCheckout componentInChildren2 = gameObject10.GetComponentInChildren<ItemCheckout>();
-				if (componentInChildren2.IsNull())
+				gameObject5.transform.SetParent(instance.compositeTryOnArea.transform);
+				gameObject5.transform.localScale = Vector3.one;
+				ItemCheckout componentInChildren = gameObject5.GetComponentInChildren<ItemCheckout>();
+				if (componentInChildren.IsNull())
 				{
-					UnityEngine.Object.Destroy(gameObject10);
+					UnityEngine.Object.Destroy(gameObject5);
 					break;
 				}
-				componentInChildren2.InitializeForCustomMap(instance.compositeTryOnArea, placeholderGameObject.scene, component.useCustomMesh);
-				storeCheckouts.Add(gameObject10);
-				placeholderReplacements.Add(gameObject10);
+				componentInChildren.InitializeForCustomMap(instance.compositeTryOnArea, placeholderGameObject.scene, component.useCustomMesh);
+				storeCheckouts.Add(gameObject5);
+				placeholderReplacements.Add(gameObject5);
 			}
 			break;
 		}
@@ -2557,7 +2620,8 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 
 	private static IEnumerator UnloadMapCoroutine()
 	{
-		GTDev.Log("[CML.UnloadMap_Co] Unloading Custom Map...");
+		GTDev.Log("[CML.UnloadMap_Co] Unloading Custom Map, " + AudioClockStamp());
+		StartAudioWatchdog();
 		if (zoneLoadingCoroutine != null)
 		{
 			queuedLoadZoneRequests.Clear();
@@ -2586,12 +2650,18 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 		yield return ResetLightmaps();
 		SetZoneDynamicLighting(enable: false);
 		GameLightingManager.instance.SetAmbientLightDynamic(Color.black);
+		GTDev.Log("[CML.UnloadMap_Co] Scenes unloaded, releasing map audio, " + AudioClockStamp());
+		yield return WaitForAudioRelease();
+		yield return ReleaseMapAudioData();
+		GTDev.Log("[CML.UnloadMap_Co] Unloading map bundle, " + AudioClockStamp());
 		if (mapBundle != null)
 		{
 			mapBundle.Unload(unloadAllLoadedObjects: true);
 		}
 		mapBundle = null;
-		Resources.UnloadUnusedAssets();
+		mapAudioClips.Clear();
+		gameAudioClipIds.Clear();
+		GTDev.Log("[CML.UnloadMap_Co] Map bundle unloaded, " + AudioClockStamp());
 		cachedLuauScript = "";
 		devModeEnabled = false;
 		disableHoldingHandsAllModes = false;
@@ -2637,6 +2707,203 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 		}
 	}
 
+	private static void SilenceSceneAudio(Scene scene)
+	{
+		if (!scene.IsValid() || !scene.isLoaded)
+		{
+			return;
+		}
+		int num = 0;
+		int num2 = 0;
+		GameObject[] rootGameObjects = scene.GetRootGameObjects();
+		for (int i = 0; i < rootGameObjects.Length; i++)
+		{
+			AudioSource[] componentsInChildren = rootGameObjects[i].GetComponentsInChildren<AudioSource>(includeInactive: true);
+			for (int j = 0; j < componentsInChildren.Length; j++)
+			{
+				AudioClip clip = componentsInChildren[j].clip;
+				if (clip != null && !gameAudioClipIds.Contains(clip.GetInstanceID()))
+				{
+					mapAudioClips.Add(clip);
+				}
+				componentsInChildren[j].Stop();
+				componentsInChildren[j].clip = null;
+			}
+			num += componentsInChildren.Length;
+			AudioListener[] componentsInChildren2 = rootGameObjects[i].GetComponentsInChildren<AudioListener>(includeInactive: true);
+			for (int k = 0; k < componentsInChildren2.Length; k++)
+			{
+				componentsInChildren2[k].enabled = false;
+			}
+			num2 += componentsInChildren2.Length;
+		}
+		GTDev.Log($"[CML.SilenceSceneAudio] {scene.name}: stopped {num} AudioSources, disabled " + $"{num2} AudioListeners, {mapAudioClips.Count} map clips tracked, {AudioClockStamp()}");
+	}
+
+	private static void SnapshotGameAudioClips()
+	{
+		gameAudioClipIds.Clear();
+		mapAudioClips.Clear();
+		AudioClip[] array = Resources.FindObjectsOfTypeAll<AudioClip>();
+		for (int i = 0; i < array.Length; i++)
+		{
+			gameAudioClipIds.Add(array[i].GetInstanceID());
+		}
+	}
+
+	private static IEnumerator ReleaseMapAudioData()
+	{
+		if (mapAudioClips.Count == 0)
+		{
+			yield break;
+		}
+		float startTime = Time.realtimeSinceStartup;
+		List<AudioClip> pendingClips = new List<AudioClip>(mapAudioClips.Count);
+		foreach (AudioClip mapAudioClip in mapAudioClips)
+		{
+			if (!(mapAudioClip == null))
+			{
+				if (mapAudioClip.loadState != 0)
+				{
+					mapAudioClip.UnloadAudioData();
+				}
+				pendingClips.Add(mapAudioClip);
+			}
+		}
+		mapAudioClips.Clear();
+		while (pendingClips.Count > 0 && Time.realtimeSinceStartup - startTime < 2f)
+		{
+			for (int num = pendingClips.Count - 1; num >= 0; num--)
+			{
+				if (pendingClips[num] == null || pendingClips[num].loadState == AudioDataLoadState.Unloaded || pendingClips[num].loadState == AudioDataLoadState.Failed)
+				{
+					pendingClips.RemoveAt(num);
+				}
+			}
+			if (pendingClips.Count > 0)
+			{
+				yield return null;
+			}
+		}
+		GTDev.Log($"[CML.ReleaseMapAudioData] Took {Time.realtimeSinceStartup - startTime:F2}s, " + $"{pendingClips.Count} clips still not unloaded, {AudioClockStamp()}");
+		yield return WaitForAudioRelease();
+	}
+
+	private static IEnumerator WaitForAudioRelease()
+	{
+		yield return null;
+		yield return new WaitForSecondsRealtime(0.1f);
+	}
+
+	private static void StartAudioWatchdog()
+	{
+		if (hasInstance)
+		{
+			audioWatchdogStartTime = Time.realtimeSinceStartup;
+			if (audioWatchdogCoroutine == null)
+			{
+				audioWatchdogCoroutine = instance.StartCoroutine(AudioWatchdogCoroutine());
+			}
+		}
+	}
+
+	private static string AudioClockStamp()
+	{
+		return $"t={Time.realtimeSinceStartup:F2} dsp={AudioSettings.dspTime:F3}";
+	}
+
+	private static IEnumerator AudioWatchdogCoroutine()
+	{
+		GTDev.Log("[CML.AudioWatchdog] Started, " + AudioClockStamp());
+		double lastDspTime = AudioSettings.dspTime;
+		float lastDspAdvanceTime = Time.realtimeSinceStartup;
+		float stallStartTime = -1f;
+		bool resetAttempted = false;
+		float driftBaseRealTime = Time.realtimeSinceStartup;
+		double driftBaseDspTime = AudioSettings.dspTime;
+		double maxDrift = 0.0;
+		bool driftReported = false;
+		while (Time.realtimeSinceStartup - audioWatchdogStartTime < 30f || stallStartTime >= 0f)
+		{
+			yield return null;
+			if (!Application.isFocused)
+			{
+				lastDspTime = AudioSettings.dspTime;
+				lastDspAdvanceTime = Time.realtimeSinceStartup;
+				driftBaseDspTime = lastDspTime;
+				driftBaseRealTime = lastDspAdvanceTime;
+				continue;
+			}
+			float realtimeSinceStartup = Time.realtimeSinceStartup;
+			double dspTime = AudioSettings.dspTime;
+			double num = (double)(realtimeSinceStartup - driftBaseRealTime) - (dspTime - driftBaseDspTime);
+			if (num > maxDrift)
+			{
+				maxDrift = num;
+			}
+			if (!driftReported && num > 0.5)
+			{
+				driftReported = true;
+				GTDev.LogError($"[CML.AudioWatchdog] Mixer running SLOW: dspTime {num:F2}s behind real time " + $"({realtimeSinceStartup - audioWatchdogStartTime:F2}s after unload start), {AudioClockStamp()}");
+			}
+			if (dspTime > lastDspTime)
+			{
+				if (stallStartTime >= 0f)
+				{
+					GTDev.Log($"[CML.AudioWatchdog] Mixer resumed after {realtimeSinceStartup - stallStartTime:F2}s stall " + $"(reset attempted: {resetAttempted}), {AudioClockStamp()}");
+					stallStartTime = -1f;
+					resetAttempted = false;
+				}
+				lastDspTime = dspTime;
+				lastDspAdvanceTime = realtimeSinceStartup;
+				continue;
+			}
+			if (stallStartTime < 0f && realtimeSinceStartup - lastDspAdvanceTime > 0.5f)
+			{
+				stallStartTime = lastDspAdvanceTime;
+				GTDev.LogError($"[CML.AudioWatchdog] Mixer STALLED: dspTime stuck at {dspTime:F3} since " + $"t={stallStartTime:F2} ({realtimeSinceStartup - audioWatchdogStartTime:F2}s after unload start), " + AudioClockStamp());
+			}
+			if (stallStartTime >= 0f && !resetAttempted && realtimeSinceStartup - stallStartTime > 3f)
+			{
+				resetAttempted = true;
+				ResetStalledAudio();
+				driftBaseRealTime = Time.realtimeSinceStartup;
+				driftBaseDspTime = AudioSettings.dspTime;
+			}
+			if (!resetAttempted || !(realtimeSinceStartup - stallStartTime > 8f))
+			{
+				continue;
+			}
+			GTDev.LogError("[CML.AudioWatchdog] Mixer still stalled after reset, giving up, " + AudioClockStamp());
+			break;
+		}
+		GTDev.Log($"[CML.AudioWatchdog] Stopped, max dspTime drift {maxDrift:F2}s, {AudioClockStamp()}");
+		audioWatchdogCoroutine = null;
+	}
+
+	private static void ResetStalledAudio()
+	{
+		AudioSource[] array = UnityEngine.Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None);
+		List<AudioSource> list = new List<AudioSource>();
+		for (int i = 0; i < array.Length; i++)
+		{
+			if (array[i].isPlaying && array[i].loop)
+			{
+				list.Add(array[i]);
+			}
+		}
+		GTDev.LogError($"[CML.AudioWatchdog] Resetting audio system, {list.Count} looping sources to " + "restart, " + AudioClockStamp());
+		bool flag = AudioSettings.Reset(AudioSettings.GetConfiguration());
+		for (int j = 0; j < list.Count; j++)
+		{
+			if (list[j] != null && list[j].isActiveAndEnabled)
+			{
+				list[j].Play();
+			}
+		}
+		GTDev.Log($"[CML.AudioWatchdog] AudioSettings.Reset returned {flag}, {AudioClockStamp()}");
+	}
+
 	private static IEnumerator AbortSceneLoad(int sceneIndex)
 	{
 		if (sceneIndex == -1)
@@ -2679,7 +2946,7 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 		{
 			yield return null;
 		}
-		UnloadSceneOptions options = UnloadSceneOptions.UnloadAllEmbeddedSceneObjects;
+		UnloadSceneOptions unloadSceneOptions = UnloadSceneOptions.UnloadAllEmbeddedSceneObjects;
 		string scenePathWithExtension = assetBundleSceneFilePaths[sceneIndex];
 		string[] array = scenePathWithExtension.Split(".");
 		string text = "";
@@ -2692,20 +2959,26 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 				sceneName = Path.GetFileName(text);
 			}
 		}
-		Scene sceneByName = SceneManager.GetSceneByName(text);
-		if (!sceneByName.IsValid() || !sceneByName.isLoaded)
+		Scene sceneToUnload = SceneManager.GetSceneByName(text);
+		if (!sceneToUnload.IsValid() || !sceneToUnload.isLoaded)
 		{
 			yield break;
 		}
-		RemoveUnloadingStorePrefabs(sceneByName);
+		SilenceSceneAudio(sceneToUnload);
+		yield return WaitForAudioRelease();
+		if (isUnloading)
+		{
+			yield return ReleaseMapAudioData();
+		}
+		RemoveUnloadingStorePrefabs(sceneToUnload);
 		for (int num = teleporters.Count - 1; num >= 0; num--)
 		{
-			if (teleporters[num].gameObject.scene == sceneByName)
+			if (teleporters[num].gameObject.scene == sceneToUnload)
 			{
 				teleporters.RemoveAt(num);
 			}
 		}
-		yield return SceneManager.UnloadSceneAsync(scenePathWithExtension, options);
+		yield return SceneManager.UnloadSceneAsync(scenePathWithExtension, unloadSceneOptions);
 		loadedSceneFilePaths.Remove(scenePathWithExtension);
 		loadedSceneNames.Remove(sceneName);
 		loadedSceneIndexes.Remove(sceneIndex);
@@ -2726,6 +2999,11 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 			}
 			UnityEngine.Object.Destroy(customMapATM);
 			customMapATM = null;
+		}
+		if (customMapGeodeATM.IsNotNull() && customMapGeodeATMScene == unloadingScene)
+		{
+			UnityEngine.Object.Destroy(customMapGeodeATM);
+			customMapGeodeATM = null;
 		}
 		int num = 0;
 		for (num = storeDisplayStands.Count - 1; num >= 0; num--)

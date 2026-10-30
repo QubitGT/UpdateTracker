@@ -1,7 +1,12 @@
 using GorillaExtensions;
 using GorillaLocomotion;
+using GorillaNetworking;
+using GorillaTag;
+using GorillaTag.CosmeticSystem;
 using TMPro;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.Serialization;
 
 public class HoverboardVisual : MonoBehaviour, ICallBack
@@ -32,9 +37,6 @@ public class HoverboardVisual : MonoBehaviour, ICallBack
 	private float carveHapticDuration;
 
 	[SerializeField]
-	private MeshRenderer boardMesh;
-
-	[SerializeField]
 	private InteractionPoint handleInteractionPoint;
 
 	[SerializeField]
@@ -43,7 +45,25 @@ public class HoverboardVisual : MonoBehaviour, ICallBack
 	[SerializeField]
 	private TextMeshPro raceLapsReadout;
 
+	[SerializeField]
+	private Transform visualSlot;
+
+	[SerializeField]
+	private GameObject defaultVisualPrefab;
+
 	private Material colorMaterial;
+
+	private GameObject defaultVisualInstance;
+
+	private GameObject activeSkinInstance;
+
+	private HoverboardCosmetic activeCosmetic;
+
+	private AsyncOperationHandle<GameObject> skinLoadHandle;
+
+	private int skinLoadVersion;
+
+	private string currentSkinDisplayName;
 
 	private Vector3 interpolatedLocalPosition;
 
@@ -82,10 +102,24 @@ public class HoverboardVisual : MonoBehaviour, ICallBack
 
 	private void Awake()
 	{
-		Material[] sharedMaterials = boardMesh.sharedMaterials;
-		colorMaterial = new Material(sharedMaterials[1]);
-		sharedMaterials[1] = colorMaterial;
-		boardMesh.sharedMaterials = sharedMaterials;
+		SpawnDefaultVisual();
+	}
+
+	private void SpawnDefaultVisual()
+	{
+		if (!(defaultVisualInstance != null) && !(defaultVisualPrefab == null))
+		{
+			defaultVisualInstance = Object.Instantiate(defaultVisualPrefab, visualSlot);
+			defaultVisualInstance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+			MeshRenderer componentInChildren = defaultVisualInstance.GetComponentInChildren<MeshRenderer>();
+			if (componentInChildren != null)
+			{
+				Material[] sharedMaterials = componentInChildren.sharedMaterials;
+				colorMaterial = new Material(sharedMaterials[1]);
+				sharedMaterials[1] = colorMaterial;
+				componentInChildren.sharedMaterials = sharedMaterials;
+			}
+		}
 	}
 
 	public void SetIsHeld(bool isHeldLeftHanded, Vector3 localPosition, Quaternion localRotation, Color boardColor)
@@ -110,8 +144,16 @@ public class HoverboardVisual : MonoBehaviour, ICallBack
 		{
 			GTPlayer.Instance.SetHoverActive(enable: true);
 		}
-		colorMaterial.color = boardColor;
+		if (colorMaterial != null)
+		{
+			colorMaterial.color = boardColor;
+		}
 		this.boardColor = boardColor;
+		if (parentRig.isLocal)
+		{
+			string displayName = ((CosmeticsController.instance != null) ? CosmeticsController.instance.currentWornSet.items[32].displayName : null);
+			ApplySkin(displayName);
+		}
 	}
 
 	public void SetNotHeld(bool isLeftHanded)
@@ -123,6 +165,7 @@ public class HoverboardVisual : MonoBehaviour, ICallBack
 	public void SetNotHeld()
 	{
 		bool isHeld = IsHeld;
+		ClearSkin();
 		base.gameObject.SetActive(value: false);
 		IsHeld = false;
 		interpolatedLocalPosition = base.transform.localPosition;
@@ -196,9 +239,101 @@ public class HoverboardVisual : MonoBehaviour, ICallBack
 		EquipmentInteractor.instance.UpdateHandEquipment(handlePosition, isLeftHand);
 	}
 
+	private void OnDisable()
+	{
+		skinLoadVersion++;
+		ClearSkin();
+	}
+
+	public void ApplySkin(string displayName)
+	{
+		if (displayName == currentSkinDisplayName && activeSkinInstance != null)
+		{
+			return;
+		}
+		skinLoadVersion++;
+		int requestedVersion = skinLoadVersion;
+		if (skinLoadHandle.IsValid())
+		{
+			Addressables.Release(skinLoadHandle);
+			skinLoadHandle = default(AsyncOperationHandle<GameObject>);
+		}
+		if (activeSkinInstance != null)
+		{
+			Object.Destroy(activeSkinInstance);
+			activeSkinInstance = null;
+			activeCosmetic = null;
+		}
+		defaultVisualInstance?.SetActive(value: true);
+		if (colorMaterial != null)
+		{
+			colorMaterial.color = boardColor;
+		}
+		if (string.IsNullOrEmpty(displayName) || displayName == "NOTHING")
+		{
+			currentSkinDisplayName = null;
+			return;
+		}
+		CosmeticSO cosmeticSO = CosmeticsController.instance?.GetCosmeticSOFromDisplayName(displayName);
+		if (!(cosmeticSO == null) && cosmeticSO.info.functionalParts != null && cosmeticSO.info.functionalParts.Length != 0)
+		{
+			GTAssetRef<GameObject> prefabAssetRef = cosmeticSO.info.functionalParts[0].prefabAssetRef;
+			skinLoadHandle = Addressables.LoadAssetAsync<GameObject>(prefabAssetRef);
+			skinLoadHandle.Completed += delegate(AsyncOperationHandle<GameObject> handle)
+			{
+				OnSkinPrefabLoaded(handle, requestedVersion, displayName);
+			};
+		}
+	}
+
+	private void OnSkinPrefabLoaded(AsyncOperationHandle<GameObject> handle, int requestedVersion, string displayName)
+	{
+		if (requestedVersion != skinLoadVersion || !base.gameObject.activeSelf)
+		{
+			if (handle.IsValid())
+			{
+				Addressables.Release(handle);
+			}
+		}
+		else if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
+		{
+			if (handle.IsValid())
+			{
+				Addressables.Release(handle);
+			}
+			skinLoadHandle = default(AsyncOperationHandle<GameObject>);
+		}
+		else
+		{
+			defaultVisualInstance?.SetActive(value: false);
+			activeSkinInstance = Object.Instantiate(handle.Result, visualSlot);
+			activeSkinInstance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+			activeCosmetic = activeSkinInstance.GetComponent<HoverboardCosmetic>();
+			activeCosmetic?.Apply(boardColor);
+			currentSkinDisplayName = displayName;
+		}
+	}
+
+	private void ClearSkin()
+	{
+		currentSkinDisplayName = null;
+		if (skinLoadHandle.IsValid())
+		{
+			Addressables.Release(skinLoadHandle);
+			skinLoadHandle = default(AsyncOperationHandle<GameObject>);
+		}
+		if (activeSkinInstance != null)
+		{
+			Object.Destroy(activeSkinInstance);
+			activeSkinInstance = null;
+			activeCosmetic = null;
+		}
+		defaultVisualInstance?.SetActive(value: true);
+	}
+
 	public void DropFreeBoard()
 	{
-		FreeHoverboardManager.instance.SendDropBoardRPC(base.transform.position, base.transform.rotation, velocityEstimator.linearVelocity, velocityEstimator.angularVelocity, boardColor);
+		FreeHoverboardManager.instance.SendDropBoardRPC(base.transform.position, base.transform.rotation, velocityEstimator.linearVelocity, velocityEstimator.angularVelocity, boardColor, parentRig.transform.lossyScale);
 	}
 
 	public void SetRaceDisplay(string text)

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Pushable Slider")]
 public class PushableSlider : MonoBehaviour
 {
 	[SerializeField]

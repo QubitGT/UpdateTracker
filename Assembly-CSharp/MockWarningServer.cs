@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/Mock Warning Server")]
 internal class MockWarningServer : WarningsServer
 {
 	public struct ButtonSetup

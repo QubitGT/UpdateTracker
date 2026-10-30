@@ -342,6 +342,17 @@ public class CosmeticsProximityReactor : MonoBehaviour, ISpawnable
 		}
 	}
 
+	public void ResetProximityState()
+	{
+		foreach (InteractionSetting block in blocks)
+		{
+			block.wasBelow = false;
+			block.isMatched = false;
+			block.lastBelowRig = null;
+		}
+		IsMatched = false;
+	}
+
 	public IReadOnlyList<string> GetTypes()
 	{
 		List<string> sharedKeysCache = CosmeticsProximityReactorManager.SharedKeysCache;

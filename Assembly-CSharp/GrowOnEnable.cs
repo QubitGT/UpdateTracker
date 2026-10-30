@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/Grow On Enable")]
 public class GrowOnEnable : MonoBehaviour, ITickSystemTick
 {
 	[SerializeField]

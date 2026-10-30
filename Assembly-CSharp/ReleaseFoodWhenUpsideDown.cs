@@ -3,6 +3,7 @@ using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Release Food When Upside Down")]
 public class ReleaseFoodWhenUpsideDown : MonoBehaviour
 {
 	public CrittersFoodDispenser dispenser;

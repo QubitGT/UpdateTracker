@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Game Entity Interaction Point")]
 public class GRGameEntityInteractionPoint : MonoBehaviour
 {
 	public GameEntity gameEntity;

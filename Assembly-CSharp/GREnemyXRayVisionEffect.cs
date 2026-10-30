@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Enemy X Ray Vision Effect")]
 public class GREnemyXRayVisionEffect : MonoBehaviour
 {
 	public GameObject enemyXRayEffect;

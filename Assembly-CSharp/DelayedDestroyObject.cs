@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Delayed Destroy Object")]
 public class DelayedDestroyObject : MonoBehaviour
 {
 	public float lifetime = 10f;

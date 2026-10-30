@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Critters/Release Cage When Upside Down")]
 public class ReleaseCageWhenUpsideDown : MonoBehaviour
 {
 	public CrittersCage cage;

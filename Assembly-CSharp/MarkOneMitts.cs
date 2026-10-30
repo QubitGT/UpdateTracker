@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Mark One Mitts")]
 public class MarkOneMitts : HandTapBehaviour, ITickSystemTick, IProximityEffectReceiver
 {
 	[Serializable]

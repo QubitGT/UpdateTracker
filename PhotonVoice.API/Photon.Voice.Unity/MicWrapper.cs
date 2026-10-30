@@ -24,7 +24,7 @@ public class MicWrapper : IAudioReader<float>, IDataReader<float>, IDisposable, 
 	{
 		get
 		{
-			if (Error != null)
+			if (Error != null || !(mic != null))
 			{
 				return 0;
 			}
@@ -36,7 +36,7 @@ public class MicWrapper : IAudioReader<float>, IDataReader<float>, IDisposable, 
 	{
 		get
 		{
-			if (Error != null)
+			if (Error != null || !(mic != null))
 			{
 				return 0;
 			}
@@ -62,14 +62,20 @@ public class MicWrapper : IAudioReader<float>, IDataReader<float>, IDisposable, 
 			{
 				logger.LogError($"[PV] MicWrapper: \"{device}\" is not a valid Unity microphone device, falling back to default one");
 				device = null;
+				this.device = null;
 			}
 			UnityMicrophone.GetDeviceCaps(device, out var minFreq, out var maxFreq);
-			int frequency = suggestedFrequency;
+			int num = suggestedFrequency;
 			if (suggestedFrequency < minFreq || (maxFreq != 0 && suggestedFrequency > maxFreq))
 			{
-				frequency = maxFreq;
+				num = maxFreq;
 			}
-			mic = UnityMicrophone.Start(device, loop: true, 1, frequency);
+			mic = UnityMicrophone.Start(device, loop: true, 1, num);
+			if (mic == null)
+			{
+				Error = $"Microphone.Start returned null (device: '{device}', frequency: {num}, caps: {minFreq}-{maxFreq})";
+				logger.LogError("[PV] MicWrapper: " + Error);
+			}
 		}
 		catch (Exception ex)
 		{

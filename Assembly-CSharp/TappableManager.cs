@@ -1,11 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Fusion;
 using Photon.Pun;
 using UnityEngine;
-using UnityEngine.Scripting;
 
 public class TappableManager : NetworkSceneObject
 {
@@ -23,7 +20,7 @@ public class TappableManager : NetworkSceneObject
 		if (gManager != null && gManager != this)
 		{
 			GTDev.LogWarning("Instance of TappableManager already exists. Destroying.");
-			UnityEngine.Object.Destroy(this);
+			Object.Destroy(this);
 			return;
 		}
 		if (gManager == null)
@@ -97,7 +94,7 @@ public class TappableManager : NetworkSceneObject
 	{
 		if (tappables.Count > 0)
 		{
-			int index = UnityEngine.Random.Range(0, tappables.Count);
+			int index = Random.Range(0, tappables.Count);
 			UnityEngine.Debug.Log("Send TestTap to tappable index: " + index + "/" + tappables.Count);
 			tappables[index].OnTap(10f);
 		}
@@ -111,50 +108,6 @@ public class TappableManager : NetworkSceneObject
 	public void SendOnTapRPC(int key, float tapStrength, PhotonMessageInfo info)
 	{
 		SendOnTapShared(key, tapStrength, new PhotonMessageInfoWrapped(info));
-	}
-
-	[Rpc]
-	public unsafe static void RPC_SendOnTap(NetworkRunner runner, int key, float tapStrength, RpcInfo info = default(RpcInfo))
-	{
-		if (NetworkBehaviourUtils.InvokeRpc)
-		{
-			NetworkBehaviourUtils.InvokeRpc = false;
-		}
-		else
-		{
-			if ((object)runner == null)
-			{
-				throw new ArgumentNullException("runner");
-			}
-			if (runner.Stage == SimulationStages.Resimulate)
-			{
-				return;
-			}
-			int num = 8;
-			num += 4;
-			num += 4;
-			if (!SimulationMessage.CanAllocateUserPayload(num))
-			{
-				NetworkBehaviourUtils.NotifyRpcPayloadSizeExceeded("System.Void TappableManager::RPC_SendOnTap(Fusion.NetworkRunner,System.Int32,System.Single,Fusion.RpcInfo)", num);
-				return;
-			}
-			if (runner.HasAnyActiveConnections())
-			{
-				SimulationMessage* ptr = SimulationMessage.Allocate(runner.Simulation, num);
-				byte* ptr2 = (byte*)ptr + 28;
-				*(RpcHeader*)ptr2 = RpcHeader.Create(NetworkBehaviourUtils.GetRpcStaticIndexOrThrow("System.Void TappableManager::RPC_SendOnTap(Fusion.NetworkRunner,System.Int32,System.Single,Fusion.RpcInfo)"));
-				int num2 = 8;
-				*(int*)(ptr2 + num2) = key;
-				num2 += 4;
-				*(float*)(ptr2 + num2) = tapStrength;
-				num2 += 4;
-				ptr->Offset = num2 * 8;
-				ptr->SetStatic();
-				runner.SendRpc(ptr);
-			}
-			info = RpcInfo.FromLocal(runner, RpcChannel.Reliable, RpcHostMode.SourceIsServer);
-		}
-		gManager.SendOnTapShared(key, tapStrength, new PhotonMessageInfoWrapped(info));
 	}
 
 	private void SendOnTapShared(int key, float tapStrength, PhotonMessageInfoWrapped info)
@@ -181,47 +134,6 @@ public class TappableManager : NetworkSceneObject
 		SendOnGrabShared(key, new PhotonMessageInfoWrapped(info));
 	}
 
-	[Rpc]
-	public unsafe static void RPC_SendOnGrab(NetworkRunner runner, int key, RpcInfo info = default(RpcInfo))
-	{
-		if (NetworkBehaviourUtils.InvokeRpc)
-		{
-			NetworkBehaviourUtils.InvokeRpc = false;
-		}
-		else
-		{
-			if ((object)runner == null)
-			{
-				throw new ArgumentNullException("runner");
-			}
-			if (runner.Stage == SimulationStages.Resimulate)
-			{
-				return;
-			}
-			int num = 8;
-			num += 4;
-			if (!SimulationMessage.CanAllocateUserPayload(num))
-			{
-				NetworkBehaviourUtils.NotifyRpcPayloadSizeExceeded("System.Void TappableManager::RPC_SendOnGrab(Fusion.NetworkRunner,System.Int32,Fusion.RpcInfo)", num);
-				return;
-			}
-			if (runner.HasAnyActiveConnections())
-			{
-				SimulationMessage* ptr = SimulationMessage.Allocate(runner.Simulation, num);
-				byte* ptr2 = (byte*)ptr + 28;
-				*(RpcHeader*)ptr2 = RpcHeader.Create(NetworkBehaviourUtils.GetRpcStaticIndexOrThrow("System.Void TappableManager::RPC_SendOnGrab(Fusion.NetworkRunner,System.Int32,Fusion.RpcInfo)"));
-				int num2 = 8;
-				*(int*)(ptr2 + num2) = key;
-				num2 += 4;
-				ptr->Offset = num2 * 8;
-				ptr->SetStatic();
-				runner.SendRpc(ptr);
-			}
-			info = RpcInfo.FromLocal(runner, RpcChannel.Reliable, RpcHostMode.SourceIsServer);
-		}
-		gManager.SendOnGrabShared(key, new PhotonMessageInfoWrapped(info));
-	}
-
 	private void SendOnGrabShared(int key, PhotonMessageInfoWrapped info)
 	{
 		MonkeAgent.IncrementRPCCall(info, "SendOnGrabShared");
@@ -245,47 +157,6 @@ public class TappableManager : NetworkSceneObject
 		SendOnReleaseShared(key, new PhotonMessageInfoWrapped(info));
 	}
 
-	[Rpc]
-	public unsafe static void RPC_SendOnRelease(NetworkRunner runner, int key, RpcInfo info = default(RpcInfo))
-	{
-		if (NetworkBehaviourUtils.InvokeRpc)
-		{
-			NetworkBehaviourUtils.InvokeRpc = false;
-		}
-		else
-		{
-			if ((object)runner == null)
-			{
-				throw new ArgumentNullException("runner");
-			}
-			if (runner.Stage == SimulationStages.Resimulate)
-			{
-				return;
-			}
-			int num = 8;
-			num += 4;
-			if (!SimulationMessage.CanAllocateUserPayload(num))
-			{
-				NetworkBehaviourUtils.NotifyRpcPayloadSizeExceeded("System.Void TappableManager::RPC_SendOnRelease(Fusion.NetworkRunner,System.Int32,Fusion.RpcInfo)", num);
-				return;
-			}
-			if (runner.HasAnyActiveConnections())
-			{
-				SimulationMessage* ptr = SimulationMessage.Allocate(runner.Simulation, num);
-				byte* ptr2 = (byte*)ptr + 28;
-				*(RpcHeader*)ptr2 = RpcHeader.Create(NetworkBehaviourUtils.GetRpcStaticIndexOrThrow("System.Void TappableManager::RPC_SendOnRelease(Fusion.NetworkRunner,System.Int32,Fusion.RpcInfo)"));
-				int num2 = 8;
-				*(int*)(ptr2 + num2) = key;
-				num2 += 4;
-				ptr->Offset = num2 * 8;
-				ptr->SetStatic();
-				runner.SendRpc(ptr);
-			}
-			info = RpcInfo.FromLocal(runner, RpcChannel.Reliable, RpcHostMode.SourceIsServer);
-		}
-		gManager.SendOnReleaseShared(key, new PhotonMessageInfoWrapped(info));
-	}
-
 	public void SendOnReleaseShared(int key, PhotonMessageInfoWrapped info)
 	{
 		MonkeAgent.IncrementRPCCall(info, "SendOnReleaseShared");
@@ -301,53 +172,5 @@ public class TappableManager : NetworkSceneObject
 				tappable.OnReleaseLocal(Time.time, info);
 			}
 		}
-	}
-
-	[NetworkRpcStaticWeavedInvoker("System.Void TappableManager::RPC_SendOnTap(Fusion.NetworkRunner,System.Int32,System.Single,Fusion.RpcInfo)")]
-	[Preserve]
-	[WeaverGenerated]
-	protected unsafe static void RPC_SendOnTap_0040Invoker(NetworkRunner runner, SimulationMessage* message)
-	{
-		byte* ptr = (byte*)message + 28;
-		int num = 8;
-		int num2 = *(int*)(ptr + num);
-		num += 4;
-		int key = num2;
-		float num3 = *(float*)(ptr + num);
-		num += 4;
-		float tapStrength = num3;
-		RpcInfo info = RpcInfo.FromMessage(runner, message, RpcHostMode.SourceIsServer);
-		NetworkBehaviourUtils.InvokeRpc = true;
-		RPC_SendOnTap(runner, key, tapStrength, info);
-	}
-
-	[NetworkRpcStaticWeavedInvoker("System.Void TappableManager::RPC_SendOnGrab(Fusion.NetworkRunner,System.Int32,Fusion.RpcInfo)")]
-	[Preserve]
-	[WeaverGenerated]
-	protected unsafe static void RPC_SendOnGrab_0040Invoker(NetworkRunner runner, SimulationMessage* message)
-	{
-		byte* ptr = (byte*)message + 28;
-		int num = 8;
-		int num2 = *(int*)(ptr + num);
-		num += 4;
-		int key = num2;
-		RpcInfo info = RpcInfo.FromMessage(runner, message, RpcHostMode.SourceIsServer);
-		NetworkBehaviourUtils.InvokeRpc = true;
-		RPC_SendOnGrab(runner, key, info);
-	}
-
-	[NetworkRpcStaticWeavedInvoker("System.Void TappableManager::RPC_SendOnRelease(Fusion.NetworkRunner,System.Int32,Fusion.RpcInfo)")]
-	[Preserve]
-	[WeaverGenerated]
-	protected unsafe static void RPC_SendOnRelease_0040Invoker(NetworkRunner runner, SimulationMessage* message)
-	{
-		byte* ptr = (byte*)message + 28;
-		int num = 8;
-		int num2 = *(int*)(ptr + num);
-		num += 4;
-		int key = num2;
-		RpcInfo info = RpcInfo.FromMessage(runner, message, RpcHostMode.SourceIsServer);
-		NetworkBehaviourUtils.InvokeRpc = true;
-		RPC_SendOnRelease(runner, key, info);
 	}
 }

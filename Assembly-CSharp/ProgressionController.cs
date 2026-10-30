@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
+[AddComponentMenu("GorillaTag/Seasonal/Progression Controller")]
 public class ProgressionController : MonoBehaviour
 {
 	[Serializable]

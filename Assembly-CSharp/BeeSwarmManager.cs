@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Bee Swarm Manager")]
 public class BeeSwarmManager : MonoBehaviour
 {
 	[SerializeField]

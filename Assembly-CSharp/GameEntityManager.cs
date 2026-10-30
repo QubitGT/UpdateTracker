@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Cysharp.Text;
-using Fusion;
 using GorillaExtensions;
 using GorillaGameModes;
 using GorillaLocomotion;
@@ -17,13 +16,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
-[NetworkBehaviourWeaved(0)]
+[AddComponentMenu("GorillaTag/Game Entity/Game Entity Manager")]
 public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCallbacks, ITickSystemTick
 {
-	public delegate void ZoneStartEvent(GTZone zoneId);
-
-	public delegate void ZoneClearEvent(GTZone zoneId);
-
 	public delegate void AuthorityChangeEvent(NetPlayer fromPlayer, NetPlayer toPlayer);
 
 	public delegate void ZoneActiveChangeEvent(bool active);
@@ -253,10 +248,6 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 
 	public bool PendingTableData { get; private set; }
 
-	public event ZoneStartEvent onZoneStart;
-
-	public event ZoneClearEvent onZoneClear;
-
 	public event AuthorityChangeEvent OnAuthorityChanged;
 
 	public event ZoneActiveChangeEvent OnZoneActiveChanged;
@@ -268,7 +259,7 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 		entitiesActiveCount = 0;
 		gameEntityData = new List<GameEntityData>(64);
 		netIdToIndex = new Dictionary<int, int>(16384);
-		netIds = new NativeArray<int>(16384, Unity.Collections.Allocator.Persistent);
+		netIds = new NativeArray<int>(16384, Allocator.Persistent);
 		createdItemTypeCount = new Dictionary<int, int>();
 		OnEntityRemoved = (Action<GameEntity>)Delegate.Combine(OnEntityRemoved, new Action<GameEntity>(CustomGameMode.OnGameEntityRemoved));
 		zoneStateData = new ZoneStateData
@@ -501,7 +492,6 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 
 	internal override void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		base.OnEnable();
 		TickSystem<object>.AddTickCallback(this);
 		VRRigCache.OnRigDeactivated += OnRigDeactivated;
@@ -514,7 +504,6 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 
 	internal override void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		base.OnDisable();
 		TickSystem<object>.RemoveTickCallback(this);
 		VRRigCache.OnRigDeactivated -= OnRigDeactivated;
@@ -526,7 +515,6 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 
 	private void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		netIds.Dispose();
 		allManagers.Remove(this);
 		if (managersByZone.TryGetValue((int)zone, out var value) && value == this)
@@ -1809,7 +1797,7 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 		}
 		if (!flag)
 		{
-			bool flag4 = gameEntity.snappedByActorNumber == gamePlayer.rig.OwningNetPlayer.ActorNumber;
+			bool flag4 = gameEntity.snappedByActorNumber == info.Sender.ActorNumber;
 			if (gameEntity.canHoldingPlayerUpdateState && flag2)
 			{
 				flag = true;
@@ -3130,17 +3118,17 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 		for (int num3 = 0; num3 < tempRigs.Count; num3++)
 		{
 			VRRig vRRig = tempRigs[num3];
-			NetPlayer owningNetPlayer = vRRig.OwningNetPlayer;
-			binaryWriter.Write(owningNetPlayer.ActorNumber);
+			NetPlayer creator = vRRig.Creator;
+			binaryWriter.Write(creator.ActorNumber);
 			GamePlayer gamePlayerRef = vRRig.GamePlayerRef;
 			bool flag3 = gamePlayerRef != null;
 			binaryWriter.Write(flag3);
 			if (flag3)
 			{
-				gamePlayerRef.SerializeNetworkState(binaryWriter, owningNetPlayer, this);
+				gamePlayerRef.SerializeNetworkState(binaryWriter, creator, this);
 				for (int num4 = 0; num4 < zoneComponents.Count; num4++)
 				{
-					zoneComponents[num4].SerializeZonePlayerData(binaryWriter, owningNetPlayer.ActorNumber);
+					zoneComponents[num4].SerializeZonePlayerData(binaryWriter, creator.ActorNumber);
 				}
 			}
 		}
@@ -3481,7 +3469,7 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 	private void UpdateZoneStateAuthority()
 	{
 		GamePlayer gamePlayer = GamePlayerLocal.instance.gamePlayer;
-		if (gamePlayer == null || gamePlayer.rig == null || gamePlayer.rig.OwningNetPlayer == null)
+		if (gamePlayer == null || gamePlayer.rig == null || gamePlayer.rig.Creator == null)
 		{
 			return;
 		}
@@ -3528,7 +3516,7 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 	private void UpdateZoneStateClient()
 	{
 		GamePlayer gamePlayer = GamePlayerLocal.instance.gamePlayer;
-		if (gamePlayer == null || gamePlayer.rig == null || gamePlayer.rig.OwningNetPlayer == null)
+		if (gamePlayer == null || gamePlayer.rig == null || gamePlayer.rig.Creator == null)
 		{
 			return;
 		}
@@ -3583,7 +3571,7 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 		{
 			return false;
 		}
-		bool flag = GorillaGameModes.GameMode.CurrentGameModeType == GameModeType.SuperCasual || GorillaGameModes.GameMode.CurrentGameModeType == GameModeType.SuperInfect;
+		bool flag = GameMode.CurrentGameModeType == GameModeType.SuperCasual || GameMode.CurrentGameModeType == GameModeType.SuperInfect;
 		for (int i = 0; i < zoneComponents.Count; i++)
 		{
 			if ((flag || !(zoneComponents[i] is SuperInfectionManager)) && !zoneComponents[i].IsZoneReady())
@@ -3724,14 +3712,6 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 			zone = zone,
 			completed = false
 		});
-	}
-
-	public override void WriteDataFusion()
-	{
-	}
-
-	public override void ReadDataFusion()
-	{
 	}
 
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
@@ -4016,17 +3996,5 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 			num = -2;
 		}
 		return num;
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
 	}
 }

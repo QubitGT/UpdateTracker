@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Enemy Ranged")]
 public class GREnemyRanged : MonoBehaviour, IGameEntityComponent, IGameEntitySerialize, IGameHittable, IGameAgentComponent, IGameProjectileLauncher, IGameEntityDebugComponent
 {
 	public enum Behavior
@@ -643,7 +644,7 @@ public class GREnemyRanged : MonoBehaviour, IGameEntityComponent, IGameEntitySer
 			if ((object)component != null && component.State != GRPlayer.GRPlayerState.Ghost)
 			{
 				bestTargetPlayer = component;
-				bestTargetNetPlayer = vRRig.OwningNetPlayer;
+				bestTargetNetPlayer = vRRig.Creator;
 				lastSeenTargetTime = Time.timeAsDouble;
 				lastSeenTargetPosition = vRRig.transform.position;
 			}

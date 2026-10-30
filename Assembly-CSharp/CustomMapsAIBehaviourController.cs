@@ -6,6 +6,7 @@ using GorillaTagScripts.VirtualStumpCustomMaps;
 using UnityEngine;
 using UnityEngine.AI;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps AI Behaviour Controller")]
 public class CustomMapsAIBehaviourController : MonoBehaviour, IGameEntityComponent
 {
 	public enum CustomMapsAIBehaviour
@@ -359,6 +360,11 @@ public class CustomMapsAIBehaviourController : MonoBehaviour, IGameEntityCompone
 		{
 			return false;
 		}
+		NetPlayer creator = potentialTarget.MyRig.Creator;
+		if (creator == null)
+		{
+			return false;
+		}
 		if (potentialTarget.State == GRPlayer.GRPlayerState.Ghost)
 		{
 			return false;
@@ -370,11 +376,11 @@ public class CustomMapsAIBehaviourController : MonoBehaviour, IGameEntityCompone
 				return false;
 			}
 		}
-		else if (CustomMapManager.IsRemotePlayerInVirtualStump(potentialTarget.MyRig.OwningNetPlayer.UserId))
+		else if (CustomMapManager.IsRemotePlayerInVirtualStump(creator.UserId))
 		{
 			return false;
 		}
-		if (!allowTargetingTaggedPlayers && GameMode.ActiveGameMode.GameType() != GameModeType.Custom && GameMode.LocalIsTagged(potentialTarget.MyRig.OwningNetPlayer))
+		if (!allowTargetingTaggedPlayers && GameMode.ActiveGameMode.GameType() != GameModeType.Custom && GameMode.LocalIsTagged(creator))
 		{
 			return false;
 		}

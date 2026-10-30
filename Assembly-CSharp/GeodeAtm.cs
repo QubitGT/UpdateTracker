@@ -8,6 +8,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Geode Atm")]
 public class GeodeAtm : MonoBehaviour
 {
 	private enum GeodePurchaseSize
@@ -124,6 +125,11 @@ public class GeodeAtm : MonoBehaviour
 		{
 			_ => text, 
 		};
+	}
+
+	public static void InvalidateGeodeBalance()
+	{
+		fetchedGeodes = false;
 	}
 
 	private static string GetLocalizedText(string key, string fallback)

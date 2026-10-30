@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Seasonal/Monke Business Station")]
 public class MonkeBusinessStation : MonoBehaviour
 {
 	[SerializeField]

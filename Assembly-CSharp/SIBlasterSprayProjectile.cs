@@ -2,6 +2,7 @@ using System;
 using GorillaLocomotion;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Blaster Spray Projectile")]
 public class SIBlasterSprayProjectile : MonoBehaviour
 {
 	private SIGadgetBlasterProjectile projectile;

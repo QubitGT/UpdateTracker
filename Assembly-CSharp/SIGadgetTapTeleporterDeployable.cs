@@ -1,6 +1,7 @@
 using GorillaLocomotion;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Tap Teleporter Deployable")]
 public class SIGadgetTapTeleporterDeployable : MonoBehaviour, IGameEntityComponent
 {
 	public GameEntity gameEntity;
@@ -54,10 +55,6 @@ public class SIGadgetTapTeleporterDeployable : MonoBehaviour, IGameEntityCompone
 
 	private float teleportCheckDistance = 2f;
 
-	private void Awake()
-	{
-	}
-
 	private void OnEnable()
 	{
 		activateTime = Time.time + activateDelay;
@@ -107,7 +104,7 @@ public class SIGadgetTapTeleporterDeployable : MonoBehaviour, IGameEntityCompone
 
 	public void OnEntityStateChange(long prevState, long newState)
 	{
-		if (gameEntity.IsAuthority())
+		if (gameEntity.manager == null || gameEntity.IsAuthority())
 		{
 			return;
 		}

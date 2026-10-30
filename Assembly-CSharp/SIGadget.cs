@@ -67,6 +67,10 @@ public abstract class SIGadget : MonoBehaviour, IGameEntityComponent, IPrefabReq
 
 	private float timeReleased;
 
+	private bool countedAsHeld;
+
+	private bool countedAsMine;
+
 	protected bool activatedLocally;
 
 	[SerializeField]
@@ -227,16 +231,22 @@ public abstract class SIGadget : MonoBehaviour, IGameEntityComponent, IPrefabReq
 		GameEntity obj4 = gameEntity;
 		obj4.OnUnsnapped = (Action)Delegate.Remove(obj4.OnUnsnapped, new Action(ReleaseInitialization));
 		LeaveAllExclusionZones();
+		UncountHeldTelemetry();
 	}
 
 	public void GrabInitialization()
 	{
 		isSleeping = false;
 		shouldSleep = false;
-		if (gameEntity.IsHeldByLocalPlayer() && !(gameEntity.manager.GetComponent<SuperInfectionManager>()?.zoneSuperInfection == null))
+		if (!gameEntity.IsHeldByLocalPlayer())
 		{
-			bool isMine = SIPlayer.LocalPlayer.activePlayerGadgets.Contains(gameEntity.GetNetId());
-			SIProgression.Instance.UpdateHeldGadgetsTelemetry(PageId, isMine, 1);
+			UncountHeldTelemetry();
+		}
+		else if (!countedAsHeld && !(gameEntity.manager.GetComponent<SuperInfectionManager>()?.zoneSuperInfection == null))
+		{
+			countedAsMine = SIPlayer.LocalPlayer.activePlayerGadgets.Contains(gameEntity.GetNetId());
+			countedAsHeld = true;
+			SIProgression.Instance.UpdateHeldGadgetsTelemetry(PageId, countedAsMine, 1);
 		}
 	}
 
@@ -245,10 +255,16 @@ public abstract class SIGadget : MonoBehaviour, IGameEntityComponent, IPrefabReq
 		shouldSleep = true;
 		isSleeping = false;
 		timeReleased = Time.time;
-		if (gameEntity.WasLastHeldByLocalPlayer() && !(gameEntity.manager.GetComponent<SuperInfectionManager>()?.zoneSuperInfection == null))
+		UncountHeldTelemetry();
+	}
+
+	private void UncountHeldTelemetry()
+	{
+		if (countedAsHeld)
 		{
-			bool isMine = SIPlayer.LocalPlayer.activePlayerGadgets.Contains(gameEntity.GetNetId());
-			SIProgression.Instance.UpdateHeldGadgetsTelemetry(PageId, isMine, -1);
+			countedAsHeld = false;
+			SIProgression.Instance?.UpdateHeldGadgetsTelemetry(PageId, countedAsMine, -1);
+			countedAsMine = false;
 		}
 	}
 

@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Fusion;
 using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Scripting;
 
 namespace GorillaTagScripts;
 
-[NetworkBehaviourWeaved(1)]
 public class DecorativeItemsManager : NetworkComponent
 {
 	public GameObject decorativeItemsContainer;
@@ -39,35 +36,7 @@ public class DecorativeItemsManager : NetworkComponent
 	[OnEnterPlay_SetNull]
 	private static DecorativeItemsManager _instance;
 
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("Data", 0, 1)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private int _Data;
-
 	public static DecorativeItemsManager Instance => _instance;
-
-	[Networked]
-	[NetworkedWeaved(0, 1)]
-	public unsafe int Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing DecorativeItemsManager.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(int*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing DecorativeItemsManager.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(int*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	protected override void Awake()
 	{
@@ -116,7 +85,6 @@ public class DecorativeItemsManager : NetworkComponent
 
 	private void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		foreach (DecorativeItem items in itemsList)
 		{
 			items.respawnItem = (UnityAction<DecorativeItem>)Delegate.Remove(items.respawnItem, new UnityAction<DecorativeItem>(OnRequestToRespawn));
@@ -186,59 +154,6 @@ public class DecorativeItemsManager : NetworkComponent
 	[PunRPC]
 	private void RespawnItemRPC(int index, Vector3 _transformPos, Quaternion _transformRot, PhotonMessageInfo info)
 	{
-		RespawnItemShared(index, _transformPos, _transformRot, info);
-	}
-
-	[Rpc]
-	private unsafe void RPC_RespawnItem(int index, Vector3 _transformPos, Quaternion _transformRot, RpcInfo info = default(RpcInfo))
-	{
-		if (((NetworkBehaviour)this).InvokeRpc)
-		{
-			((NetworkBehaviour)this).InvokeRpc = false;
-		}
-		else
-		{
-			NetworkBehaviourUtils.ThrowIfBehaviourNotInitialized(this);
-			if (base.Runner.Stage == SimulationStages.Resimulate)
-			{
-				return;
-			}
-			int localAuthorityMask = base.Object.GetLocalAuthorityMask();
-			if ((localAuthorityMask & 7) == 0)
-			{
-				NetworkBehaviourUtils.NotifyLocalSimulationNotAllowedToSendRpc("System.Void GorillaTagScripts.DecorativeItemsManager::RPC_RespawnItem(System.Int32,UnityEngine.Vector3,UnityEngine.Quaternion,Fusion.RpcInfo)", base.Object, 7);
-				return;
-			}
-			int num = 8;
-			num += 4;
-			num += 12;
-			num += 16;
-			if (!SimulationMessage.CanAllocateUserPayload(num))
-			{
-				NetworkBehaviourUtils.NotifyRpcPayloadSizeExceeded("System.Void GorillaTagScripts.DecorativeItemsManager::RPC_RespawnItem(System.Int32,UnityEngine.Vector3,UnityEngine.Quaternion,Fusion.RpcInfo)", num);
-				return;
-			}
-			if (base.Runner.HasAnyActiveConnections())
-			{
-				SimulationMessage* ptr = SimulationMessage.Allocate(base.Runner.Simulation, num);
-				byte* ptr2 = (byte*)ptr + 28;
-				*(RpcHeader*)ptr2 = RpcHeader.Create(base.Object.Id, ((NetworkBehaviour)this).ObjectIndex, 1);
-				int num2 = 8;
-				*(int*)(ptr2 + num2) = index;
-				num2 += 4;
-				*(Vector3*)(ptr2 + num2) = _transformPos;
-				num2 += 12;
-				*(Quaternion*)(ptr2 + num2) = _transformRot;
-				num2 += 16;
-				ptr->Offset = num2 * 8;
-				base.Runner.SendRpc(ptr);
-			}
-			if ((localAuthorityMask & 7) == 0)
-			{
-				return;
-			}
-			info = RpcInfo.FromLocal(base.Runner, RpcChannel.Reliable, RpcHostMode.SourceIsServer);
-		}
 		RespawnItemShared(index, _transformPos, _transformRot, info);
 	}
 
@@ -317,16 +232,6 @@ public class DecorativeItemsManager : NetworkComponent
 		return null;
 	}
 
-	public override void WriteDataFusion()
-	{
-		Data = currentIndex;
-	}
-
-	public override void ReadDataFusion()
-	{
-		currentIndex = Data;
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (info.Sender == PhotonNetwork.MasterClient)
@@ -341,40 +246,5 @@ public class DecorativeItemsManager : NetworkComponent
 		{
 			currentIndex = (int)stream.ReceiveNext();
 		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
-	}
-
-	[NetworkRpcWeavedInvoker(1, 7, 7)]
-	[Preserve]
-	[WeaverGenerated]
-	protected unsafe static void RPC_RespawnItem_0040Invoker(NetworkBehaviour behaviour, SimulationMessage* message)
-	{
-		byte* ptr = (byte*)message + 28;
-		int num = 8;
-		int num2 = *(int*)(ptr + num);
-		num += 4;
-		int index = num2;
-		Vector3 vector = *(Vector3*)(ptr + num);
-		num += 12;
-		Vector3 transformPos = vector;
-		Quaternion quaternion = *(Quaternion*)(ptr + num);
-		num += 16;
-		Quaternion transformRot = quaternion;
-		RpcInfo info = RpcInfo.FromMessage(behaviour.Runner, message, RpcHostMode.SourceIsServer);
-		behaviour.InvokeRpc = true;
-		((DecorativeItemsManager)behaviour).RPC_RespawnItem(index, transformPos, transformRot, info);
 	}
 }

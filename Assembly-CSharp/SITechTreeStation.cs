@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [DefaultExecutionOrder(100)]
+[AddComponentMenu("GorillaTag/Super Infection/SI Tech Tree Station")]
 public class SITechTreeStation : MonoBehaviour, ITouchScreenStation
 {
 	public enum NodePopupState

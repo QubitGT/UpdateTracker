@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Fusion;
 using GorillaExtensions;
 using Photon.Pun;
 using Photon.Realtime;
@@ -373,13 +372,13 @@ public class RacingManager : NetworkSceneObject, ITickSystemTick
 			{
 				foreach (VRRig activeRig in VRRigCache.ActiveRigs)
 				{
-					int actorNumber = activeRig.OwningNetPlayer.ActorNumber;
+					int actorNumber = activeRig.Creator.ActorNumber;
 					if (participantActorNumbers.BinarySearch(actorNumber) >= 0 && !instance.IsActorLockedIntoAnyRace(actorNumber))
 					{
 						racers.Add(new RacerData
 						{
 							actorNumber = actorNumber,
-							playerName = activeRig.OwningNetPlayer.SanitizedNickName,
+							playerName = activeRig.Creator.SanitizedNickName,
 							latestCheckpointTime = raceStartTime
 						});
 					}
@@ -574,14 +573,14 @@ public class RacingManager : NetworkSceneObject, ITickSystemTick
 				}
 				else
 				{
-					if (instance.IsActorLockedIntoAnyRace(component.OwningNetPlayer.ActorNumber))
+					if (instance.IsActorLockedIntoAnyRace(component.Creator.ActorNumber))
 					{
 						continue;
 					}
-					actorsInStartZone.AddSortedUnique(component.OwningNetPlayer.ActorNumber);
+					actorsInStartZone.AddSortedUnique(component.Creator.ActorNumber);
 					if (actorsInStartZone.Count > count)
 					{
-						playerNamesInStartZone.Add(component.OwningNetPlayer.ActorNumber, component.playerNameVisible);
+						playerNamesInStartZone.Add(component.Creator.ActorNumber, component.playerNameVisible);
 					}
 				}
 				overlapColliders[i] = null;
@@ -629,14 +628,12 @@ public class RacingManager : NetworkSceneObject, ITickSystemTick
 
 	protected override void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		TickSystem<object>.AddTickCallback(this);
 		base.OnEnable();
 	}
 
 	protected override void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		TickSystem<object>.RemoveTickCallback(this);
 		base.OnDisable();
 	}

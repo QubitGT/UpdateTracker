@@ -3,6 +3,7 @@ using System.Collections;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Temp Mask")]
 public class TempMask : MonoBehaviour
 {
 	public int year;

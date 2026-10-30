@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "NewLegalAgreementAsset", menuName = "Gorilla Tag/Legal Agreement Asset")]
+[CreateAssetMenu(fileName = "NewLegalAgreementAsset", menuName = "GorillaTag/Legal Agreement Asset")]
 public class LegalAgreementTextAsset : ScriptableObject
 {
 	public enum PostAcceptAction

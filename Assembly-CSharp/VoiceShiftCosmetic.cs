@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Voice Shift Cosmetic")]
 public class VoiceShiftCosmetic : MonoBehaviour
 {
 	private const float PITCH_MIN = 2f / 3f;

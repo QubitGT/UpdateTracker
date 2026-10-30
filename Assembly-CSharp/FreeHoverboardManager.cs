@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using GorillaExtensions;
+using GorillaNetworking;
+using GorillaTag.CosmeticSystem;
 using Photon.Pun;
 using UnityEngine;
 
@@ -80,6 +82,16 @@ public class FreeHoverboardManager : NetworkSceneObject
 		}
 		NetworkSystem.Instance.OnPlayerLeft += new Action<NetPlayer>(OnPlayerLeftRoom);
 		NetworkSystem.Instance.OnReturnedToSinglePlayer += new Action(OnLeftRoom);
+		NetworkSystem.Instance.OnPlayerJoined += new Action<NetPlayer>(OnPlayerJoinedRoom);
+	}
+
+	private void OnPlayerJoinedRoom(NetPlayer netPlayer)
+	{
+		if (PhotonNetwork.InRoom && !(VRRig.LocalRig == null) && VRRig.LocalRig.hoverboardVisual.IsHeld)
+		{
+			string skinDisplayName = ((CosmeticsController.instance != null) ? CosmeticsController.instance.currentWornSet.items[32].displayName : null);
+			SendHeldBoardSkinRPC(skinDisplayName);
+		}
 	}
 
 	private void OnPlayerLeftRoom(NetPlayer netPlayer)
@@ -100,14 +112,16 @@ public class FreeHoverboardManager : NetworkSceneObject
 		perPlayerData.Clear();
 	}
 
-	private void SpawnBoard(DataPerPlayer playerData, int boardIndex, Vector3 position, Quaternion rotation, Vector3 velocity, Vector3 avelocity, Color boardColor)
+	private void SpawnBoard(DataPerPlayer playerData, int boardIndex, Vector3 position, Quaternion rotation, Vector3 velocity, Vector3 avelocity, Color boardColor, Vector3 globalScale, string skinDisplayName)
 	{
 		FreeHoverboardInstance obj = ((boardIndex == 0) ? playerData.board0 : playerData.board1);
 		obj.transform.position = position;
 		obj.transform.rotation = rotation;
+		obj.transform.SetScale(globalScale);
 		obj.Rigidbody.linearVelocity = velocity;
 		obj.Rigidbody.angularVelocity = avelocity;
 		obj.SetColor(boardColor);
+		obj.ApplySkin(skinDisplayName);
 		obj.gameObject.SetActive(value: true);
 		if (obj.ownerActorNumber == NetworkSystem.Instance.LocalPlayer?.ActorNumber)
 		{
@@ -115,10 +129,55 @@ public class FreeHoverboardManager : NetworkSceneObject
 		}
 	}
 
-	public void SendDropBoardRPC(Vector3 position, Quaternion rotation, Vector3 velocity, Vector3 avelocity, Color boardColor)
+	public void SendHeldBoardSkinRPC(string skinDisplayName)
+	{
+		if (PhotonNetwork.InRoom)
+		{
+			photonView.RPC("HeldBoardSkin_RPC", RpcTarget.All, skinDisplayName ?? string.Empty);
+		}
+		else
+		{
+			VRRig.LocalRig.heldBoardSkinDisplayName = skinDisplayName;
+		}
+	}
+
+	[PunRPC]
+	public void HeldBoardSkin_RPC(string skinDisplayName, PhotonMessageInfo info)
+	{
+		MonkeAgent.IncrementRPCCall(info, "HeldBoardSkin_RPC");
+		if (info.Sender != PhotonNetwork.LocalPlayer && perPlayerData.TryGetValue(info.Sender.ActorNumber, out var value) && !value.spamCheck.CheckCallTime(Time.unscaledTime))
+		{
+			return;
+		}
+		if (string.IsNullOrEmpty(skinDisplayName))
+		{
+			skinDisplayName = null;
+		}
+		if (skinDisplayName != null)
+		{
+			CosmeticSO cosmeticSO = CosmeticsController.instance?.GetCosmeticSOFromDisplayName(skinDisplayName);
+			if (cosmeticSO == null || cosmeticSO.info.category.Value != CosmeticsController.CosmeticCategory.Hoverboard)
+			{
+				skinDisplayName = null;
+			}
+		}
+		RigContainer playerRig;
+		VRRig vRRig = ((info.Sender == PhotonNetwork.LocalPlayer) ? VRRig.LocalRig : (VRRigCache.Instance.TryGetVrrig(info.Sender, out playerRig) ? playerRig.Rig : null));
+		if (!(vRRig == null))
+		{
+			vRRig.heldBoardSkinDisplayName = skinDisplayName;
+			if (vRRig.hoverboardVisual.IsHeld)
+			{
+				vRRig.hoverboardVisual.ApplySkin(skinDisplayName);
+			}
+		}
+	}
+
+	public void SendDropBoardRPC(Vector3 position, Quaternion rotation, Vector3 velocity, Vector3 avelocity, Color boardColor, Vector3 globalScale)
 	{
 		DataPerPlayer orCreatePlayerData = GetOrCreatePlayerData(NetworkSystem.Instance.LocalPlayer.ActorNumber);
 		int num = (orCreatePlayerData.board0.gameObject.activeSelf ? ((!orCreatePlayerData.board1.gameObject.activeSelf) ? 1 : (1 - localPlayerLastSpawnedBoardIndex)) : 0);
+		string text = ((CosmeticsController.instance != null) ? CosmeticsController.instance.currentWornSet.items[32].displayName : null);
 		if (PhotonNetwork.InRoom)
 		{
 			long num2 = BitPackUtils.PackWorldPosForNetwork(position);
@@ -126,28 +185,38 @@ public class FreeHoverboardManager : NetworkSceneObject
 			long num4 = BitPackUtils.PackWorldPosForNetwork(velocity);
 			long num5 = BitPackUtils.PackWorldPosForNetwork(avelocity);
 			short num6 = BitPackUtils.PackColorForNetwork(boardColor);
-			photonView.RPC("DropBoard_RPC", RpcTarget.All, num == 1, num2, num3, num4, num5, num6);
+			photonView.RPC("DropBoard_RPC", RpcTarget.All, num == 1, num2, num3, num4, num5, num6, text ?? string.Empty);
 		}
 		else
 		{
-			SpawnBoard(orCreatePlayerData, num, position, rotation, velocity, avelocity, boardColor);
+			SpawnBoard(orCreatePlayerData, num, position, rotation, velocity, avelocity, boardColor, globalScale, text);
 		}
 	}
 
 	[PunRPC]
-	public void DropBoard_RPC(bool boardIndex1, long positionPacked, int rotationPacked, long velocityPacked, long avelocityPacked, short colorPacked, PhotonMessageInfo info)
+	public void DropBoard_RPC(bool boardIndex1, long positionPacked, int rotationPacked, long velocityPacked, long avelocityPacked, short colorPacked, string skinDisplayName, PhotonMessageInfo info)
 	{
 		MonkeAgent.IncrementRPCCall(info, "DropBoard_RPC");
 		int boardIndex2 = (boardIndex1 ? 1 : 0);
 		DataPerPlayer orCreatePlayerData = GetOrCreatePlayerData(info.Sender.ActorNumber);
-		if ((info.Sender == PhotonNetwork.LocalPlayer || orCreatePlayerData.spamCheck.CheckCallTime(Time.unscaledTime)) && VRRigCache.Instance.TryGetVrrig(info.Sender, out var playerRig))
+		if ((info.Sender != PhotonNetwork.LocalPlayer && !orCreatePlayerData.spamCheck.CheckCallTime(Time.unscaledTime)) || !VRRigCache.Instance.TryGetVrrig(info.Sender, out var playerRig))
 		{
-			Vector3 position = BitPackUtils.UnpackWorldPosFromNetwork(positionPacked);
-			if (playerRig.Rig.IsPositionInRange(position, 5f))
+			return;
+		}
+		Vector3 position = BitPackUtils.UnpackWorldPosFromNetwork(positionPacked);
+		if (!playerRig.Rig.IsPositionInRange(position, 5f))
+		{
+			return;
+		}
+		if (!string.IsNullOrEmpty(skinDisplayName) && skinDisplayName != "NOTHING")
+		{
+			CosmeticSO cosmeticSO = CosmeticsController.instance?.GetCosmeticSOFromDisplayName(skinDisplayName);
+			if (cosmeticSO == null || cosmeticSO.info.category.Value != CosmeticsController.CosmeticCategory.Hoverboard)
 			{
-				SpawnBoard(orCreatePlayerData, boardIndex2, position, BitPackUtils.UnpackQuaternionFromNetwork(rotationPacked), BitPackUtils.UnpackWorldPosFromNetwork(velocityPacked), BitPackUtils.UnpackWorldPosFromNetwork(avelocityPacked), BitPackUtils.UnpackColorFromNetwork(colorPacked));
+				skinDisplayName = null;
 			}
 		}
+		SpawnBoard(orCreatePlayerData, boardIndex2, position, BitPackUtils.UnpackQuaternionFromNetwork(rotationPacked), BitPackUtils.UnpackWorldPosFromNetwork(velocityPacked), BitPackUtils.UnpackWorldPosFromNetwork(avelocityPacked), BitPackUtils.UnpackColorFromNetwork(colorPacked), playerRig.transform.lossyScale, skinDisplayName);
 	}
 
 	public void SendGrabBoardRPC(FreeHoverboardInstance board)

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Pendulum")]
 public class Pendulum : MonoBehaviour
 {
 	public float MaxAngleDeflection = 10f;

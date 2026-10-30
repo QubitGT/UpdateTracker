@@ -6,6 +6,7 @@ using Photon.Pun;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Quest Board")]
 public class SIQuestBoard : MonoBehaviour, IGorillaSliceableSimple
 {
 	private enum RoomFXDurationState

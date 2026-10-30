@@ -2,6 +2,7 @@ using GorillaLocomotion;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Grenade Black Hole")]
 public class SIGadgetGrenadeBlackHole : SIGadgetGrenade
 {
 	private enum State

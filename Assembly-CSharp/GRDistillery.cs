@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Distillery")]
 public class GRDistillery : MonoBehaviour
 {
 	[SerializeField]

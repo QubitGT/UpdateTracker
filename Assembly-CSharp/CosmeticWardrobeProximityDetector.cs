@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(SphereCollider))]
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Wardrobe Proximity Detector")]
 public class CosmeticWardrobeProximityDetector : MonoBehaviour
 {
 	[SerializeField]

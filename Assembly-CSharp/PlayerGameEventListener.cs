@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Seasonal/Player Game Event Listener")]
 public class PlayerGameEventListener : MonoBehaviour
 {
 	[SerializeField]

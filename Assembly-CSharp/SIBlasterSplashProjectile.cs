@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Blaster Splash Projectile")]
 public class SIBlasterSplashProjectile : MonoBehaviour, SIGadgetProjectileType
 {
 	public float knockbackSpeed;
@@ -69,7 +70,7 @@ public class SIBlasterSplashProjectile : MonoBehaviour, SIGadgetProjectileType
 		Vector3[] array2 = new Vector3[hitPlayers.Count];
 		for (int i = 0; i < hitPlayers.Count; i++)
 		{
-			array[i] = ((hitPlayers[i] != null && hitPlayers[i].OwningNetPlayer != null) ? hitPlayers[i].OwningNetPlayer.ActorNumber : (-1));
+			array[i] = ((hitPlayers[i] != null && hitPlayers[i].Creator != null) ? hitPlayers[i].Creator.ActorNumber : (-1));
 			Vector3 vector = hitPlayers[i].transform.position - projectile.transform.position;
 			float num = Mathf.Max(0f, 1f - Mathf.Max(0f, vector.magnitude - fullSplashRadius) / (splashHitDistance - fullSplashRadius));
 			array2[i] = vector.normalized * knockbackSpeed * num;

@@ -3,6 +3,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Sticky Hand")]
 public class StickyHand : MonoBehaviour, ISpawnable
 {
 	[SerializeField]

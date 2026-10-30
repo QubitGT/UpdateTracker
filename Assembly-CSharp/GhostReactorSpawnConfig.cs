@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "GhostReactorSpawnConfig", menuName = "ScriptableObjects/GhostReactorSpawnConfig")]
+[CreateAssetMenu(fileName = "GhostReactorSpawnConfig", menuName = "ScriptableObjects/Ghost Reactor/GhostReactorSpawnConfig")]
 public class GhostReactorSpawnConfig : ScriptableObject
 {
 	public enum SpawnPointType

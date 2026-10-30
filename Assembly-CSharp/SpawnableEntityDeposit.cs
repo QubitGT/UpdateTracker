@@ -5,6 +5,7 @@ using UnityEngine.Events;
 [RequireComponent(typeof(GameEntity))]
 [RequireComponent(typeof(XSceneRefTarget))]
 [RequireComponent(typeof(Rigidbody))]
+[AddComponentMenu("GorillaTag/Game Entity/Spawnable Entity Deposit")]
 public class SpawnableEntityDeposit : MonoBehaviour, IGameEntityComponent
 {
 	[SerializeField]

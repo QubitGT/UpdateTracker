@@ -8,8 +8,6 @@ namespace GorillaNetworking;
 [Serializable]
 public class GorillaText
 {
-	private string failureText;
-
 	public string currentText;
 
 	private string originalText = string.Empty;
@@ -18,9 +16,13 @@ public class GorillaText
 
 	private bool modified;
 
+	private bool failedState;
+
 	private Material[] originalMaterials;
 
 	private Material failureMaterial;
+
+	private Material[] failureMaterials;
 
 	internal Material[] currentMaterials;
 
@@ -32,8 +34,8 @@ public class GorillaText
 	{
 		this.failureMaterial = failureMaterial;
 		this.originalMaterials = originalMaterials;
+		failureMaterials = null;
 		currentMaterials = originalMaterials;
-		Debug.Log("Original text = " + originalText);
 		updateTextCallback = callback;
 		updateMaterialCallback = materialCallback;
 		GorillaTextManager.RegisterText(this);
@@ -44,10 +46,9 @@ public class GorillaText
 		if (modified)
 		{
 			modified = false;
-			string text = stringBuilder.ToString();
-			if (currentText != text)
+			if (currentText == null || !stringBuilder.Equals(currentText.AsSpan()))
 			{
-				currentText = text;
+				currentText = stringBuilder.ToString();
 				updateTextCallback?.Invoke(currentText);
 			}
 		}
@@ -55,19 +56,26 @@ public class GorillaText
 
 	public void EnableFailedState(string failText)
 	{
-		failureText = failText;
+		if (!failedState)
+		{
+			originalText = currentText;
+			failedState = true;
+		}
 		updateTextCallback?.Invoke(failText);
-		originalText = currentText;
 		currentText = failText;
-		currentMaterials = (Material[])originalMaterials.Clone();
-		currentMaterials[0] = failureMaterial;
+		if (failureMaterials == null)
+		{
+			failureMaterials = (Material[])originalMaterials.Clone();
+			failureMaterials[0] = failureMaterial;
+		}
+		currentMaterials = failureMaterials;
 		updateMaterialCallback?.Invoke(currentMaterials);
 	}
 
 	public void DisableFailedState()
 	{
+		failedState = false;
 		updateTextCallback?.Invoke(originalText);
-		failureText = "";
 		currentText = originalText;
 		currentMaterials = originalMaterials;
 		updateMaterialCallback?.Invoke(currentMaterials);

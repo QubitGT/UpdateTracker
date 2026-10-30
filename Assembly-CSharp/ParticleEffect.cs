@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 
 [RequireComponent(typeof(ParticleSystem))]
+[AddComponentMenu("GorillaTag/Cosmetics/Particle Effect")]
 public class ParticleEffect : MonoBehaviour
 {
 	public ParticleSystem system;

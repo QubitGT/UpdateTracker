@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Growing Snowball Throwable")]
 public class GrowingSnowballThrowable : SnowballThrowable
 {
 	[Serializable]

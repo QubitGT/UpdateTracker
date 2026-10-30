@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Metro Blimp")]
 public class MetroBlimp : MonoBehaviour
 {
 	public MetroSpotlight spotLightLeft;

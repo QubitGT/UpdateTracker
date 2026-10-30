@@ -3,6 +3,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Chest Object Hysteresis")]
 public class ChestObjectHysteresis : MonoBehaviour, ISpawnable
 {
 	public float angleHysteresis;

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Randomize Wave Phase Offset")]
 public class RandomizeWavePhaseOffset : MonoBehaviour
 {
 	[SerializeField]

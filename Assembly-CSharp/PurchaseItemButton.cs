@@ -2,6 +2,7 @@ using System.Collections;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Purchase Item Button")]
 public class PurchaseItemButton : GorillaPressableButton
 {
 	public string buttonSide;

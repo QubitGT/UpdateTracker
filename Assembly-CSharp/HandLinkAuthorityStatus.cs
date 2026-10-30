@@ -97,6 +97,6 @@ public struct HandLinkAuthorityStatus
 
 	public override string ToString()
 	{
-		return string.Format("{0}/{1}", timestamp.ToString("0.0000"), tiebreak);
+		return $"{timestamp:0.0000}/{tiebreak}";
 	}
 }

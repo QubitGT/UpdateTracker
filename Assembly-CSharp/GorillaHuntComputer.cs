@@ -2,12 +2,13 @@ using System;
 using GorillaLocomotion;
 using GorillaNetworking;
 using GorillaTag;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class GorillaHuntComputer : MonoBehaviour
 {
-	public Text text;
+	public TMP_Text text;
 
 	public Image material;
 
@@ -15,7 +16,7 @@ public class GorillaHuntComputer : MonoBehaviour
 
 	public Image face;
 
-	public Image badge;
+	public Image shirt;
 
 	public Image leftHand;
 
@@ -57,7 +58,7 @@ public class GorillaHuntComputer : MonoBehaviour
 				material.gameObject.SetActive(value: false);
 				hat.gameObject.SetActive(value: false);
 				face.gameObject.SetActive(value: false);
-				badge.gameObject.SetActive(value: false);
+				shirt.gameObject.SetActive(value: false);
 				leftHand.gameObject.SetActive(value: false);
 				rightHand.gameObject.SetActive(value: false);
 				text.text = "YOU WON! CONGRATS, HUNTER!";
@@ -67,7 +68,7 @@ public class GorillaHuntComputer : MonoBehaviour
 				material.gameObject.SetActive(value: false);
 				hat.gameObject.SetActive(value: false);
 				face.gameObject.SetActive(value: false);
-				badge.gameObject.SetActive(value: false);
+				shirt.gameObject.SetActive(value: false);
 				leftHand.gameObject.SetActive(value: false);
 				rightHand.gameObject.SetActive(value: false);
 				text.text = "GAME STARTING IN:\n" + huntManager.countDownTime + "...";
@@ -77,7 +78,7 @@ public class GorillaHuntComputer : MonoBehaviour
 				material.gameObject.SetActive(value: false);
 				hat.gameObject.SetActive(value: false);
 				face.gameObject.SetActive(value: false);
-				badge.gameObject.SetActive(value: false);
+				shirt.gameObject.SetActive(value: false);
 				leftHand.gameObject.SetActive(value: false);
 				rightHand.gameObject.SetActive(value: false);
 				text.text = "WAITING TO START";
@@ -91,7 +92,7 @@ public class GorillaHuntComputer : MonoBehaviour
 			material.gameObject.SetActive(value: false);
 			hat.gameObject.SetActive(value: false);
 			face.gameObject.SetActive(value: false);
-			badge.gameObject.SetActive(value: false);
+			shirt.gameObject.SetActive(value: false);
 			leftHand.gameObject.SetActive(value: false);
 			rightHand.gameObject.SetActive(value: false);
 			text.text = "YOU ARE DEAD\nTAG OTHERS\nTO SLOW THEM";
@@ -101,11 +102,11 @@ public class GorillaHuntComputer : MonoBehaviour
 			myRig = playerRig.Rig;
 			if (myRig != null)
 			{
-				material.material = myRig.materialsToChangeTo[myRig.setMatIndex];
+				GorillaPlayerScoreboardLine.UpdateSwatch(material, myRig);
 				text.text = "TARGET:\n" + NormalizeName(doIt: true, myRig.creator?.NickName) + "\nDISTANCE: " + Mathf.CeilToInt((GTPlayer.Instance.headCollider.transform.position - myRig.transform.position).magnitude) + "M";
 				SetImage(myRig.cosmeticSet.items[0].displayName, ref hat);
 				SetImage(myRig.cosmeticSet.items[2].displayName, ref face);
-				SetImage(myRig.cosmeticSet.items[1].displayName, ref badge);
+				SetImage(myRig.cosmeticSet.items[11].displayName, ref shirt);
 				SetImage(GetPrioritizedItemForHand(myRig, forLeftHand: true).displayName, ref leftHand);
 				SetImage(GetPrioritizedItemForHand(myRig, forLeftHand: false).displayName, ref rightHand);
 				material.gameObject.SetActive(value: true);

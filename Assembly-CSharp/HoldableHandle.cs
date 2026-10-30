@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Holdable Handle")]
 public class HoldableHandle : InteractionPoint
 {
 	[SerializeField]

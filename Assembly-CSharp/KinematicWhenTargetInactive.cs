@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Kinematic When Target Inactive")]
 public class KinematicWhenTargetInactive : MonoBehaviour
 {
 	public Rigidbody[] rigidBodies;

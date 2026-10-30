@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Health Meter")]
 public class GRHealthMeter : MonoBehaviour
 {
 	public List<GRHealthMeterNode> nodes;

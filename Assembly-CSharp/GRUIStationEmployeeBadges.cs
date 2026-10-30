@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GRUI Station Employee Badges")]
 public class GRUIStationEmployeeBadges : MonoBehaviour, IGorillaSliceableSimple
 {
 	[SerializeField]
@@ -67,7 +68,7 @@ public class GRUIStationEmployeeBadges : MonoBehaviour, IGorillaSliceableSimple
 	{
 		for (int i = 0; i < tempRigs.Count; i++)
 		{
-			NetPlayer netPlayer = (tempRigs[i].isOfflineVRRig ? NetworkSystem.Instance.LocalPlayer : tempRigs[i].OwningNetPlayer);
+			NetPlayer netPlayer = (tempRigs[i].isOfflineVRRig ? NetworkSystem.Instance.LocalPlayer : tempRigs[i].Creator);
 			if (netPlayer == null || netPlayer.ActorNumber == -1 || dispenserForActorNr.TryGetValue(netPlayer.ActorNumber, out var _))
 			{
 				continue;

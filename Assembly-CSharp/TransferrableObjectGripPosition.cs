@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Transferrable Object Grip Position")]
 public class TransferrableObjectGripPosition : MonoBehaviour
 {
 	[SerializeField]

@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [ExecuteAlways]
+[AddComponentMenu("GorillaTag/Environment/Water Surface Material Controller")]
 public class WaterSurfaceMaterialController : MonoBehaviour
 {
 	public float ScrollX = 0.6f;

@@ -7,6 +7,7 @@ using KID.Model;
 using UnityEngine;
 using UnityEngine.Localization;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Main Screen")]
 public class KIDUI_MainScreen : MonoBehaviour
 {
 	[Serializable]

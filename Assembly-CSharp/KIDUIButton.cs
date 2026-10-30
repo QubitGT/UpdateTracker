@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI Button")]
 public class KIDUIButton : Button, IPointerEnterHandler, IEventSystemHandler, IPointerExitHandler
 {
 	[SerializeField]

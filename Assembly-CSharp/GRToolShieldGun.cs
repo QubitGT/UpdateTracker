@@ -5,6 +5,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Shield Gun")]
 public class GRToolShieldGun : MonoBehaviour
 {
 	private enum State

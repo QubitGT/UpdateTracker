@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Enemy Boss Moon Collider Helper")]
 public class GREnemyBossMoonColliderHelper : MonoBehaviour
 {
 	public bool ResizeOnAwake = true;

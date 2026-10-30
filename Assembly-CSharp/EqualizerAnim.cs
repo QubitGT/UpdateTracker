@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Equalizer Anim")]
 public class EqualizerAnim : MonoBehaviour
 {
 	[SerializeField]

@@ -3,6 +3,7 @@ using GorillaNetworking;
 using KID.Model;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/UGC Permission Manager")]
 internal class UGCPermissionManager : MonoBehaviour
 {
 	private interface IUGCPermissions

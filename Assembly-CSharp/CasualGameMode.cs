@@ -1,4 +1,3 @@
-using Fusion;
 using GorillaGameModes;
 using Photon.Pun;
 using UnityEngine;
@@ -8,15 +7,6 @@ public sealed class CasualGameMode : GorillaGameManager
 	public override int MyMatIndex(NetPlayer player)
 	{
 		return 0;
-	}
-
-	public override void OnSerializeRead(object newData)
-	{
-	}
-
-	public override object OnSerializeWrite()
-	{
-		return null;
 	}
 
 	public override void OnSerializeRead(PhotonStream stream, PhotonMessageInfo info)
@@ -30,11 +20,6 @@ public sealed class CasualGameMode : GorillaGameManager
 	public override GameModeType GameType()
 	{
 		return GameModeType.Casual;
-	}
-
-	public override void AddFusionDataBehaviour(NetworkObject behaviour)
-	{
-		behaviour.AddBehaviour<CasualGameModeData>();
 	}
 
 	public override string GameModeName()

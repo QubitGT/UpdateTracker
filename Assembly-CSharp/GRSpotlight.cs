@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Spotlight")]
 public class GRSpotlight : MonoBehaviourTick
 {
 	public float yAmplitude = 75f;

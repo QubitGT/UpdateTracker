@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Serialization;
 
-[CreateAssetMenu(fileName = "BuilderPieceSet01", menuName = "Gorilla Tag/Builder/PieceSet", order = 0)]
+[CreateAssetMenu(fileName = "BuilderPieceSet01", menuName = "GorillaTag/Builder/PieceSet", order = 0)]
 public class BuilderPieceSet : ScriptableObject
 {
 	public enum BuilderPieceCategory

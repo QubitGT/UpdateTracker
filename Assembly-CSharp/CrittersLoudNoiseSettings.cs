@@ -1,3 +1,6 @@
+using UnityEngine;
+
+[AddComponentMenu("GorillaTag/Critters/Critters Loud Noise Settings")]
 public class CrittersLoudNoiseSettings : CrittersActorSettings
 {
 	public float _soundVolume;

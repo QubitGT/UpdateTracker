@@ -1,6 +1,7 @@
 using GorillaTag.Cosmetics;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Parachute Projectile")]
 public class ParachuteProjectile : MonoBehaviour, IProjectile, ITickSystemTick
 {
 	[SerializeField]

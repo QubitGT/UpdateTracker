@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Critter Spawner Shade Fleeing")]
 public class CosmeticCritterSpawnerShadeFleeing : CosmeticCritterSpawner
 {
 	private Vector3 spawnPosition;

@@ -1693,96 +1693,96 @@ public class ProgressionManager : MonoBehaviour
 
 	private UnityWebRequest FormatWebRequest<T>(string url, T pendingRequest, RequestType type)
 	{
-		string text = "";
+		string path = "";
 		byte[] bytes = Encoding.UTF8.GetBytes(JsonUtility.ToJson(pendingRequest));
 		switch (type)
 		{
 		case RequestType.GetProgression:
-			text = "/api/GetProgression";
+			path = "/api/GetProgression";
 			break;
 		case RequestType.SetProgression:
-			text = "/api/SetProgression";
+			path = "/api/SetProgression";
 			break;
 		case RequestType.UnlockProgressionTreeNode:
-			text = "/api/UnlockProgressionTreeNode";
+			path = "/api/UnlockProgressionTreeNode";
 			break;
 		case RequestType.GetSIQuestsStatus:
-			text = "/api/GetSIQuestsStatus";
+			path = "/api/GetSIQuestsStatus";
 			break;
 		case RequestType.GetActiveSIQuests:
-			text = "/api/GetActiveSIQuests";
+			path = "/api/GetActiveSIQuests";
 			break;
 		case RequestType.IncrementSIResource:
-			text = "/api/IncrementSIResource";
+			path = "/api/IncrementSIResource";
 			break;
 		case RequestType.CompleteSIQuest:
-			text = "/api/SetSIQuestComplete";
+			path = "/api/SetSIQuestComplete";
 			break;
 		case RequestType.CompleteSIBonus:
-			text = "/api/SetSIBonusComplete";
+			path = "/api/SetSIBonusComplete";
 			break;
 		case RequestType.CollectSIIdol:
-			text = "/api/SetSIIdolCollect";
+			path = "/api/SetSIIdolCollect";
 			break;
 		case RequestType.ResetSIQuestsStatus:
-			text = "/api/ResetSIQuestsStatus";
+			path = "/api/ResetSIQuestsStatus";
 			break;
 		case RequestType.PurchaseTechPoints:
-			text = "/api/PurchaseTechPoints";
+			path = "/api/PurchaseTechPoints";
 			break;
 		case RequestType.PurchaseResources:
-			text = "/api/PurchaseResources";
+			path = "/api/PurchaseResources";
 			break;
 		case RequestType.PurchaseShiftCreditCapIncrease:
-			text = "/api/PurchaseShiftCreditCapIncrease";
+			path = "/api/PurchaseShiftCreditCapIncrease";
 			break;
 		case RequestType.PurchaseShiftCredit:
-			text = "/api/PurchaseShiftCredit";
+			path = "/api/PurchaseShiftCredit";
 			break;
 		case RequestType.GetJuicerStatus:
-			text = "/api/GetJuicerStatus";
+			path = "/api/GetJuicerStatus";
 			break;
 		case RequestType.DepositCore:
-			text = "/api/DepositGRCore";
+			path = "/api/DepositGRCore";
 			break;
 		case RequestType.PurchaseOverdrive:
-			text = "/api/PurchaseOverdrive";
+			path = "/api/PurchaseOverdrive";
 			break;
 		case RequestType.GetShiftCredit:
-			text = "/api/GetShiftCredit";
+			path = "/api/GetShiftCredit";
 			break;
 		case RequestType.SubtractShiftCredit:
-			text = "/api/SubtractShiftCredit";
+			path = "/api/SubtractShiftCredit";
 			break;
 		case RequestType.AdvanceDockWristUpgrade:
-			text = "/api/AdvanceDockWristUpgrade";
+			path = "/api/AdvanceDockWristUpgrade";
 			break;
 		case RequestType.GetDockWristUpgradeStatus:
-			text = "/api/GetDockWristUpgradeStatus";
+			path = "/api/GetDockWristUpgradeStatus";
 			break;
 		case RequestType.PurchaseDrillUpgrade:
-			text = "/api/PurchaseDrillUpgrade";
+			path = "/api/PurchaseDrillUpgrade";
 			break;
 		case RequestType.RecycleTool:
-			text = "/api/RecycleTool";
+			path = "/api/RecycleTool";
 			break;
 		case RequestType.StartOfShift:
-			text = "/api/StartOfShift";
+			path = "/api/StartOfShift";
 			break;
 		case RequestType.EndOfShiftReward:
-			text = "/api/EndOfShiftReward";
+			path = "/api/EndOfShiftReward";
 			break;
 		case RequestType.GetGhostReactorStats:
-			text = "/api/GetGhostReactorStats";
+			path = "/api/GetGhostReactorStats";
 			break;
 		case RequestType.GetGhostReactorInventory:
-			text = "/api/GetGhostReactorInventory";
+			path = "/api/GetGhostReactorInventory";
 			break;
 		case RequestType.SetGhostReactorInventory:
-			text = "/api/SetGhostReactorInventory";
+			path = "/api/SetGhostReactorInventory";
 			break;
 		}
-		UnityWebRequest unityWebRequest = new UnityWebRequest(url + text, "POST");
+		UnityWebRequest unityWebRequest = new UnityWebRequest(BackendApiUrl.Build(url, path), "POST");
 		unityWebRequest.uploadHandler = new UploadHandlerRaw(bytes);
 		unityWebRequest.downloadHandler = new DownloadHandlerBuffer();
 		unityWebRequest.SetRequestHeader("Content-Type", "application/json");

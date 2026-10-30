@@ -1,6 +1,7 @@
 using Sirenix.OdinInspector;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critter Spawn Trigger")]
 public class CritterSpawnTrigger : MonoBehaviour
 {
 	[Header("Trigger Settings")]

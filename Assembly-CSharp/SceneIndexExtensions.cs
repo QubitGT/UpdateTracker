@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public static class SceneIndexExtensions
 {
-	private const int SceneIndex_COUNT = 25;
+	private const int SceneIndex_COUNT = 26;
 
 	[OnEnterPlay_SetNull]
 	private static List<Action>[] onSceneLoadCallbacks;
@@ -43,7 +43,7 @@ public static class SceneIndexExtensions
 	{
 		if (onSceneLoadCallbacks == null)
 		{
-			onSceneLoadCallbacks = new List<Action>[25];
+			onSceneLoadCallbacks = new List<Action>[26];
 			for (int i = 0; i < onSceneLoadCallbacks.Length; i++)
 			{
 				onSceneLoadCallbacks[i] = new List<Action>();
@@ -77,7 +77,7 @@ public static class SceneIndexExtensions
 	{
 		if (onSceneUnloadCallbacks == null)
 		{
-			onSceneUnloadCallbacks = new List<Action>[25];
+			onSceneUnloadCallbacks = new List<Action>[26];
 			for (int i = 0; i < onSceneUnloadCallbacks.Length; i++)
 			{
 				onSceneUnloadCallbacks[i] = new List<Action>();

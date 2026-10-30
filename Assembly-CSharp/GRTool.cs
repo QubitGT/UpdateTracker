@@ -5,6 +5,7 @@ using Photon.Pun;
 using Unity.Collections;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool")]
 public class GRTool : MonoBehaviour, IGameEntitySerialize, IGameEntityComponent, IGameEntityDebugComponent
 {
 	public enum GRToolType

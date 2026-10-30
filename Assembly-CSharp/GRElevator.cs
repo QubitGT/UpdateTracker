@@ -4,6 +4,7 @@ using GorillaNetworking;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Elevator")]
 public class GRElevator : MonoBehaviour
 {
 	public enum ElevatorState
@@ -150,9 +151,20 @@ public class GRElevator : MonoBehaviour
 		}
 	}
 
+	private static void PlayIfActive(AudioSource source)
+	{
+		if (source.isActiveAndEnabled)
+		{
+			source.Play();
+		}
+	}
+
 	public void PlayDing()
 	{
-		ambientAudio.PlayOneShot(dingClip);
+		if (ambientAudio.isActiveAndEnabled)
+		{
+			ambientAudio.PlayOneShot(dingClip);
+		}
 	}
 
 	public void PlayButtonPress()
@@ -167,7 +179,7 @@ public class GRElevator : MonoBehaviour
 			ambientAudio.clip = travellingLoopClip;
 			ambientAudio.loop = true;
 			ambientAudio.time = 0f;
-			ambientAudio.Play();
+			PlayIfActive(ambientAudio);
 		}
 	}
 
@@ -178,7 +190,7 @@ public class GRElevator : MonoBehaviour
 			ambientAudio.clip = ambientLoopClip;
 			ambientAudio.loop = true;
 			ambientAudio.time = 0f;
-			ambientAudio.Play();
+			PlayIfActive(ambientAudio);
 		}
 	}
 
@@ -187,7 +199,7 @@ public class GRElevator : MonoBehaviour
 		if (!musicAudio.isPlaying)
 		{
 			musicAudio.time = time;
-			musicAudio.Play();
+			PlayIfActive(musicAudio);
 		}
 	}
 
@@ -195,14 +207,14 @@ public class GRElevator : MonoBehaviour
 	{
 		doorAudio.clip = doorOpenClip;
 		doorAudio.time = 0f;
-		doorAudio.Play();
+		PlayIfActive(doorAudio);
 	}
 
 	public void PlayDoorCloseBegin()
 	{
 		doorAudio.clip = doorCloseClip;
 		doorAudio.time = 0f;
-		doorAudio.Play();
+		PlayIfActive(doorAudio);
 	}
 
 	public void PlayDoorOpenTravel()

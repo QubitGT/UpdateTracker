@@ -1,6 +1,5 @@
 using System;
 using Drawing;
-using Drawing.Examples;
 using Unity.Jobs;
 using UnityEngine;
 
@@ -14,7 +13,6 @@ internal class __JobReflectionRegistrationOutput__3150089336157158032
 			IJobExtensions.EarlyJobInit<GeometryBuilderJob>();
 			IJobExtensions.EarlyJobInit<PersistentFilterJob>();
 			IJobExtensions.EarlyJobInit<StreamSplitter>();
-			IJobExtensions.EarlyJobInit<BurstExample.DrawingJob>();
 		}
 		catch (Exception ex)
 		{

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Radial Gravity")]
 public class RadialGravity : MonoBehaviour
 {
 	private void Start()

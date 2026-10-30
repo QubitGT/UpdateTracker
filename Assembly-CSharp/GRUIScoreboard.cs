@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GRUI Scoreboard")]
 public class GRUIScoreboard : MonoBehaviour, IGorillaSliceableSimple
 {
 	public enum ScoreboardScreen
@@ -50,10 +51,10 @@ public class GRUIScoreboard : MonoBehaviour, IGorillaSliceableSimple
 		{
 			if (!(entries[i] == null))
 			{
-				if (i < vrRigs.Count && vrRigs[i] != null && vrRigs[i].OwningNetPlayer != null)
+				if (i < vrRigs.Count && vrRigs[i] != null && vrRigs[i].Creator != null)
 				{
 					entries[i].gameObject.SetActive(value: true);
-					entries[i].Setup(vrRigs[i], vrRigs[i].OwningNetPlayer.ActorNumber, currentScreen);
+					entries[i].Setup(vrRigs[i], vrRigs[i].Creator.ActorNumber, currentScreen);
 				}
 				else
 				{

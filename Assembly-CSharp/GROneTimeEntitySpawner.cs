@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR One Time Entity Spawner")]
 public class GROneTimeEntitySpawner : MonoBehaviour
 {
 	public GhostReactor reactor;

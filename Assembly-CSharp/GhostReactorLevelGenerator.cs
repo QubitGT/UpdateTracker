@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/Ghost Reactor Level Generator")]
 public class GhostReactorLevelGenerator : MonoBehaviourTick
 {
 	public enum NodeType

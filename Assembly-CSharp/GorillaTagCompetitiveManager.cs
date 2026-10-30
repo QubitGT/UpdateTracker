@@ -287,6 +287,10 @@ public class GorillaTagCompetitiveManager : GorillaTagManager
 		VRRig rig2 = playerRig.Rig;
 		if (rig.IsPositionInRange(rig2.transform.position, 6f) || rig.CheckTagDistanceRollback(rig2, 6f, 0.2f))
 		{
+			if (rig == VRRig.LocalRig)
+			{
+				MedalClipRelay.Clip(MedalClipRelay.MedalClip.ClipType.Tag);
+			}
 			if (!NetworkSystem.Instance.IsMasterClient && gameState == GameState.Playing && !currentInfected.Contains(taggedPlayer))
 			{
 				AddLastTagged(taggedPlayer, taggingPlayer);

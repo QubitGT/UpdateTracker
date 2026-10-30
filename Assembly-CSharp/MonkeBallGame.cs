@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Fusion;
 using GorillaExtensions;
 using GorillaNetworking;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
-[NetworkBehaviourWeaved(0)]
 public class MonkeBallGame : NetworkComponent, ITickSystemTick
 {
 	public enum GameState
@@ -164,22 +162,14 @@ public class MonkeBallGame : NetworkComponent, ITickSystemTick
 
 	private new void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		base.OnEnable();
 		TickSystem<object>.AddTickCallback(this);
 	}
 
 	private new void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		base.OnDisable();
 		TickSystem<object>.RemoveTickCallback(this);
-	}
-
-	public override void Despawned(NetworkRunner runner, bool hasState)
-	{
-		base.Despawned(runner, hasState);
-		UnassignNetworkListeners();
 	}
 
 	public void OnPlayerDestroy()
@@ -961,31 +951,11 @@ public class MonkeBallGame : NetworkComponent, ITickSystemTick
 		}
 	}
 
-	public override void WriteDataFusion()
-	{
-	}
-
-	public override void ReadDataFusion()
-	{
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 	}
 
 	protected override void ReadDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
 	}
 }

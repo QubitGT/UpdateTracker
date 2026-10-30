@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Fusion;
 using GorillaGameModes;
 using Photon.Pun;
 using Photon.Realtime;
@@ -66,11 +65,6 @@ public sealed class GorillaHuntManager : GorillaGameManager
 			Debug.LogError("[LOCALIZATION::GORILLA_GAME_MANAGER] Failed to get key for Game Mode [GAME_MODE_HUNT_ROOM_LABEL]");
 		}
 		return result;
-	}
-
-	public override void AddFusionDataBehaviour(NetworkObject behaviour)
-	{
-		behaviour.AddBehaviour<HuntGameModeData>();
 	}
 
 	public override void StartPlaying()
@@ -472,29 +466,6 @@ public sealed class GorillaHuntManager : GorillaGameManager
 	{
 		waitingToStartNextHuntGame = false;
 		UpdateHuntState();
-	}
-
-	public override void OnSerializeRead(object newData)
-	{
-		HuntData huntData = (HuntData)newData;
-		huntData.currentHuntedArray.CopyTo(currentHuntedArray);
-		huntData.currentTargetArray.CopyTo(currentTargetArray);
-		huntStarted = huntData.huntStarted;
-		waitingToStartNextHuntGame = huntData.waitingToStartNextHuntGame;
-		countDownTime = huntData.countDownTime;
-		CopyHuntDataArrayToList();
-	}
-
-	public override object OnSerializeWrite()
-	{
-		CopyHuntDataListToArray();
-		HuntData huntData = default(HuntData);
-		huntData.currentHuntedArray.CopyFrom(currentHuntedArray, 0, currentHuntedArray.Length);
-		huntData.currentTargetArray.CopyFrom(currentTargetArray, 0, currentTargetArray.Length);
-		huntData.huntStarted = huntStarted;
-		huntData.waitingToStartNextHuntGame = waitingToStartNextHuntGame;
-		huntData.countDownTime = countDownTime;
-		return huntData;
 	}
 
 	public override void OnSerializeWrite(PhotonStream stream, PhotonMessageInfo info)

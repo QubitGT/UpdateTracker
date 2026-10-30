@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using PlayFab;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KID Messaging Controller")]
 public class KIDMessagingController : MonoBehaviour
 {
 	private const string SHOWN_CONFIRMATION_SCREEN_PREFIX = "hasShownKIDConfirmationScreen-";

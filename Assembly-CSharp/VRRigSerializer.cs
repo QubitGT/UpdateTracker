@@ -1,5 +1,4 @@
 using System;
-using Fusion;
 using GorillaExtensions;
 using GorillaGameModes;
 using GorillaLocomotion;
@@ -11,27 +10,8 @@ using Photon.Voice.PUN;
 using Photon.Voice.Unity;
 using UnityEngine;
 
-[NetworkBehaviourWeaved(35)]
 internal class VRRigSerializer : GorillaWrappedSerializer, IFXContextParems<HandTapArgs>, IFXContextParems<GeoSoundArg>
 {
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("nickName", 0, 17)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private NetworkString<_16> _nickName;
-
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("defaultName", 17, 17)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private NetworkString<_16> _defaultName;
-
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("tutorialComplete", 34, 1)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private bool _tutorialComplete;
-
 	[SerializeField]
 	private PhotonVoiceView voiceView;
 
@@ -45,72 +25,6 @@ internal class VRRigSerializer : GorillaWrappedSerializer, IFXContextParems<Hand
 	private HandTapArgs handTapArgs = new HandTapArgs();
 
 	private GeoSoundArg geoSoundArg = new GeoSoundArg();
-
-	[Networked]
-	[NetworkedWeaved(0, 17)]
-	public unsafe NetworkString<_16> nickName
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing VRRigSerializer.nickName. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(NetworkString<_16>*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing VRRigSerializer.nickName. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(NetworkString<_16>*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
-
-	[Networked]
-	[NetworkedWeaved(17, 17)]
-	public unsafe NetworkString<_16> defaultName
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing VRRigSerializer.defaultName. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(NetworkString<_16>*)(((NetworkBehaviour)this).Ptr + 17);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing VRRigSerializer.defaultName. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(NetworkString<_16>*)(((NetworkBehaviour)this).Ptr + 17) = value;
-		}
-	}
-
-	[Networked]
-	[NetworkedWeaved(34, 1)]
-	public unsafe bool tutorialComplete
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing VRRigSerializer.tutorialComplete. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return ReadWriteUtilsForWeaver.ReadBoolean(((NetworkBehaviour)this).Ptr + 34);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing VRRigSerializer.tutorialComplete. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			ReadWriteUtilsForWeaver.WriteBoolean(((NetworkBehaviour)this).Ptr + 34, value);
-		}
-	}
 
 	private PhotonVoiceView Voice => voiceView;
 
@@ -244,13 +158,11 @@ internal class VRRigSerializer : GorillaWrappedSerializer, IFXContextParems<Hand
 
 	private void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		CleanUp(netDestroy: false);
 	}
 
 	private void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		if (networkSpeaker != null && networkSpeaker.parent != base.transform)
 		{
 			UnityEngine.Object.Destroy(networkSpeaker.gameObject);
@@ -434,7 +346,7 @@ internal class VRRigSerializer : GorillaWrappedSerializer, IFXContextParems<Hand
 	[PunRPC]
 	public void GrabbedByPlayer(bool grabbedBody, bool grabbedLeftHand, bool grabbedWithLeftHand, PhotonMessageInfo info)
 	{
-		if (GorillaGameModes.GameMode.ActiveGameMode is GorillaGuardianManager gorillaGuardianManager && gorillaGuardianManager.IsPlayerGuardian(info.Sender) && VRRigCache.Instance.TryGetVrrig(info.Sender, out var playerRig))
+		if (GameMode.ActiveGameMode is GorillaGuardianManager gorillaGuardianManager && gorillaGuardianManager.IsPlayerGuardian(info.Sender) && VRRigCache.Instance.TryGetVrrig(info.Sender, out var playerRig))
 		{
 			vrrig.GrabbedByPlayer(playerRig.Rig, grabbedBody, grabbedLeftHand, grabbedWithLeftHand);
 		}
@@ -483,7 +395,7 @@ internal class VRRigSerializer : GorillaWrappedSerializer, IFXContextParems<Hand
 			tapDir.Normalize();
 		}
 		float max = GorillaTagger.Instance.DefaultHandTapVolume;
-		if (GorillaGameModes.GameMode.ActiveGameMode is GorillaAmbushManager gorillaAmbushManager && gorillaAmbushManager.IsInfected(rigContainer.Creator))
+		if (GameMode.ActiveGameMode is GorillaAmbushManager gorillaAmbushManager && gorillaAmbushManager.IsInfected(rigContainer.Creator))
 		{
 			max = gorillaAmbushManager.crawlingSpeedForMaxVolume;
 		}
@@ -616,23 +528,5 @@ internal class VRRigSerializer : GorillaWrappedSerializer, IFXContextParems<Hand
 	public void UpdateRankedInfo(float elo, int questRank, int PCRank, PhotonMessageInfoWrapped info)
 	{
 		vrrig?.UpdateRankedInfo(elo, questRank, PCRank, info);
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		nickName = _nickName;
-		defaultName = _defaultName;
-		tutorialComplete = _tutorialComplete;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_nickName = nickName;
-		_defaultName = defaultName;
-		_tutorialComplete = tutorialComplete;
 	}
 }

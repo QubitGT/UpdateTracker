@@ -1,6 +1,7 @@
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Spin With Gorilla Speed")]
 public class SpinWithGorillaSpeed : MonoBehaviour
 {
 	[Tooltip("Get the velocity from this component when determining the spin speed. If this is unset, it will use the unsmoothed velocity of the parent VRRig component.")]

@@ -1,6 +1,7 @@
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Beta Checker")]
 public class BetaChecker : MonoBehaviour
 {
 	public GameObject[] objectsToEnable;

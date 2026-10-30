@@ -4,6 +4,7 @@ using GorillaNetworking;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Status Watch")]
 public class GRToolStatusWatch : MonoBehaviour, IGameEntityComponent
 {
 	private enum WatchState

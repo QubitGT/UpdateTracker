@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GorillaTagScripts.GhostReactor;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Enemy")]
 public class GREnemy : MonoBehaviour, IGameEntityComponent, IGameHittable
 {
 	public GRHealthMeter healthMeter;

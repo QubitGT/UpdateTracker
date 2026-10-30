@@ -7,6 +7,7 @@ using UnityEngine.Rendering;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Seasonal/Prop Placement RB")]
 public class PropPlacementRB : MonoBehaviour, IDelayedExecListener
 {
 	[FormerlySerializedAs("rb")]

@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Gum Bubble")]
 public class GumBubble : LerpComponent
 {
 	public Transform target;

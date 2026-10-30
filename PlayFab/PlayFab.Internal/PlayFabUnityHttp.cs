@@ -79,7 +79,7 @@ public class PlayFabUnityHttp : ITransportPlugin, IPlayFabPlugin
 			www2.SetRequestHeader("Content-Type", "application/json");
 		}
 		yield return www2.SendWebRequest();
-		if (www2.isNetworkError || www2.isHttpError)
+		if (www2.result == UnityWebRequest.Result.ConnectionError || www2.result == UnityWebRequest.Result.ProtocolError)
 		{
 			errorCallback(www2.error);
 		}

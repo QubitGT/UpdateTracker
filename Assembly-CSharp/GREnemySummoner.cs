@@ -4,6 +4,7 @@ using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.AI;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Enemy Summoner")]
 public class GREnemySummoner : MonoBehaviour, IGameEntityComponent, IGameEntitySerialize, IGameHittable, IGameEntityDebugComponent, IGameAgentComponent, IGRSummoningEntity
 {
 	public enum Behavior
@@ -349,7 +350,7 @@ public class GREnemySummoner : MonoBehaviour, IGameEntityComponent, IGameEntityS
 		senseNearby.UpdateNearby(tempRigs, senseLineOfSight);
 		float outDistanceSq;
 		VRRig vRRig = senseNearby.PickClosest(out outDistanceSq);
-		agent.RequestTarget((vRRig == null) ? null : vRRig.OwningNetPlayer);
+		agent.RequestTarget((vRRig == null) ? null : vRRig.Creator);
 		switch (currBehavior)
 		{
 		case Behavior.Idle:

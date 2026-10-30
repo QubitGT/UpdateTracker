@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace NetSynchrony;
 
-[CreateAssetMenu(fileName = "RandomDispatcher", menuName = "NetSynchrony/RandomDispatcher", order = 0)]
+[CreateAssetMenu(fileName = "RandomDispatcher", menuName = "ScriptableObjects/Networking/RandomDispatcher", order = 0)]
 public class RandomDispatcher : ScriptableObject
 {
 	public delegate void RandomDispatcherEvent(RandomDispatcher randomDispatcher);

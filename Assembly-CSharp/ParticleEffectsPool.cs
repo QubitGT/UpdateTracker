@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Cysharp.Text;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Particle Effects Pool")]
 public class ParticleEffectsPool : MonoBehaviour
 {
 	public ParticleEffect[] effects = new ParticleEffect[0];

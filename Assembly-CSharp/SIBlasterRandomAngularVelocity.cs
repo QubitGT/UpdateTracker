@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Blaster Random Angular Velocity")]
 public class SIBlasterRandomAngularVelocity : MonoBehaviour, SIGadgetProjectileModifier
 {
 	public float maxVel;

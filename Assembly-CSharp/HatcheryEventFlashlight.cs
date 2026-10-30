@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Hatchery Event Flashlight")]
 public class HatcheryEventFlashlight : MonoBehaviourTick, IGorillaSliceableSimple
 {
 	private const float lightMaxDistance = 6f;

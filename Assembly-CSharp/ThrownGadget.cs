@@ -3,6 +3,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Super Infection/Thrown Gadget")]
 public class ThrownGadget : MonoBehaviour
 {
 	public GameEntity gameEntity;

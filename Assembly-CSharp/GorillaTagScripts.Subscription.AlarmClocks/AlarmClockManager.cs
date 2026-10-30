@@ -110,6 +110,10 @@ public sealed class AlarmClockManager : MonoBehaviour
 		{
 			yield return null;
 		}
+		while (PrivateUIRoom.GetInOverlay())
+		{
+			yield return null;
+		}
 		PrivateUIRoom.ForceStartOverlay(PrivateUIRoom.OverlaySource.AlarmClock, _loadingMessage);
 		PersistLog.Log($"[AC][F{Time.frameCount}] Waiting for feature flags.");
 		while (true)

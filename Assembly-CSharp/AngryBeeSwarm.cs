@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Fusion;
 using GorillaExtensions;
 using GorillaTag.Rendering;
 using Photon.Pun;
@@ -9,7 +8,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
 
-[NetworkBehaviourWeaved(3)]
+[AddComponentMenu("GorillaTag/Seasonal/Angry Bee Swarm")]
 public class AngryBeeSwarm : NetworkComponent
 {
 	public enum ChaseState
@@ -118,35 +117,7 @@ public class AngryBeeSwarm : NetworkComponent
 
 	private float nextPathTimestamp;
 
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("Data", 0, 3)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private BeeSwarmData _Data;
-
 	public bool isDormant => currentState == ChaseState.Dormant;
-
-	[Networked]
-	[NetworkedWeaved(0, 3)]
-	public unsafe BeeSwarmData Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing AngryBeeSwarm.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(BeeSwarmData*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing AngryBeeSwarm.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(BeeSwarmData*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	protected override void Awake()
 	{
@@ -493,21 +464,6 @@ public class AngryBeeSwarm : NetworkComponent
 		}
 	}
 
-	public override void WriteDataFusion()
-	{
-		Data = new BeeSwarmData(targetPlayer.ActorNumber, (int)currentState, currentSpeed);
-	}
-
-	public override void ReadDataFusion()
-	{
-		targetPlayer = NetworkSystem.Instance.GetPlayer(Data.TargetActorNumber);
-		currentState = (ChaseState)Data.CurrentState;
-		if (float.IsFinite(Data.CurrentSpeed))
-		{
-			currentSpeed = Data.CurrentSpeed;
-		}
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (info.Sender != null && info.Sender.Equals(PhotonNetwork.MasterClient))
@@ -553,19 +509,5 @@ public class AngryBeeSwarm : NetworkComponent
 	private void TestEmerge()
 	{
 		Emerge(testEmergeFrom.transform.position, testEmergeTo.transform.position);
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
 	}
 }

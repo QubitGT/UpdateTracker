@@ -10,7 +10,7 @@ public class GtLckNetworkCosmeticDependantPlayerIdSupplier : MonoBehaviour, ILck
 
 	public string GetPlayerId()
 	{
-		return vrrig.OwningNetPlayer.UserId;
+		return vrrig.Creator?.UserId;
 	}
 
 	public void UpdatePlayerId()

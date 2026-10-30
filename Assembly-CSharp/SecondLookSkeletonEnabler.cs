@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Second Look Skeleton Enabler")]
 public class SecondLookSkeletonEnabler : Tappable
 {
 	public bool isTapped;

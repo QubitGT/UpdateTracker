@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using ExitGames.Client.Photon;
-using Fusion;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
@@ -79,8 +78,6 @@ public class MonkeAgent : MonoBehaviour, IGorillaSliceableSimple
 	private Dictionary<string, Dictionary<string, RPCCallTracker>> userRPCCalls = new Dictionary<string, Dictionary<string, RPCCallTracker>>();
 
 	private ExitGames.Client.Photon.Hashtable hashTable;
-
-	private NetworkRunner runner => ((NetworkSystemFusion)NetworkSystem.Instance).runner;
 
 	private bool sendReport
 	{

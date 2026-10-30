@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ObservableBehaviorRule", menuName = "Utilities/ObservableBehaviorRule")]
+[CreateAssetMenu(fileName = "ObservableBehaviorRule", menuName = "ScriptableObjects/Data/ObservableBehaviorRule")]
 public class ObservableBehaviorRule : ScriptableObject
 {
 	[SerializeField]

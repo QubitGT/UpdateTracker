@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Hot Pepper Face")]
 public class HotPepperFace : MonoBehaviour
 {
 	[SerializeField]

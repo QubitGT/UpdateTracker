@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/Test Spawn Gadget")]
 public class TestSpawnGadget : MonoBehaviour
 {
 	[Serializable]

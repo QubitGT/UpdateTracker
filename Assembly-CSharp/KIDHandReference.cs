@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KID Hand Reference")]
 public class KIDHandReference : MonoBehaviour
 {
 	[SerializeField]

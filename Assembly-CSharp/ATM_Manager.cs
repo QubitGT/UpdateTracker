@@ -5,6 +5,7 @@ using GorillaNetworking.Store;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/ATM_Manager")]
 public class ATM_Manager : MonoBehaviour, IBuildValidation
 {
 	public enum ATMStages

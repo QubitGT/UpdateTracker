@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Critter Spawner Shade Hidden")]
 public class CosmeticCritterSpawnerShadeHidden : CosmeticCritterSpawnerTimed
 {
 	[Tooltip("Add between X and Y extra height to the base orbit height.")]

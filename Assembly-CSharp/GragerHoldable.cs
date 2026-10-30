@@ -2,6 +2,7 @@ using GorillaExtensions;
 using Unity.Cinemachine;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Grager Holdable")]
 public class GragerHoldable : MonoBehaviour
 {
 	[SerializeField]

@@ -93,6 +93,12 @@ public class Campfire : MonoBehaviour, IGorillaSliceableSimple
 		lastTime = Time.time;
 	}
 
+	private void SetFlameBrightness(float value)
+	{
+		Color.RGBToHSV(mat.color, out h, out s, out v);
+		mat.color = Color.HSVToRGB(h, s, value);
+	}
+
 	public void OnEnable()
 	{
 		GorillaSlicerSimpleManager.RegisterSliceable(this, GorillaSlicerSimpleManager.UpdateStep.LateUpdate);
@@ -117,8 +123,7 @@ public class Campfire : MonoBehaviour, IGorillaSliceableSimple
 				mergedBottom = false;
 				mergedMiddle = false;
 				mergedTop = false;
-				Color.RGBToHSV(mat.color, out h, out s, out v);
-				mat.color = Color.HSVToRGB(h, s, 1f);
+				SetFlameBrightness(1f);
 			}
 			Flap(ref perlinBottom, perlinStepBottom, ref lastAngleBottom, ref baseFire, bottomRange, baseMultiplier, ref mergedBottom);
 			Flap(ref perlinMiddle, perlinStepMiddle, ref lastAngleMiddle, ref middleFire, middleRange, middleMultiplier, ref mergedMiddle);
@@ -132,8 +137,7 @@ public class Campfire : MonoBehaviour, IGorillaSliceableSimple
 				mergedBottom = false;
 				mergedMiddle = false;
 				mergedTop = false;
-				Color.RGBToHSV(mat.color, out h, out s, out v);
-				mat.color = Color.HSVToRGB(h, s, 0.25f);
+				SetFlameBrightness(0.25f);
 			}
 			ReturnToOff(ref baseFire, startingRotationBottom, ref mergedBottom);
 			ReturnToOff(ref middleFire, startingRotationMiddle, ref mergedMiddle);

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Virtual Stump Revive Player")]
 public class VirtualStumpRevivePlayer : MonoBehaviour
 {
 	[SerializeField]

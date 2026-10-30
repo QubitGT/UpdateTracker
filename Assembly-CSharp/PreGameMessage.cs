@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/Pre Game Message")]
 public class PreGameMessage : MonoBehaviour
 {
 	[SerializeField]

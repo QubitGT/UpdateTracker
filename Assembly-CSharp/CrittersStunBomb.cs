@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Stun Bomb")]
 public class CrittersStunBomb : CrittersToolThrowable
 {
 	[Header("Stun Bomb")]

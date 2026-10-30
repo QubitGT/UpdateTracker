@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Speed Driven Anim")]
 public class SpeedDrivenAnim : MonoBehaviour
 {
 	[SerializeField]

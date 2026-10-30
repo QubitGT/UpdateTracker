@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Ftue Exit Trigger")]
 public class GRFtueExitTrigger : GorillaTriggerBox
 {
 	public GRFirstTimeUserExperience ftueObject;

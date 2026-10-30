@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Attributes")]
 public class GRAttributes : MonoBehaviour
 {
 	[Serializable]

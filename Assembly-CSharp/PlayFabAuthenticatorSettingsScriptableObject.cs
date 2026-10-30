@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "PlayFabAuthenticatorSettings", menuName = "ScriptableObjects/PlayFabAuthenticatorSettings")]
+[CreateAssetMenu(fileName = "PlayFabAuthenticatorSettings", menuName = "ScriptableObjects/Networking/PlayFabAuthenticatorSettings")]
 public class PlayFabAuthenticatorSettingsScriptableObject : ScriptableObject
 {
 	public string TitleId;
@@ -22,8 +22,6 @@ public class PlayFabAuthenticatorSettingsScriptableObject : ScriptableObject
 	public string ModerationApiBaseUrl;
 
 	public string ProgressionApiBaseUrl;
-
-	public string TitleDataApiBaseUrl;
 
 	public string VotingApiBaseUrl;
 }

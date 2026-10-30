@@ -1,10 +1,12 @@
 using System;
+using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
 [RequireComponent(typeof(GameGrabbable))]
 [RequireComponent(typeof(GameSnappable))]
 [RequireComponent(typeof(GameButtonActivatable))]
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Platform Deployer")]
 public class SIGadgetPlatformDeployer : SIGadget, I_SIDisruptable, IEnergyGadget
 {
 	private enum State
@@ -51,9 +53,6 @@ public class SIGadgetPlatformDeployer : SIGadget, I_SIDisruptable, IEnergyGadget
 
 	[SerializeField]
 	private GameObject previewPlatform;
-
-	[SerializeField]
-	private float handInset = 0.1f;
 
 	[SerializeField]
 	private float handDepthOffset = 0.3f;
@@ -341,18 +340,26 @@ public class SIGadgetPlatformDeployer : SIGadget, I_SIDisruptable, IEnergyGadget
 
 	public override void ProcessClientToAuthorityRPC(PhotonMessageInfo info, int rpcID, object[] data)
 	{
-		if (rpcID == 0 && data != null && data.Length == 3 && GameEntityManager.ValidateDataType<int>(data[0], out var _) && GameEntityManager.ValidateDataType<Vector3>(data[1], out var dataAsType2) && GameEntityManager.ValidateDataType<Quaternion>(data[2], out var dataAsType3) && gameEntity.IsAttachedToPlayer(NetPlayer.Get(info.Sender)) && !(Vector3.Distance(base.transform.position, dataAsType2) > 2f))
+		if (rpcID == 0 && data != null && data.Length == 3 && GameEntityManager.ValidateDataType<int>(data[0], out var _) && GameEntityManager.ValidateDataType<Vector3>(data[1], out var dataAsType2))
 		{
-			CreateLocalPlatformInstance(dataAsType2, dataAsType3);
-			SendAuthorityToClientRPC(0, data);
+			float maxVal = 10000f;
+			if (dataAsType2.IsValid(in maxVal) && GameEntityManager.ValidateDataType<Quaternion>(data[2], out var dataAsType3) && dataAsType3.IsValid() && gameEntity.IsAttachedToPlayer(NetPlayer.Get(info.Sender)) && !(Vector3.Distance(base.transform.position, dataAsType2) > 2f))
+			{
+				CreateLocalPlatformInstance(dataAsType2, dataAsType3);
+				SendAuthorityToClientRPC(0, data);
+			}
 		}
 	}
 
 	public override void ProcessAuthorityToClientRPC(PhotonMessageInfo info, int rpcID, object[] data)
 	{
-		if (rpcID == 0 && data != null && data.Length == 3 && GameEntityManager.ValidateDataType<int>(data[0], out var dataAsType) && GameEntityManager.ValidateDataType<Vector3>(data[1], out var dataAsType2) && GameEntityManager.ValidateDataType<Quaternion>(data[2], out var dataAsType3) && dataAsType != NetworkSystem.Instance.LocalPlayer.ActorNumber)
+		if (rpcID == 0 && data != null && data.Length == 3 && GameEntityManager.ValidateDataType<int>(data[0], out var dataAsType) && GameEntityManager.ValidateDataType<Vector3>(data[1], out var dataAsType2))
 		{
-			CreateLocalPlatformInstance(dataAsType2, dataAsType3);
+			float maxVal = 10000f;
+			if (dataAsType2.IsValid(in maxVal) && GameEntityManager.ValidateDataType<Quaternion>(data[2], out var dataAsType3) && dataAsType3.IsValid() && dataAsType != NetworkSystem.Instance.LocalPlayer.ActorNumber)
+			{
+				CreateLocalPlatformInstance(dataAsType2, dataAsType3);
+			}
 		}
 	}
 

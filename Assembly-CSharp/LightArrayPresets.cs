@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "LightArrayPresets", menuName = "Scriptable Objects/LightArrayPresets")]
+[CreateAssetMenu(fileName = "LightArrayPresets", menuName = "ScriptableObjects/Visuals and Audio/LightArrayPresets")]
 public class LightArrayPresets : ScriptableObject
 {
 	[Serializable]

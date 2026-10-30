@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Holster Disk")]
 public class SIGadgetHolsterDisk : SIGadget, I_SIDisruptable
 {
 	private enum State

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.SmartFormat.PersistentVariables;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Age Discrepancy Screen")]
 public class KIDUI_AgeDiscrepancyScreen : MonoBehaviour
 {
 	[SerializeField]

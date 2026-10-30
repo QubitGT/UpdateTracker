@@ -5,6 +5,7 @@ using GorillaNetworking;
 using GorillaTagScripts.VirtualStumpCustomMaps;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Tentacle Arm")]
 public class SIGadgetTentacleArm : SIGadget, ICallBack, IEnergyGadget
 {
 	private class HeldPlayerCallback : ICallBack

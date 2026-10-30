@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Bake Blend Shape")]
 public class BakeBlendShape : MonoBehaviour
 {
 	private void Update()

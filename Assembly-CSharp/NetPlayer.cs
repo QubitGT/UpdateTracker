@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Fusion;
 using GorillaTag;
 using Photon.Realtime;
 using UnityEngine;
@@ -99,18 +98,7 @@ public abstract class NetPlayer : ObjectPoolEvents
 		return NetworkSystem.Instance?.GetPlayer(player) ?? null;
 	}
 
-	public static implicit operator NetPlayer(PlayerRef player)
-	{
-		Utils.Log("Using an implicit cast from PlayerRef to NetPlayer. Please make sure this was intended as this has potential to cause errors when switching between network backends");
-		return NetworkSystem.Instance?.GetPlayer(player) ?? null;
-	}
-
 	public static NetPlayer Get(Player player)
-	{
-		return NetworkSystem.Instance?.GetPlayer(player) ?? null;
-	}
-
-	public static NetPlayer Get(PlayerRef player)
 	{
 		return NetworkSystem.Instance?.GetPlayer(player) ?? null;
 	}

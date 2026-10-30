@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/Stilt RB Hand Follower")]
 public class StiltRBHandFollower : MonoBehaviour
 {
 	private Rigidbody rb;

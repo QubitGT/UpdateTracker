@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Test Manipulatable Spinner")]
 public class TestManipulatableSpinner : MonoBehaviour
 {
 	public ManipulatableSpinner spinner;

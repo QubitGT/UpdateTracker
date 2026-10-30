@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Super Infection/SIUI Player Quest Display")]
 public class SIUIPlayerQuestDisplay : MonoBehaviour, IGorillaSliceableSimple
 {
 	public TextMeshProUGUI playerName;

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Bag Settings")]
 public class CrittersBagSettings : CrittersActorSettings
 {
 	public Collider attachableCollider;

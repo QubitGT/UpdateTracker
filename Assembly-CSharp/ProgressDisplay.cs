@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Seasonal/Progress Display")]
 public class ProgressDisplay : MonoBehaviour
 {
 	[SerializeField]

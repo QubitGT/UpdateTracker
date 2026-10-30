@@ -3,6 +3,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Legacy Transferrable Object")]
 public class LegacyTransferrableObject : HoldableObject
 {
 	public enum InterpolateState

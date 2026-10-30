@@ -2,6 +2,7 @@ using System;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Quest Display")]
 public class QuestDisplay : MonoBehaviour
 {
 	[SerializeField]

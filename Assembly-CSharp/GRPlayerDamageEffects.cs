@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Player Damage Effects")]
 public class GRPlayerDamageEffects : MonoBehaviour
 {
 	public ParticleSystem radialDamageEffect;

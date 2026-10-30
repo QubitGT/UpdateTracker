@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Rigid Body Noise Event Maker")]
 public class GRRigidBodyNoiseEventMaker : MonoBehaviour
 {
 	public float velocityThreshold = 5f;

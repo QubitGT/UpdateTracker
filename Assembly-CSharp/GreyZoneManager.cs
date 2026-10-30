@@ -9,6 +9,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Grey Zone Manager")]
 public class GreyZoneManager : MonoBehaviourPun, IPunObservable, IInRoomCallbacks
 {
 	[OnEnterPlay_SetNull]

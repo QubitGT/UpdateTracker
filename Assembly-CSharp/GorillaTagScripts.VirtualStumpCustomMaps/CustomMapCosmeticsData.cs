@@ -10,7 +10,7 @@ using UnityEngine;
 namespace GorillaTagScripts.VirtualStumpCustomMaps;
 
 [Serializable]
-[CreateAssetMenu(menuName = "ScriptableObjects/CustomMapCosmeticDataSO", order = 0)]
+[CreateAssetMenu(menuName = "ScriptableObjects/Gameplay/CustomMapCosmeticDataSO", order = 0)]
 public class CustomMapCosmeticsData : ScriptableObject
 {
 	[SerializeField]

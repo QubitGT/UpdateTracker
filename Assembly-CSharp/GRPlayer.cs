@@ -7,6 +7,7 @@ using GorillaNetworking;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Player")]
 public class GRPlayer : MonoBehaviourTick
 {
 	public enum GRPlayerState
@@ -478,6 +479,7 @@ public class GRPlayer : MonoBehaviourTick
 	{
 		base.OnDisable();
 		Reset();
+		lastPlayerPosition = Vector3.zero;
 	}
 
 	public void Reset()
@@ -882,6 +884,24 @@ public class GRPlayer : MonoBehaviourTick
 		}
 	}
 
+	public static void SerializePlaceholderNetworkState(BinaryWriter writer)
+	{
+		GRPlayer local = GetLocal();
+		writer.Write((byte)0);
+		writer.Write((!(local != null)) ? 1 : local.MaxHp);
+		writer.Write(0);
+		writer.Write(double.NaN);
+		writer.Write((byte)0);
+		writer.Write(0);
+		writer.Write(0);
+		writer.Write(0);
+		writer.Write(0);
+		for (int i = 0; i < 8; i++)
+		{
+			writer.Write(0f);
+		}
+	}
+
 	public static void DeserializeNetworkStateAndBurn(BinaryReader reader, GRPlayer player, GhostReactorManager grManager)
 	{
 		GRPlayerState newState = (GRPlayerState)reader.ReadByte();
@@ -895,7 +915,11 @@ public class GRPlayer : MonoBehaviourTick
 		int num5 = reader.ReadInt32();
 		for (int i = 0; i < 8; i++)
 		{
-			player.synchronizedSessionStats[i] = reader.ReadSingle();
+			float num6 = reader.ReadSingle();
+			if (player != null)
+			{
+				player.synchronizedSessionStats[i] = num6;
+			}
 		}
 		if (player != null)
 		{
@@ -1204,8 +1228,8 @@ public class GRPlayer : MonoBehaviourTick
 	public GRShuttle GetAssignedShuttle(bool isOnDrillovator)
 	{
 		_ = GhostReactor.instance;
-		GRShuttle drillShuttleForPlayer = GRElevatorManager._instance.GetDrillShuttleForPlayer(gamePlayer.rig.OwningNetPlayer.ActorNumber);
-		GRShuttle stagingShuttleForPlayer = GRElevatorManager._instance.GetStagingShuttleForPlayer(gamePlayer.rig.OwningNetPlayer.ActorNumber);
+		GRShuttle drillShuttleForPlayer = GRElevatorManager._instance.GetDrillShuttleForPlayer(gamePlayer.rig.Creator.ActorNumber);
+		GRShuttle stagingShuttleForPlayer = GRElevatorManager._instance.GetStagingShuttleForPlayer(gamePlayer.rig.Creator.ActorNumber);
 		if (!isOnDrillovator)
 		{
 			return stagingShuttleForPlayer;
@@ -1234,9 +1258,9 @@ public class GRPlayer : MonoBehaviourTick
 		VRRigCache.Instance.GetAllUsedRigs(tempRigs);
 		for (int i = 0; i < tempRigs.Count; i++)
 		{
-			if (tempRigs[i].OwningNetPlayer != null && tempRigs[i].OwningNetPlayer.UserId == userId)
+			if (tempRigs[i].Creator != null && tempRigs[i].Creator.UserId == userId)
 			{
-				return Get(tempRigs[i].OwningNetPlayer);
+				return Get(tempRigs[i].Creator);
 			}
 		}
 		return null;
@@ -1300,7 +1324,7 @@ public class GRPlayer : MonoBehaviourTick
 			return;
 		}
 		freezeDuration = duration;
-		if (gamePlayer.rig.OwningNetPlayer.IsLocal)
+		if (gamePlayer.rig.Creator.IsLocal)
 		{
 			GorillaTagger.Instance.ApplyStatusEffect(GorillaTagger.StatusEffect.Frozen, duration);
 			GorillaTagger.Instance.StartVibration(forLeftController: true, GorillaTagger.Instance.taggedHapticStrength, GorillaTagger.Instance.taggedHapticDuration);

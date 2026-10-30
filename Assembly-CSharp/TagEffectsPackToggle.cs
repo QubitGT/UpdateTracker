@@ -3,6 +3,7 @@ using GorillaTag.CosmeticSystem;
 using TagEffects;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Tag Effects Pack Toggle")]
 public class TagEffectsPackToggle : MonoBehaviour, ISpawnable
 {
 	private VRRig _rig;

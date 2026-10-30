@@ -1,22 +1,13 @@
-using Fusion;
 using GorillaGameModes;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/Super Casual Game")]
 public sealed class SuperCasualGame : GorillaGameManager
 {
 	public override int MyMatIndex(NetPlayer player)
 	{
 		return 0;
-	}
-
-	public override void OnSerializeRead(object newData)
-	{
-	}
-
-	public override object OnSerializeWrite()
-	{
-		return null;
 	}
 
 	public override void OnSerializeRead(PhotonStream stream, PhotonMessageInfo info)
@@ -30,11 +21,6 @@ public sealed class SuperCasualGame : GorillaGameManager
 	public override GameModeType GameType()
 	{
 		return GameModeType.SuperCasual;
-	}
-
-	public override void AddFusionDataBehaviour(NetworkObject behaviour)
-	{
-		behaviour.AddBehaviour<CasualGameModeData>();
 	}
 
 	public override string GameModeName()

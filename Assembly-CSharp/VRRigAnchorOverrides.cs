@@ -5,6 +5,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/VR Rig Anchor Overrides")]
 public class VRRigAnchorOverrides : MonoBehaviour
 {
 	[SerializeField]

@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 
 [RequireComponent(typeof(GameEntity))]
+[AddComponentMenu("GorillaTag/Game Entity/Spawnable Entity")]
 public class SpawnableEntity : MonoBehaviour, IGorillaSliceableSimple
 {
 	public GameEntity entity;
@@ -29,32 +30,42 @@ public class SpawnableEntity : MonoBehaviour, IGorillaSliceableSimple
 
 	private void Start()
 	{
-		if (!entity)
+		if (entity == null)
 		{
 			entity = GetComponent<GameEntity>();
 		}
 		if (lifespan > 0f)
 		{
-			GameEntity gameEntity = entity;
-			gameEntity.OnGrabbed = (Action)Delegate.Combine(gameEntity.OnGrabbed, new Action(OnGrabbed));
-			GameEntity gameEntity2 = entity;
-			gameEntity2.OnReleased = (Action)Delegate.Combine(gameEntity2.OnReleased, new Action(OnReleased));
+			if (entity != null)
+			{
+				GameEntity gameEntity = entity;
+				gameEntity.OnGrabbed = (Action)Delegate.Combine(gameEntity.OnGrabbed, new Action(OnGrabbed));
+				GameEntity gameEntity2 = entity;
+				gameEntity2.OnReleased = (Action)Delegate.Combine(gameEntity2.OnReleased, new Action(OnReleased));
+			}
 			StartCountdown();
 		}
 	}
 
 	private void OnDestroy()
 	{
-		if (!ApplicationQuittingState.IsQuitting)
+		if (ApplicationQuittingState.IsQuitting)
 		{
-			if (lifespan > 0f)
+			return;
+		}
+		if (lifespan > 0f)
+		{
+			if (entity != null)
 			{
 				GameEntity gameEntity = entity;
 				gameEntity.OnGrabbed = (Action)Delegate.Remove(gameEntity.OnGrabbed, new Action(OnGrabbed));
 				GameEntity gameEntity2 = entity;
 				gameEntity2.OnReleased = (Action)Delegate.Remove(gameEntity2.OnReleased, new Action(OnReleased));
-				StopCountdown();
 			}
+			StopCountdown();
+		}
+		if (_spawner != null)
+		{
 			_spawner.Unregister(this);
 		}
 	}

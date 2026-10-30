@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(ParticleSystem))]
+[AddComponentMenu("GorillaTag/Cosmetics/Particle System Event Shortcut")]
 public class ParticleSystemEventShortcut : MonoBehaviour
 {
 	private bool initialized;

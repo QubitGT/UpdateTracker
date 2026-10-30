@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Skeleton Pathing Node")]
 public class SkeletonPathingNode : MonoBehaviour
 {
 	public bool ejectionPoint;

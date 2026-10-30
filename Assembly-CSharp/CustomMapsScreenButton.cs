@@ -2,6 +2,7 @@ using GorillaExtensions;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Screen Button")]
 public class CustomMapsScreenButton : CustomMapsScreenTouchPoint
 {
 	[SerializeField]

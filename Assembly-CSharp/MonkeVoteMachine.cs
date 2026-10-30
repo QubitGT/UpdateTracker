@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Seasonal/Monke Vote Machine")]
 public class MonkeVoteMachine : MonoBehaviour
 {
 	public enum VotingState

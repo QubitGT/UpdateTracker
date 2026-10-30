@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Age Appeal Controller")]
 public class KIDUI_AgeAppealController : MonoBehaviour
 {
 	private static KIDUI_AgeAppealController _instance;

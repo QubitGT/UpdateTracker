@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Shift Siren Light")]
 public class GRShiftSirenLight : MonoBehaviourTick
 {
 	public float rotationRate = 1.25f;

@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using GorillaGameModes;
 using GorillaNetworking;
 using Newtonsoft.Json;
 using PlayFab;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Rotating Quests Manager")]
 public class RotatingQuestsManager : MonoBehaviour, ITickSystemTick, GorillaQuestManager
 {
 	[Serializable]
@@ -90,6 +92,8 @@ public class RotatingQuestsManager : MonoBehaviour, ITickSystemTick, GorillaQues
 	private AudioSource _questAudio;
 
 	private DateTime nextQuestUpdateTime;
+
+	private List<string> _availableGameModeNames;
 
 	private const string kDailyQuestSetIDKey = "Rotating_Quest_Daily_SetID_Key";
 
@@ -308,17 +312,50 @@ public class RotatingQuestsManager : MonoBehaviour, ITickSystemTick, GorillaQues
 		ProgressionController.ReportQuestSelectionChanged();
 	}
 
+	private void CollectAvailableGameModeNames()
+	{
+		if (_availableGameModeNames != null || GameMode.gameModes.Count <= 0)
+		{
+			return;
+		}
+		_availableGameModeNames = new List<string>();
+		foreach (GameModeType allMainZoneMode in GameMode.GameModeZoneMapping.AllMainZoneModes)
+		{
+			GorillaGameManager gameModeInstance = GameMode.GetGameModeInstance(allMainZoneMode);
+			if (gameModeInstance != null)
+			{
+				_availableGameModeNames.Add(gameModeInstance.GameModeName());
+			}
+		}
+	}
+
 	private void RemoveDisabledQuests()
 	{
+		CollectAvailableGameModeNames();
 		RemoveDisabledQuestsFromGroupList(quests.DailyQuests);
 		RemoveDisabledQuestsFromGroupList(quests.WeeklyQuests);
-		static void RemoveDisabledQuestsFromGroupList(List<RotatingQuestGroup> questList)
+		bool IsRequiredGameModeAvailable(RotatingQuest quest)
+		{
+			if (_availableGameModeNames == null || (quest.questType != QuestType.gameModeObjective && quest.questType != QuestType.gameModeRound) || string.IsNullOrEmpty(quest.questOccurenceFilter))
+			{
+				return true;
+			}
+			foreach (string availableGameModeName in _availableGameModeNames)
+			{
+				if (availableGameModeName.StartsWith(quest.questOccurenceFilter))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		void RemoveDisabledQuestsFromGroupList(List<RotatingQuestGroup> questList)
 		{
 			foreach (RotatingQuestGroup quest in questList)
 			{
 				for (int num = quest.quests.Count - 1; num >= 0; num--)
 				{
-					if (quest.quests[num].disable)
+					if (quest.quests[num].disable || !IsRequiredGameModeAvailable(quest.quests[num]))
 					{
 						quest.quests.RemoveAt(num);
 					}

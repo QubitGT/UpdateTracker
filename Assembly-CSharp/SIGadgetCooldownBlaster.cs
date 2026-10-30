@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Cooldown Blaster")]
 public class SIGadgetCooldownBlaster : MonoBehaviour, SIGadgetBlasterType
 {
 	public SIGadgetBlasterProjectile projectilePrefab;

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Finger Flag Twirl Test")]
 public class FingerFlagTwirlTest : MonoBehaviour
 {
 	public Vector3 rotAnimDurations = new Vector3(0.2f, 0.1f, 0.5f);

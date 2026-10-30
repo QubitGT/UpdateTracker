@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/Ghost Reactor Level Section Connector")]
 public class GhostReactorLevelSectionConnector : MonoBehaviour
 {
 	public enum Direction

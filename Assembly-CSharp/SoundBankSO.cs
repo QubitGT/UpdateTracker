@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Gorilla Tag/SoundBankSO")]
+[CreateAssetMenu(menuName = "GorillaTag/SoundBankSO")]
 public class SoundBankSO : ScriptableObject
 {
 	public AudioClip[] sounds;

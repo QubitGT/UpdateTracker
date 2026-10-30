@@ -2,6 +2,7 @@ using GorillaLocomotion;
 using GorillaTagScripts.VirtualStumpCustomMaps;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/V Hallway Enter Trigger")]
 public class VHallwayEnterTrigger : MonoBehaviour
 {
 	[Tooltip("Which hallway this is: FeatureA -> featured map 0, FeatureB -> featured map 1, Custom -> open the stump with no auto-load.")]

@@ -1,14 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Fusion;
 using GorillaLocomotion;
 using GorillaNetworking;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Video;
 
-[NetworkBehaviourWeaved(0)]
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Elevator Manager")]
 public class GRElevatorManager : NetworkComponent, ITickSystemTick
 {
 	[Serializable]
@@ -175,7 +174,6 @@ public class GRElevatorManager : NetworkComponent, ITickSystemTick
 
 	protected void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		NetworkSystem.Instance.OnReturnedToSinglePlayer -= new Action(OnLeftRoom);
 		NetworkSystem.Instance.OnPlayerJoined -= new Action<NetPlayer>(OnPlayerAdded);
 		NetworkSystem.Instance.OnPlayerLeft -= new Action<NetPlayer>(OnPlayerRemoved);
@@ -183,7 +181,6 @@ public class GRElevatorManager : NetworkComponent, ITickSystemTick
 
 	private new void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		base.OnEnable();
 		TickSystem<object>.AddTickCallback(this);
 		DestinationVideoPlayer.loopPointReached += DisableVideoScreens;
@@ -191,7 +188,6 @@ public class GRElevatorManager : NetworkComponent, ITickSystemTick
 
 	private new void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		base.OnDisable();
 		TickSystem<object>.RemoveTickCallback(this);
 		DestinationVideoPlayer.loopPointReached -= DisableVideoScreens;
@@ -1205,25 +1201,5 @@ public class GRElevatorManager : NetworkComponent, ITickSystemTick
 		{
 			RemovePlayer(player);
 		}
-	}
-
-	public override void WriteDataFusion()
-	{
-	}
-
-	public override void ReadDataFusion()
-	{
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
 	}
 }

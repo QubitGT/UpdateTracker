@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Playables;
 
+[AddComponentMenu("GorillaTag/Seasonal/Scheduled Timeline Player")]
 public class ScheduledTimelinePlayer : MonoBehaviour
 {
 	public PlayableDirector timeline;

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Audio Fader")]
 public class AudioFader : MonoBehaviour
 {
 	[SerializeField]

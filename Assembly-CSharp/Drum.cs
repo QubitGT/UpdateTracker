@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Drum")]
 public class Drum : MonoBehaviour
 {
 	public bool disabler;

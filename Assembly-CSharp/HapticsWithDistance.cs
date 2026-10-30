@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(SphereCollider))]
+[AddComponentMenu("GorillaTag/Cosmetics/Haptics With Distance")]
 public class HapticsWithDistance : MonoBehaviour, ITickSystemTick
 {
 	[SerializeField]

@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
-using System.Runtime.InteropServices;
 using AA;
-using Fusion;
 using GorillaExtensions;
 using GorillaLocomotion;
 using GorillaTagScripts;
@@ -11,7 +9,6 @@ using UnityEngine;
 using UnityEngine.XR;
 
 [RequireComponent(typeof(Rigidbody))]
-[NetworkBehaviourWeaved(11)]
 public class GliderHoldable : NetworkHoldableObject, IRequestableOwnershipGuardCallbacks
 {
 	private enum GliderState
@@ -52,26 +49,18 @@ public class GliderHoldable : NetworkHoldableObject, IRequestableOwnershipGuardC
 		}
 	}
 
-	[StructLayout(LayoutKind.Explicit, Size = 44)]
-	[NetworkStructWeaved(11)]
-	internal struct SyncedState : INetworkStruct
+	internal struct SyncedState
 	{
-		[FieldOffset(0)]
 		public int riderId;
 
-		[FieldOffset(4)]
 		public byte materialIndex;
 
-		[FieldOffset(8)]
 		public byte audioLevel;
 
-		[FieldOffset(12)]
-		public NetworkBool tagged;
+		public bool tagged;
 
-		[FieldOffset(16)]
 		public Vector3 position;
 
-		[FieldOffset(28)]
 		public Quaternion rotation;
 
 		public void Init(Vector3 defaultPosition, Quaternion defaultRotation)
@@ -88,7 +77,7 @@ public class GliderHoldable : NetworkHoldableObject, IRequestableOwnershipGuardC
 			riderId = id;
 			materialIndex = 0;
 			audioLevel = 0;
-			tagged = default(NetworkBool);
+			tagged = false;
 			position = default(Vector3);
 			rotation = default(Quaternion);
 		}
@@ -449,11 +438,6 @@ public class GliderHoldable : NetworkHoldableObject, IRequestableOwnershipGuardC
 
 	private bool infectedState;
 
-	[WeaverGenerated]
-	[DefaultForProperty("Data", 0, 11)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private SyncedState _Data;
-
 	private bool OutOfBounds
 	{
 		get
@@ -467,28 +451,6 @@ public class GliderHoldable : NetworkHoldableObject, IRequestableOwnershipGuardC
 	}
 
 	public override bool TwoHanded => true;
-
-	[Networked]
-	[NetworkedWeaved(0, 11)]
-	internal unsafe SyncedState Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing GliderHoldable.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(SyncedState*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing GliderHoldable.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(SyncedState*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	protected override void Awake()
 	{
@@ -515,7 +477,6 @@ public class GliderHoldable : NetworkHoldableObject, IRequestableOwnershipGuardC
 
 	private void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		if (ownershipGuard != null)
 		{
 			ownershipGuard.RemoveCallbackTarget(this);
@@ -524,13 +485,11 @@ public class GliderHoldable : NetworkHoldableObject, IRequestableOwnershipGuardC
 
 	internal override void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		base.OnEnable();
 	}
 
 	internal override void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		Respawn();
 		base.OnDisable();
 	}
@@ -1181,7 +1140,7 @@ public class GliderHoldable : NetworkHoldableObject, IRequestableOwnershipGuardC
 		if (audioLevel != num3)
 		{
 			audioLevel = num3;
-			if (syncedState.riderId != -1 && (bool)syncedState.tagged)
+			if (syncedState.riderId != -1 && syncedState.tagged)
 			{
 				UpdateAudioSource(calmAudio, audioLevel * infectedAudioVolumeMultiplier);
 				UpdateAudioSource(activeAudio, audioLevel * infectedAudioVolumeMultiplier);
@@ -1376,22 +1335,6 @@ public class GliderHoldable : NetworkHoldableObject, IRequestableOwnershipGuardC
 		return Vector3.ProjectOnPlane(upDir - windDir, upDir);
 	}
 
-	public override void ReadDataFusion()
-	{
-		int num = syncedState.riderId;
-		syncedState = Data;
-		if (num != syncedState.riderId)
-		{
-			positionLocalToVRRig = syncedState.position;
-			rotationLocalToVRRig = syncedState.rotation;
-		}
-	}
-
-	public override void WriteDataFusion()
-	{
-		Data = syncedState;
-	}
-
 	protected override void ReadDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (info.Sender == ((PunNetPlayer)ownershipGuard.actualOwner)?.PlayerRef)
@@ -1420,7 +1363,7 @@ public class GliderHoldable : NetworkHoldableObject, IRequestableOwnershipGuardC
 		if (info.Sender.Equals(ownershipGuard.actualOwner?.GetPlayerRef()))
 		{
 			stream.SendNext(syncedState.riderId);
-			stream.SendNext((bool)syncedState.tagged);
+			stream.SendNext(syncedState.tagged);
 			stream.SendNext(syncedState.materialIndex);
 			stream.SendNext(syncedState.audioLevel);
 			stream.SendNext(syncedState.position);
@@ -1468,19 +1411,5 @@ public class GliderHoldable : NetworkHoldableObject, IRequestableOwnershipGuardC
 
 	public void OnMyCreatorLeft()
 	{
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
 	}
 }

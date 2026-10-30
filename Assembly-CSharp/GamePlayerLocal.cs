@@ -8,6 +8,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Player Local")]
 public class GamePlayerLocal : MonoBehaviour, IDelayedExecListener
 {
 	private enum HandGrabState

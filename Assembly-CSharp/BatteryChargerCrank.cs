@@ -3,6 +3,7 @@ using GorillaLocomotion;
 using UnityEngine;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Environment/Battery Charger Crank")]
 public class BatteryChargerCrank : HoldableObject
 {
 	[SerializeField]

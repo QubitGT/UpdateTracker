@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using ExitGames.Client.Photon;
-using Fusion;
 using GorillaTag.Rendering;
 using Photon.Pun;
+using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/Ghost Reactor")]
 public class GhostReactor : MonoBehaviourTick, IBuildValidation
 {
 	[Serializable]
@@ -609,11 +610,11 @@ public class GhostReactor : MonoBehaviourTick, IBuildValidation
 		VRRigCache.Instance.GetAllUsedRigs(vrRigs);
 		vrRigs.Sort(delegate(VRRig a, VRRig b)
 		{
-			if (a == null || a.OwningNetPlayer == null)
+			if (a == null || a.Creator == null)
 			{
 				return 1;
 			}
-			return (b == null || b.OwningNetPlayer == null) ? (-1) : a.OwningNetPlayer.ActorNumber.CompareTo(b.OwningNetPlayer.ActorNumber);
+			return (b == null || b.Creator == null) ? (-1) : a.Creator.ActorNumber.CompareTo(b.Creator.ActorNumber);
 		});
 		if (promotionBot != null)
 		{

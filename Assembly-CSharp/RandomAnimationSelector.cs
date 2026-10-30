@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
+[AddComponentMenu("GorillaTag/Cosmetics/Random Animation Selector")]
 public class RandomAnimationSelector : MonoBehaviour, IGorillaSliceableSimple
 {
 	[SerializeField]

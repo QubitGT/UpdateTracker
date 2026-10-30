@@ -8,8 +8,8 @@ using GorillaTagScripts;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
-using UnityEngine.Rendering;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Player")]
 public class GamePlayer : MonoBehaviour
 {
 	public struct SlotData
@@ -78,19 +78,6 @@ public class GamePlayer : MonoBehaviour
 	public Action OnPlayerLeftZone;
 
 	private bool grabbingDisabled;
-
-	private const bool _k_MATTO__USE_STATIC_CACHE = false;
-
-	[OnEnterPlay_SetNull]
-	private static (int, GamePlayer)[] lookupCache_actorNum_to_gamePlayer;
-
-	[OnEnterPlay_SetNull]
-	private static (int, GamePlayer)[] lookupCache_rigInstanceId_to_gamePlayer;
-
-	[OnEnterPlay_Set(0)]
-	private static int staticLookupCachesCount;
-
-	public const int INVALID_ACTOR_NUMBER = int.MinValue;
 
 	public bool DidJoinWithItems { get; set; }
 
@@ -172,14 +159,9 @@ public class GamePlayer : MonoBehaviour
 	{
 	}
 
-	private void Start()
-	{
-		InitializeStaticLookupCaches();
-	}
-
 	public void MigrateHeldActorNumbers()
 	{
-		int actorNumber = rig.OwningNetPlayer.ActorNumber;
+		int actorNumber = rig.Creator.ActorNumber;
 		for (int i = 0; i < 4; i++)
 		{
 			if (!(slots[i].entityManager != null))
@@ -569,6 +551,11 @@ public class GamePlayer : MonoBehaviour
 
 	public static bool TryGetGamePlayer(int actorNumber, out GamePlayer out_gamePlayer)
 	{
+		if (!NetworkSystem.Instance.InRoom && actorNumber != NetworkSystem.Instance.LocalPlayerID)
+		{
+			out_gamePlayer = null;
+			return false;
+		}
 		NetPlayer player = NetworkSystem.Instance.GetPlayer(actorNumber);
 		if (player == null || VRRigCache.Instance == null || !VRRigCache.Instance.TryGetVrrig(player, out var playerRig))
 		{
@@ -696,13 +683,13 @@ public class GamePlayer : MonoBehaviour
 				continue;
 			}
 			BitPackUtils.UnpackHandPosRotFromNetwork(num2, out var localPos, out var handRot);
-			if (!(gamePlayer != null) || gamePlayer.rig.OwningNetPlayer == null)
+			if (!(gamePlayer != null) || gamePlayer.rig.Creator == null)
 			{
 				continue;
 			}
 			if (IsGrabSlot(i))
 			{
-				manager.GrabEntityOnCreate(entityIdFromNetId, IsLeftHand(i), localPos, handRot, gamePlayer.rig.OwningNetPlayer);
+				manager.GrabEntityOnCreate(entityIdFromNetId, IsLeftHand(i), localPos, handRot, gamePlayer.rig.Creator);
 				continue;
 			}
 			int jointType = -1;
@@ -715,7 +702,7 @@ public class GamePlayer : MonoBehaviour
 				jointType = 4;
 				break;
 			}
-			manager.SnapEntityOnCreate(entityIdFromNetId, i == 2, localPos, handRot, jointType, gamePlayer.rig.OwningNetPlayer);
+			manager.SnapEntityOnCreate(entityIdFromNetId, i == 2, localPos, handRot, jointType, gamePlayer.rig.Creator);
 		}
 		bool initializePlayer = reader.ReadBoolean();
 		if (gamePlayer != null)
@@ -752,73 +739,6 @@ public class GamePlayer : MonoBehaviour
 			return i <= 3;
 		}
 		return false;
-	}
-
-	internal static void InitializeStaticLookupCaches()
-	{
-		lookupCache_actorNum_to_gamePlayer = new(int, GamePlayer)[20];
-		lookupCache_rigInstanceId_to_gamePlayer = new(int, GamePlayer)[20];
-		if (VRRigCache.isInitialized)
-		{
-			UpdateStaticLookupCaches();
-		}
-	}
-
-	internal static void UpdateStaticLookupCaches()
-	{
-		if (lookupCache_actorNum_to_gamePlayer == null)
-		{
-			return;
-		}
-		List<VRRig> value;
-		using (ListPool<VRRig>.Get(out value))
-		{
-			if (value.Capacity < 20)
-			{
-				value.Capacity = 20;
-			}
-			VRRigCache.Instance.GetActiveRigs(value);
-			if (value.Count > lookupCache_actorNum_to_gamePlayer.Length)
-			{
-				int newSize = value.Count * 2;
-				Array.Resize(ref lookupCache_actorNum_to_gamePlayer, newSize);
-				Array.Resize(ref lookupCache_rigInstanceId_to_gamePlayer, newSize);
-			}
-			staticLookupCachesCount = value.Count;
-			if (staticLookupCachesCount >= 1)
-			{
-				VRRig vRRig = value[0];
-				if (vRRig == null)
-				{
-					throw new NullReferenceException("[GT/GamePlayer::_VRRigCache_OnActiveRigsChanged]  ERROR!!!  (should never happen) The VRRig at index 0 is expected to be the local rig but is null.");
-				}
-				int actorNumber = PhotonNetwork.LocalPlayer.ActorNumber;
-				GamePlayer gamePlayer = GamePlayerLocal.instance.gamePlayer;
-				lookupCache_actorNum_to_gamePlayer[0] = (actorNumber, gamePlayer);
-				lookupCache_rigInstanceId_to_gamePlayer[0] = (vRRig.GetInstanceID(), gamePlayer);
-			}
-			for (int i = 1; i < staticLookupCachesCount; i++)
-			{
-				VRRig vRRig2 = value[i];
-				if (vRRig2 == null)
-				{
-					throw new NullReferenceException("[GT/GamePlayer::_VRRigCache_OnActiveRigsChanged]  ERROR!!!  (should never happen) An entry from `VRRigCache.Instance.GetActiveRigs(activeRigs)` is null but is expected to be ready and all entries not null at this stage.");
-				}
-				GamePlayer component = vRRig2.GetComponent<GamePlayer>();
-				if (component == null)
-				{
-					throw new NullReferenceException("[GT/GamePlayer::_VRRigCache_OnActiveRigsChanged]  ERROR!!!  (should never happen) Could not get GamePlayer from rig which is expected to be ready at this stage.");
-				}
-				int item = vRRig2.OwningNetPlayer?.ActorNumber ?? int.MinValue;
-				lookupCache_actorNum_to_gamePlayer[i] = (item, component);
-				lookupCache_rigInstanceId_to_gamePlayer[i] = (vRRig2.GetInstanceID(), component);
-			}
-			for (int j = staticLookupCachesCount; j < lookupCache_actorNum_to_gamePlayer.Length; j++)
-			{
-				lookupCache_actorNum_to_gamePlayer[j] = (0, null);
-				lookupCache_rigInstanceId_to_gamePlayer[j] = (0, null);
-			}
-		}
 	}
 
 	public void SetInitializePlayer(bool initialized)

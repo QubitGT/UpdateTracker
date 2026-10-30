@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Deployed Child")]
 public class DeployedChild : MonoBehaviour
 {
 	[SerializeField]

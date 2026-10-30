@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Too Young To Play")]
 public class KIDUI_TooYoungToPlay : MonoBehaviour
 {
 	public void ShowTooYoungToPlayScreen()

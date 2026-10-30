@@ -83,5 +83,6 @@ public enum CustomMapKeyboardBinding
 	row2Right,
 	row3Left,
 	row3Right,
-	featured
+	featured,
+	dev
 }

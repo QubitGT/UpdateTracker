@@ -4,6 +4,7 @@ using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Bag")]
 public class CrittersBag : CrittersActor
 {
 	public AudioSource audioSrc;

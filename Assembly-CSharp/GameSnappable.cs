@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Snappable")]
 public class GameSnappable : MonoBehaviour
 {
 	[Serializable]

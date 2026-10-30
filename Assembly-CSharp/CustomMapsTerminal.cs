@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using GorillaNetworking;
 using GorillaTagScripts.VirtualStumpCustomMaps;
 using Modio.Mods;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Terminal")]
 public class CustomMapsTerminal : MonoBehaviour
 {
 	public enum ScreenType
@@ -17,7 +19,8 @@ public class CustomMapsTerminal : MonoBehaviour
 		SubscribedMods,
 		SearchMods,
 		ModDetails,
-		FeaturedMods
+		FeaturedMods,
+		DevMaps
 	}
 
 	[SerializeField]
@@ -50,11 +53,36 @@ public class CustomMapsTerminal : MonoBehaviour
 	[SerializeField]
 	private TMP_Text terminalControllerText;
 
+	[Header("Tent terminal")]
+	[SerializeField]
+	private bool isTentTerminal;
+
+	[SerializeField]
+	private GameObject[] tentVisuals;
+
+	[SerializeField]
+	private CustomMapsDevTerminal devScreen;
+
+	[SerializeField]
+	private CustomMapsScreenButton devButton;
+
 	public const int NO_DRIVER_ID = -2;
 
 	private static CustomMapsTerminal instance;
 
 	private static bool hasInstance;
+
+	private static readonly List<CustomMapsTerminal> enabledTerminals = new List<CustomMapsTerminal>();
+
+	private bool devButtonShowsDevPage;
+
+	private bool showingConnecting;
+
+	private bool? tentVisible;
+
+	private static bool openDevScreenOnControl;
+
+	private static Mod atriumMap;
 
 	private static long localModDetailsID = -1L;
 
@@ -69,6 +97,12 @@ public class CustomMapsTerminal : MonoBehaviour
 	private static ScreenType cachedCurrentScreen = ScreenType.Invalid;
 
 	private static ScreenType previousScreen = ScreenType.Invalid;
+
+	private const float MaxRoomSwitchWaitSeconds = 15f;
+
+	private const string ConnectingText = "CONNECTING TO YOUR ROOM...";
+
+	private static float roomSwitchStartTime = -1f;
 
 	public static int LocalPlayerID => NetworkSystem.Instance.LocalPlayer.ActorNumber;
 
@@ -96,6 +130,8 @@ public class CustomMapsTerminal : MonoBehaviour
 		}
 	}
 
+	public bool IsTentTerminal => isTentTerminal;
+
 	private static bool HasFeaturedScreen
 	{
 		get
@@ -118,6 +154,38 @@ public class CustomMapsTerminal : MonoBehaviour
 			}
 			return ScreenType.FeaturedMods;
 		}
+	}
+
+	private static bool? TentTerminalAllowed()
+	{
+		NetworkSystem networkSystem = NetworkSystem.Instance;
+		if (networkSystem == null)
+		{
+			return false;
+		}
+		if (networkSystem.InRoom)
+		{
+			return networkSystem.SessionIsPrivate;
+		}
+		if (networkSystem.netState == NetSystemState.Connecting || networkSystem.netState == NetSystemState.Disconnecting || CustomMapManager.WaitingForRoomJoin)
+		{
+			return null;
+		}
+		return false;
+	}
+
+	private static bool IsSwitchingRooms()
+	{
+		if (!CustomMapManager.WaitingForRoomJoin && (!(NetworkSystem.Instance != null) || !NetworkSystem.Instance.InRoom || !VirtualStumpSerializer.IsWaitingForRoomInit()))
+		{
+			roomSwitchStartTime = -1f;
+			return false;
+		}
+		if (roomSwitchStartTime < 0f)
+		{
+			roomSwitchStartTime = Time.unscaledTime;
+		}
+		return Time.unscaledTime - roomSwitchStartTime < 15f;
 	}
 
 	private static void ShowFeaturedScreenOrGallery()
@@ -145,24 +213,158 @@ public class CustomMapsTerminal : MonoBehaviour
 
 	private void Awake()
 	{
-		instance = this;
-		hasInstance = true;
+		if (!hasInstance || !isTentTerminal)
+		{
+			instance = this;
+			hasInstance = true;
+		}
 	}
 
 	private void Start()
 	{
-		localDriverID = -2;
-		localCurrentScreen = ScreenType.TerminalControlPrompt;
-		previousScreen = ScreenType.TerminalControlPrompt;
+		if (localCurrentScreen == ScreenType.Invalid)
+		{
+			localDriverID = -2;
+			localCurrentScreen = ScreenType.TerminalControlPrompt;
+			previousScreen = ScreenType.TerminalControlPrompt;
+		}
 		controlAccessScreen.Show();
 		detailsAccessScreen.Show();
 		modListScreen.Hide();
 		modFeaturedScreen?.Hide();
 		modDetailsScreen.Hide();
+		if (devScreen != null)
+		{
+			devScreen.Hide();
+		}
 		ModIOManager.OnModIOLoggedIn.AddListener(OnModIOLoggedIn);
 		ModIOManager.OnModIOLoggedOut.AddListener(OnModIOLoggedOut);
 		NetworkSystem.Instance.OnMultiplayerStarted += new Action(OnJoinedRoom);
 		NetworkSystem.Instance.OnReturnedToSinglePlayer += new Action(OnReturnedToSinglePlayer);
+		if (isTentTerminal)
+		{
+			NetworkSystem.Instance.OnJoinedRoomEvent += new Action(UpdateTentVisibility);
+			NetworkSystem.Instance.OnReturnedToSinglePlayer += new Action(UpdateTentVisibility);
+			if (instance == this)
+			{
+				SyncWithSharedState();
+			}
+		}
+	}
+
+	private void OnEnable()
+	{
+		if (!enabledTerminals.Contains(this))
+		{
+			enabledTerminals.Add(this);
+		}
+		if (isTentTerminal)
+		{
+			BecomeActiveTerminal();
+			UpdateTentVisibility();
+		}
+	}
+
+	private void OnDisable()
+	{
+		enabledTerminals.Remove(this);
+		if (isTentTerminal)
+		{
+			atriumMap = null;
+		}
+		if (hasInstance && !(instance != this))
+		{
+			if (isTentTerminal)
+			{
+				ReleaseLocalTerminalControl();
+			}
+			if (enabledTerminals.Count > 0)
+			{
+				enabledTerminals[enabledTerminals.Count - 1].BecomeActiveTerminal();
+			}
+		}
+	}
+
+	private void LateUpdate()
+	{
+		RefreshConnectingMessage();
+		if (isTentTerminal)
+		{
+			UpdateTentVisibility();
+			if (hasInstance && !(instance != this))
+			{
+				RefreshDevButton();
+			}
+		}
+	}
+
+	private void RefreshConnectingMessage()
+	{
+		bool flag = localDriverID == -2 && localCurrentScreen == ScreenType.TerminalControlPrompt;
+		bool flag2 = flag && IsSwitchingRooms();
+		if (flag2)
+		{
+			controlAccessScreen.DisplayError("CONNECTING TO YOUR ROOM...");
+		}
+		else if (showingConnecting && flag)
+		{
+			controlAccessScreen.Reset();
+			controlAccessScreen.Show();
+		}
+		showingConnecting = flag2;
+	}
+
+	private void UpdateTentVisibility()
+	{
+		if (!isTentTerminal)
+		{
+			return;
+		}
+		bool? flag = TentTerminalAllowed();
+		if (!flag.HasValue && tentVisible.HasValue)
+		{
+			return;
+		}
+		bool valueOrDefault = flag.GetValueOrDefault();
+		if (valueOrDefault == tentVisible)
+		{
+			return;
+		}
+		tentVisible = valueOrDefault;
+		if (tentVisuals != null)
+		{
+			GameObject[] array = tentVisuals;
+			foreach (GameObject gameObject in array)
+			{
+				if (gameObject != null && gameObject.activeSelf != valueOrDefault)
+				{
+					gameObject.SetActive(valueOrDefault);
+				}
+			}
+		}
+		if (!valueOrDefault && hasInstance && instance == this)
+		{
+			ReleaseLocalTerminalControl();
+		}
+	}
+
+	private void RefreshDevButton()
+	{
+		if (!(devButton == null))
+		{
+			bool flag = !IsLocked();
+			bool flag2 = devScreen != null && devScreen.IsAvailable && (IsDriver || (flag && !IsSwitchingRooms())) && localCurrentScreen != ScreenType.ModDetails;
+			if (devButton.gameObject.activeSelf != flag2)
+			{
+				devButton.gameObject.SetActive(flag2);
+			}
+			bool flag3 = localCurrentScreen == ScreenType.DevMaps;
+			if (flag2 && flag3 != devButtonShowsDevPage)
+			{
+				devButtonShowsDevPage = flag3;
+				devButton.SetButtonActive(flag3);
+			}
+		}
 	}
 
 	private void OnDestroy()
@@ -171,6 +373,11 @@ public class CustomMapsTerminal : MonoBehaviour
 		ModIOManager.OnModIOLoggedOut.RemoveListener(OnModIOLoggedOut);
 		NetworkSystem.Instance.OnMultiplayerStarted -= new Action(OnJoinedRoom);
 		NetworkSystem.Instance.OnReturnedToSinglePlayer -= new Action(OnReturnedToSinglePlayer);
+		if (isTentTerminal)
+		{
+			NetworkSystem.Instance.OnJoinedRoomEvent -= new Action(UpdateTentVisibility);
+			NetworkSystem.Instance.OnReturnedToSinglePlayer -= new Action(UpdateTentVisibility);
+		}
 	}
 
 	public static void ShowDetailsScreen(Mod mod)
@@ -178,6 +385,11 @@ public class CustomMapsTerminal : MonoBehaviour
 		previousScreen = localCurrentScreen;
 		localCurrentScreen = ScreenType.ModDetails;
 		localModDetailsID = mod.Id;
+		if (!instance.isTentTerminal)
+		{
+			atriumMap = mod;
+		}
+		HideDevScreen();
 		instance.modListScreen.Hide();
 		instance.modFeaturedScreen?.Hide();
 		instance.controlAccessScreen.Hide();
@@ -192,8 +404,13 @@ public class CustomMapsTerminal : MonoBehaviour
 
 	public static void ReturnFromDetailsScreen()
 	{
+		HideDevScreen();
+		if (!instance.isTentTerminal)
+		{
+			atriumMap = null;
+		}
 		ScreenType screenType = previousScreen;
-		if (screenType == ScreenType.ModDetails || screenType == ScreenType.Invalid || screenType == ScreenType.TerminalControlPrompt)
+		if (screenType == ScreenType.ModDetails || screenType == ScreenType.Invalid || screenType == ScreenType.TerminalControlPrompt || screenType == ScreenType.DevMaps)
 		{
 			localCurrentScreen = DefaultBrowseScreen;
 			previousScreen = DefaultBrowseScreen;
@@ -252,6 +469,7 @@ public class CustomMapsTerminal : MonoBehaviour
 		{
 			previousScreen = localCurrentScreen;
 			localCurrentScreen = ScreenType.AvailableMods;
+			HideDevScreen();
 			instance.modFeaturedScreen?.Hide();
 			instance.modSearchScreen.Hide();
 			instance.modDetailsScreen.Hide();
@@ -271,6 +489,7 @@ public class CustomMapsTerminal : MonoBehaviour
 		{
 			previousScreen = localCurrentScreen;
 			localCurrentScreen = DefaultBrowseScreen;
+			HideDevScreen();
 			instance.modListScreen.Hide();
 			instance.modSearchScreen.Hide();
 			instance.modDetailsScreen.Hide();
@@ -287,6 +506,7 @@ public class CustomMapsTerminal : MonoBehaviour
 	{
 		previousScreen = localCurrentScreen;
 		localCurrentScreen = ScreenType.SearchMods;
+		HideDevScreen();
 		instance.modListScreen.Hide();
 		instance.modFeaturedScreen?.Hide();
 		instance.controlAccessScreen.Hide();
@@ -304,6 +524,7 @@ public class CustomMapsTerminal : MonoBehaviour
 		{
 			localCurrentScreen = ScreenType.AvailableMods;
 			previousScreen = ScreenType.AvailableMods;
+			HideDevScreen();
 			instance.modFeaturedScreen?.Hide();
 			instance.modSearchScreen.Hide();
 			instance.modDetailsScreen.Hide();
@@ -314,6 +535,64 @@ public class CustomMapsTerminal : MonoBehaviour
 			instance.modListScreen.SwapListDisplay(CustomMapsListScreen.ListScreenState.AvailableMods);
 			instance.modListScreen.Show();
 			SendTerminalStatus();
+		}
+	}
+
+	public static void ShowDevScreen()
+	{
+		if (hasInstance && instance.isTentTerminal && !(instance.devScreen == null) && instance.devScreen.IsAvailable && IsLocked() && IsDriver)
+		{
+			previousScreen = localCurrentScreen;
+			localCurrentScreen = ScreenType.DevMaps;
+			instance.modListScreen.Hide();
+			instance.modFeaturedScreen?.Hide();
+			instance.modSearchScreen.Hide();
+			instance.modDetailsScreen.Hide();
+			instance.modDisplayScreen.Hide();
+			instance.controlAccessScreen.Hide();
+			instance.detailsAccessScreen.Hide();
+			instance.devScreen.Show();
+			SendTerminalStatus();
+		}
+	}
+
+	public static void ToggleDevScreen()
+	{
+		if (!hasInstance)
+		{
+			return;
+		}
+		if (!IsLocked())
+		{
+			if (!IsSwitchingRooms())
+			{
+				openDevScreenOnControl = true;
+				instance.HandleTerminalControlButtonPressed();
+			}
+		}
+		else if (localCurrentScreen == ScreenType.DevMaps)
+		{
+			ShowFeaturedScreen();
+		}
+		else
+		{
+			ShowDevScreen();
+		}
+	}
+
+	public static void OnDevScreenUnavailable()
+	{
+		if (hasInstance && localCurrentScreen == ScreenType.DevMaps && IsDriver)
+		{
+			ShowFeaturedScreen();
+		}
+	}
+
+	private static void HideDevScreen()
+	{
+		if (hasInstance && instance.devScreen != null)
+		{
+			instance.devScreen.Hide();
 		}
 	}
 
@@ -362,14 +641,21 @@ public class CustomMapsTerminal : MonoBehaviour
 			if (IsDriver)
 			{
 				HideTerminalControlScreens();
+				if (openDevScreenOnControl)
+				{
+					openDevScreenOnControl = false;
+					ShowDevScreen();
+				}
 			}
 			else
 			{
+				openDevScreenOnControl = false;
 				ShowTerminalControlScreen();
 			}
 		}
 		else
 		{
+			openDevScreenOnControl = false;
 			localDriverID = -2;
 			instance.terminalControlButton.UnlockTerminalControl();
 			ShowTerminalControlScreen();
@@ -405,6 +691,7 @@ public class CustomMapsTerminal : MonoBehaviour
 		case ScreenType.SubscribedMods:
 		case ScreenType.SearchMods:
 		case ScreenType.FeaturedMods:
+		case ScreenType.DevMaps:
 			ShowTerminalControlScreen();
 			break;
 		case ScreenType.ModDetails:
@@ -422,9 +709,27 @@ public class CustomMapsTerminal : MonoBehaviour
 	private void UpdateControlScreenForDriver()
 	{
 		GTDev.Log($"[CustomMapsTerminal::UpdateScreenToMatchStatus] driverID: {localDriverID} " + $"| currentScreen: {localCurrentScreen} " + $"| previousScreen: {previousScreen} ");
+		if (localCurrentScreen == ScreenType.DevMaps && (devScreen == null || !devScreen.IsAvailable))
+		{
+			localCurrentScreen = DefaultBrowseScreen;
+		}
+		if (localCurrentScreen != ScreenType.DevMaps && devScreen != null)
+		{
+			devScreen.Hide();
+		}
 		switch (localCurrentScreen)
 		{
 		case ScreenType.TerminalControlPrompt:
+			break;
+		case ScreenType.DevMaps:
+			controlAccessScreen.Hide();
+			detailsAccessScreen.Hide();
+			modSearchScreen.Hide();
+			modListScreen.Hide();
+			modFeaturedScreen?.Hide();
+			modDetailsScreen.Hide();
+			modDisplayScreen.Hide();
+			devScreen.Show();
 			break;
 		case ScreenType.FeaturedMods:
 			controlAccessScreen.Hide();
@@ -522,12 +827,19 @@ public class CustomMapsTerminal : MonoBehaviour
 
 	private void BecomeActiveTerminal()
 	{
-		if (instance == this)
+		if (!hasInstance || !(instance == this))
 		{
-			return;
+			instance = this;
+			hasInstance = true;
+			if (localCurrentScreen != ScreenType.Invalid)
+			{
+				SyncWithSharedState();
+			}
 		}
-		instance = this;
-		hasInstance = true;
+	}
+
+	private void SyncWithSharedState()
+	{
 		if (IsLocalOnly || localDriverID == -2)
 		{
 			ResetTerminalControl();
@@ -546,6 +858,10 @@ public class CustomMapsTerminal : MonoBehaviour
 
 	public void HandleTerminalControlButtonPressed()
 	{
+		if (!IsDriver && IsSwitchingRooms())
+		{
+			return;
+		}
 		BecomeActiveTerminal();
 		if (!IsLocalOnly)
 		{
@@ -607,6 +923,7 @@ public class CustomMapsTerminal : MonoBehaviour
 				instance.controlAccessScreen.SetDriverName();
 				instance.detailsAccessScreen.SetDriverName();
 			}
+			HideDevScreen();
 			instance.modListScreen.Hide();
 			instance.modFeaturedScreen?.Hide();
 			instance.modDetailsScreen.Hide();
@@ -625,6 +942,7 @@ public class CustomMapsTerminal : MonoBehaviour
 		{
 			return;
 		}
+		long mapId;
 		if (previousScreen > ScreenType.TerminalControlPrompt)
 		{
 			localCurrentScreen = previousScreen;
@@ -637,11 +955,29 @@ public class CustomMapsTerminal : MonoBehaviour
 		{
 			localCurrentScreen = ScreenType.ModDetails;
 		}
+		else if (instance.isTentTerminal && TryTakeAtriumMap(out mapId))
+		{
+			localCurrentScreen = ScreenType.ModDetails;
+			localModDetailsID = mapId;
+		}
 		else
 		{
 			localCurrentScreen = DefaultBrowseScreen;
 		}
 		instance.UpdateControlScreenForDriver();
+	}
+
+	private static bool TryTakeAtriumMap(out long mapId)
+	{
+		mapId = 0L;
+		Mod mod = atriumMap;
+		atriumMap = null;
+		if (mod == null || mod.File == null || mod.File.State != ModFileState.Installed)
+		{
+			return false;
+		}
+		mapId = mod.Id;
+		return mapId > 0;
 	}
 
 	public static void RequestDriverNickNameRefresh()

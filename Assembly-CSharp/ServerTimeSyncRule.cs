@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ServerTimeSyncRule", menuName = "Scriptable Objects/ServerTimeSyncRule")]
+[CreateAssetMenu(fileName = "ServerTimeSyncRule", menuName = "ScriptableObjects/Networking/ServerTimeSyncRule")]
 public class ServerTimeSyncRule : ScriptableObject
 {
 	private enum Unit

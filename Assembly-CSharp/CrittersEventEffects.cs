@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Event Effects")]
 public class CrittersEventEffects : MonoBehaviour
 {
 	[Serializable]

@@ -21,6 +21,10 @@ public class VoxelActions : SingletonMonoBehaviour<VoxelActions>
 	[SerializeField]
 	private GameObject _stoneDigBigFX;
 
+	public override void Awake()
+	{
+	}
+
 	public void PlayDigFX(Vector3 position, Vector3 normal, int dirtAmount, int stoneAmount)
 	{
 		if (dirtAmount > 0)

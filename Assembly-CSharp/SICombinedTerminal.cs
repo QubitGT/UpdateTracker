@@ -4,6 +4,7 @@ using GorillaTag;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Combined Terminal")]
 public class SICombinedTerminal : MonoBehaviour, IGorillaSliceableSimple
 {
 	public enum TerminalSubFunction

@@ -3,6 +3,7 @@ using GorillaTag.CosmeticSystem;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Prop Hunt Debug Helper")]
 public class PropHuntDebugHelper : MonoBehaviour
 {
 	[OnEnterPlay_SetNull]

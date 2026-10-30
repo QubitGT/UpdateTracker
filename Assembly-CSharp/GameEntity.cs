@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.XR;
 
 [SelectionBase]
+[AddComponentMenu("GorillaTag/Game Entity/Game Entity")]
 public class GameEntity : MonoBehaviour
 {
 	public class RendererSet
@@ -237,7 +238,7 @@ public class GameEntity : MonoBehaviour
 		rigidBody = GetComponent<Rigidbody>();
 		if ((bool)rigidBody)
 		{
-			if (!gravityController && !TryGetComponent<MonkeGravityController>(out gravityController) && (rigidBody.useGravity || !rigidBody.isKinematic))
+			if (!gravityController && !TryGetComponent<MonkeGravityController>(out gravityController) && (rigidBody.useGravity || !rigidBody.isKinematic) && (bool)GetComponentInChildren<Collider>())
 			{
 				gravityController = base.gameObject.AddComponent<MonkeGravityController>();
 			}
@@ -432,7 +433,11 @@ public class GameEntity : MonoBehaviour
 
 	public bool IsAuthority()
 	{
-		return manager.IsAuthority();
+		if (manager != null)
+		{
+			return manager.IsAuthority();
+		}
+		return false;
 	}
 
 	public bool IsValidToMigrate()

@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Voting Card")]
 public class VotingCard : MonoBehaviour
 {
 	[SerializeField]

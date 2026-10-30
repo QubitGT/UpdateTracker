@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Elf Launcher Elf")]
 public class ElfLauncherElf : MonoBehaviour
 {
 	[SerializeField]

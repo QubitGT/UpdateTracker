@@ -4,6 +4,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/DJ Scratch Sound Player")]
 public class DJScratchSoundPlayer : MonoBehaviour, ISpawnable, PrefabNameSerialized
 {
 	[SerializeField]

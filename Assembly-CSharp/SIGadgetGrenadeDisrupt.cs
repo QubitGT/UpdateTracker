@@ -1,6 +1,7 @@
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Grenade Disrupt")]
 public class SIGadgetGrenadeDisrupt : SIGadgetGrenade
 {
 	private enum State

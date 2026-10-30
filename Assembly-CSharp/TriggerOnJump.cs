@@ -6,6 +6,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Trigger On Jump")]
 public class TriggerOnJump : MonoBehaviour, ITickSystemTick, PrefabNameSerialized
 {
 	[SerializeField]

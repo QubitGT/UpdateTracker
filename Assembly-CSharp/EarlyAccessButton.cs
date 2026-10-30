@@ -4,6 +4,7 @@ using GorillaNetworking;
 using UnityEngine;
 
 [Obsolete("Replaced with bundlebutton")]
+[AddComponentMenu("GorillaTag/Cosmetics/Early Access Button")]
 public class EarlyAccessButton : GorillaPressableButton
 {
 	private void Awake()

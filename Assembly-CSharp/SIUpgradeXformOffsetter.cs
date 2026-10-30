@@ -3,6 +3,7 @@ using GorillaExtensions;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Upgrade Xform Offsetter")]
 public class SIUpgradeXformOffsetter : MonoBehaviour
 {
 	[Serializable]

@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Research Station")]
 public class GRResearchStation : MonoBehaviour
 {
 	public Color selectedUpgradeColor = Color.yellow;

@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Transferrable Item Slot Transform Override")]
 public class TransferrableItemSlotTransformOverride : MonoBehaviour, IGorillaSliceableSimple, ISpawnable
 {
 	[FormerlySerializedAs("transformOverridesList")]

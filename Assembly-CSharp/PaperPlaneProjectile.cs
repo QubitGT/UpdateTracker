@@ -3,6 +3,7 @@ using GorillaTag.Reactions;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Paper Plane Projectile")]
 public class PaperPlaneProjectile : MonoBehaviour
 {
 	public delegate void PaperPlaneHit(Vector3 endPoint);

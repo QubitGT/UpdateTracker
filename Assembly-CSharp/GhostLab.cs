@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Ghost Lab")]
 public class GhostLab : MonoBehaviourTick, IBuildValidation
 {
 	public enum EntranceDoorsState

@@ -6,6 +6,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 using Valve.VR;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Input Field Controller")]
 public class KIDUI_InputFieldController : MonoBehaviour, IPointerEnterHandler, IEventSystemHandler, IPointerExitHandler
 {
 	[Header("Haptics")]

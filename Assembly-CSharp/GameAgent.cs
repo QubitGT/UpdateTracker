@@ -3,6 +3,7 @@ using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.AI;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Agent")]
 public class GameAgent : MonoBehaviour, IGameEntityComponent
 {
 	public delegate void StateChangedEvent(byte newState);

@@ -583,6 +583,7 @@ public class EdMeshCombinerPrefab : MonoBehaviour
 				jobData.Schedule().Complete();
 				jobData.sourceSubmeshIndices.Dispose();
 				jobData.sourceTransforms.Dispose();
+				jobData.lightmapScaleOffsets.Dispose();
 				jobData.baseColors.Dispose();
 				jobData.atlasSlices.Dispose();
 				jobData.uvModifiersMinMax.Dispose();

@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 
 [DefaultExecutionOrder(500)]
+[AddComponentMenu("GorillaTag/Super Infection/SI Purchase Terminal")]
 public class SIPurchaseTerminal : MonoBehaviour, ITouchScreenStation
 {
 	public enum PurchaseTerminalState

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Ref Registry")]
 public class CosmeticRefRegistry : MonoBehaviour
 {
 	private GameObject[] partsTable = new GameObject[9];

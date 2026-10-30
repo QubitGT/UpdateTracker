@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Environment/Metro Spotlight")]
 public class MetroSpotlight : MonoBehaviour
 {
 	[SerializeField]

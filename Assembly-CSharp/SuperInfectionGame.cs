@@ -4,11 +4,9 @@ using GorillaTag;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/Super Infection Game")]
 public sealed class SuperInfectionGame : GorillaTagManager
 {
-	[SerializeField]
-	private int _mySuperExampleSerializedField = 123;
-
 	private ESuperInfectionGameState _gameState_previous;
 
 	public new static SuperInfectionGame instance { get; private set; }
@@ -167,6 +165,7 @@ public sealed class SuperInfectionGame : GorillaTagManager
 		}
 		if (VRRigCache.Instance.TryGetVrrig(taggedPlayer, out var _) && VRRigCache.Instance.TryGetVrrig(taggingPlayer, out var _) && taggingPlayer.ActorNumber == SIPlayer.LocalPlayer.ActorNr)
 		{
+			MedalClipRelay.Clip(MedalClipRelay.MedalClip.ClipType.Tag);
 			if (SIProgression.Instance.heldOrSnappedByGadgetPageType[SITechTreePageId.Dash] > 0)
 			{
 				PlayerGameEvents.MiscEvent("SIDashTag");

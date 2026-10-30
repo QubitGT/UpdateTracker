@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Blaster Pumpable Projectile")]
 public class SIBlasterPumpableProjectile : MonoBehaviour, SIGadgetProjectileModifier
 {
 	public float maxPump;

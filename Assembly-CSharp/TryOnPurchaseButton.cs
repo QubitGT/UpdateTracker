@@ -2,6 +2,7 @@ using System.Collections;
 using GorillaNetworking.Store;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Try On Purchase Button")]
 public class TryOnPurchaseButton : GorillaPressableButton
 {
 	public bool bError;

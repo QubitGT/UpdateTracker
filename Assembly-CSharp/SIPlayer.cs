@@ -5,6 +5,7 @@ using GorillaLocomotion;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Player")]
 public class SIPlayer : MonoBehaviour, ITickSystemTick
 {
 	[Serializable]
@@ -140,7 +141,7 @@ public class SIPlayer : MonoBehaviour, ITickSystemTick
 		{
 			if (!gamePlayer.rig.isOfflineVRRig)
 			{
-				return gamePlayer.rig.OwningNetPlayer.ActorNumber;
+				return gamePlayer.rig.Creator?.ActorNumber ?? (-1);
 			}
 			return NetworkSystem.Instance.LocalPlayerID;
 		}
@@ -247,6 +248,33 @@ public class SIPlayer : MonoBehaviour, ITickSystemTick
 		{
 			writer.Write(CurrentProgression.currentQuestIds[m]);
 			writer.Write(CurrentProgression.currentQuestProgresses[m]);
+		}
+	}
+
+	public static void SerializePlaceholderNetworkState(BinaryWriter writer)
+	{
+		for (int i = 0; i < 6; i++)
+		{
+			writer.Write(0);
+		}
+		for (int j = 0; j < 2; j++)
+		{
+			writer.Write(0);
+		}
+		for (int k = 0; k < progressionSO.TreePageCount; k++)
+		{
+			for (int l = 0; l < progressionSO.TreeNodeCounts[k]; l++)
+			{
+				writer.Write(value: false);
+			}
+		}
+		writer.Write((byte)0);
+		writer.Write((byte)0);
+		writer.Write((byte)0);
+		for (int m = 0; m < 3; m++)
+		{
+			writer.Write(0);
+			writer.Write(0);
 		}
 	}
 
@@ -386,24 +414,6 @@ public class SIPlayer : MonoBehaviour, ITickSystemTick
 	public void SetProgressionLocal()
 	{
 		currentProgression = new ProgressionData(SIProgression.Instance);
-		int num = 0;
-		if (currentProgression.techTreeData != null)
-		{
-			for (int i = 0; i < currentProgression.techTreeData.Length; i++)
-			{
-				if (currentProgression.techTreeData[i] == null)
-				{
-					continue;
-				}
-				for (int j = 0; j < currentProgression.techTreeData[i].Length; j++)
-				{
-					if (currentProgression.techTreeData[i][j])
-					{
-						num++;
-					}
-				}
-			}
-		}
 		gamePlayer.SetInitializePlayer(initialized: true);
 		UpdateVisualsForAvailableQuestRedemption();
 	}

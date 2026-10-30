@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Bee Perch Point")]
 public class BeePerchPoint : MonoBehaviour
 {
 	[SerializeField]

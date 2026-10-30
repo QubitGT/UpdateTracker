@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [ExecuteInEditMode]
-public class CosmeticsDemoRig : MonoBehaviour
+public class CosmeticsDemoRig : MonoBehaviour, ISerializationCallbackReceiver
 {
 	[Serializable]
 	private struct EdSpawnedCosmetic
@@ -80,5 +80,22 @@ public class CosmeticsDemoRig : MonoBehaviour
 	public UnityEvent<Color> OnColorChange;
 
 	[SerializeField]
-	private EdSpawnedCosmetic[] spawnedCosmetics = new EdSpawnedCosmetic[16];
+	private EdSpawnedCosmetic[] spawnedCosmetics = new EdSpawnedCosmetic[35];
+
+	void ISerializationCallbackReceiver.OnBeforeSerialize()
+	{
+	}
+
+	void ISerializationCallbackReceiver.OnAfterDeserialize()
+	{
+		int num = 35;
+		if (spawnedCosmetics == null)
+		{
+			spawnedCosmetics = new EdSpawnedCosmetic[num];
+		}
+		else if (spawnedCosmetics.Length < num)
+		{
+			Array.Resize(ref spawnedCosmetics, num);
+		}
+	}
 }

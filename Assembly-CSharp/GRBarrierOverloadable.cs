@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Barrier Overloadable")]
 public class GRBarrierOverloadable : MonoBehaviour
 {
 	public enum State

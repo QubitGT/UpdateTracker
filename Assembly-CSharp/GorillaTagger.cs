@@ -21,6 +21,14 @@ using UnityEngine.XR;
 
 public class GorillaTagger : MonoBehaviour, IGuidedRefReceiverMono, IGuidedRefMonoBehaviour, IGuidedRefObject
 {
+	public enum FramerateHealthLevel
+	{
+		Good,
+		Fair,
+		Weak,
+		Poor
+	}
+
 	private struct StiltTagData
 	{
 		public bool isLeftHand;
@@ -113,19 +121,27 @@ public class GorillaTagger : MonoBehaviour, IGuidedRefReceiverMono, IGuidedRefMo
 
 	public int SmoothedFramerate;
 
-	private int _prevSmoothedFramerate;
+	public FramerateHealthLevel FramerateHealth;
 
-	public int FramerateHealth;
+	private float _framerateFairTimer;
 
-	private int _prevFramerateHealth;
+	private float _framerateWeakTimer;
 
-	private float _framerateHealthTimer;
+	private const int FRAMERATE_HEALTH_VARIANCE = 3;
+
+	private const int FRAMERATE_HEALTH_WEAK_DROP = 10;
+
+	private const float FRAMERATE_HEALTH_EXTENDED_DURATION = 5f;
+
+	private const float FRAMERATE_SAMPLE_INTERVAL = 0.1f;
 
 	private float[] _framerateTracker = new float[30];
 
 	private float _framerateTotal;
 
 	private int _framerateIndex;
+
+	private int _framerateSampleCount;
 
 	private float _framerateTimer;
 
@@ -564,6 +580,9 @@ public class GorillaTagger : MonoBehaviour, IGuidedRefReceiverMono, IGuidedRefMo
 	{
 		_framerateIndex = 0;
 		_framerateTotal = 0f;
+		_framerateSampleCount = 0;
+		_framerateFairTimer = 0f;
+		_framerateWeakTimer = 0f;
 		for (int i = 0; i < _framerateTracker.Length; i++)
 		{
 			_framerateTracker[i] = 0f;
@@ -637,38 +656,58 @@ public class GorillaTagger : MonoBehaviour, IGuidedRefReceiverMono, IGuidedRefMo
 				{
 					_framerateIndex = 0;
 				}
-				_prevSmoothedFramerate = SmoothedFramerate;
-				SmoothedFramerate = Mathf.RoundToInt(_framerateTotal / (float)_framerateTracker.Length);
-				_ = SmoothedFramerate;
-				_ = DebugHudStats.FPS_THRESHOLD;
+				if (_framerateSampleCount < _framerateTracker.Length)
+				{
+					_framerateSampleCount++;
+				}
+				SmoothedFramerate = Mathf.RoundToInt(_framerateTotal / (float)_framerateSampleCount);
+				int num2 = DebugHudStats.FPS_THRESHOLD + 1;
+				_framerateFairTimer = ((SmoothedFramerate < num2 - 3) ? (_framerateFairTimer + 0.1f) : 0f);
+				_framerateWeakTimer = ((SmoothedFramerate < num2 - 10) ? (_framerateWeakTimer + 0.1f) : 0f);
+				if (SmoothedFramerate < num2 / 2)
+				{
+					FramerateHealth = FramerateHealthLevel.Poor;
+				}
+				else if (_framerateWeakTimer > 5f)
+				{
+					FramerateHealth = FramerateHealthLevel.Weak;
+				}
+				else if (_framerateFairTimer > 5f)
+				{
+					FramerateHealth = FramerateHealthLevel.Fair;
+				}
+				else
+				{
+					FramerateHealth = FramerateHealthLevel.Good;
+				}
 			}
 		}
 		if (xrSubsystemIsActive && Application.platform != RuntimePlatform.Android && activeXRDisplay != null && activeXRDisplay.TryGetDisplayRefreshRate(out _defaultRefreshRate))
 		{
-			float num2 = (_forcePerfRefreshRate ? _perfRefreshRate : _defaultRefreshRate);
-			float num3 = 1f / num2;
-			if (num2 > 0f)
+			float num3 = (_forcePerfRefreshRate ? _perfRefreshRate : _defaultRefreshRate);
+			float num4 = 1f / num3;
+			if (num3 > 0f)
 			{
-				DebugHudStats.FPS_THRESHOLD = (int)num2 - 1;
+				DebugHudStats.FPS_THRESHOLD = (int)num3 - 1;
 			}
-			if (_forceFramerateCheck || Mathf.Abs(Time.fixedDeltaTime - num3) > 0.0001f)
+			if (_forceFramerateCheck || Mathf.Abs(Time.fixedDeltaTime - num4) > 0.0001f)
 			{
 				_forceFramerateCheck = false;
 				Debug.Log(" =========== Adjusting refresh size =========");
 				Debug.Log(" fixedDeltaTime before:\t" + Time.fixedDeltaTime);
-				Debug.Log(" Refresh rate         :\t" + num2);
-				Time.fixedDeltaTime = num3;
-				UpdateResolutionScale(num2 < _defaultRefreshRate);
+				Debug.Log(" Refresh rate         :\t" + num3);
+				Time.fixedDeltaTime = num4;
+				UpdateResolutionScale(num3 < _defaultRefreshRate);
 				Debug.Log(" fixedDeltaTime after :\t" + Time.fixedDeltaTime);
 				Debug.Log(" History size before  :\t" + GTPlayer.Instance.velocityHistorySize);
-				GTPlayer.Instance.velocityHistorySize = Mathf.Max(Mathf.Min(Mathf.FloorToInt(num2 * (1f / 12f)), 10), 6);
+				GTPlayer.Instance.velocityHistorySize = Mathf.Max(Mathf.Min(Mathf.FloorToInt(num3 * (1f / 12f)), 10), 6);
 				if (GTPlayer.Instance.velocityHistorySize > 9)
 				{
 					GTPlayer.Instance.velocityHistorySize--;
 				}
 				Debug.Log("New history size: " + GTPlayer.Instance.velocityHistorySize);
 				Debug.Log(" ============================================");
-				GTPlayer.Instance.slideControl = 1f - CalcSlideControl(num2);
+				GTPlayer.Instance.slideControl = 1f - CalcSlideControl(num3);
 				GTPlayer.Instance.InitializeValues();
 			}
 		}
@@ -679,40 +718,40 @@ public class GorillaTagger : MonoBehaviour, IGuidedRefReceiverMono, IGuidedRefMo
 		else if ((_forceFramerateCheck && OVRManager.instance != null) || (!_framerateUpdated && Application.platform == RuntimePlatform.Android && OVRManager.instance.gameObject.activeSelf))
 		{
 			InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
-			int num4 = OVRManager.display.displayFrequenciesAvailable.Length - 1;
-			float num5 = OVRManager.display.displayFrequenciesAvailable[num4];
+			int num5 = OVRManager.display.displayFrequenciesAvailable.Length - 1;
+			float num6 = OVRManager.display.displayFrequenciesAvailable[num5];
 			float systemDisplayFrequency = OVRPlugin.systemDisplayFrequency;
-			while (num5 > 90f)
+			while (num6 > 90f)
 			{
-				num4--;
-				if (num4 < 0)
+				num5--;
+				if (num5 < 0)
 				{
 					break;
 				}
-				num5 = OVRManager.display.displayFrequenciesAvailable[num4];
+				num6 = OVRManager.display.displayFrequenciesAvailable[num5];
 			}
-			_defaultRefreshRate = num5;
+			_defaultRefreshRate = num6;
 			if (_forcePerfRefreshRate)
 			{
-				num5 = _perfRefreshRate;
+				num6 = _perfRefreshRate;
 			}
-			float num6 = 1f;
-			float num7 = 1f / num5;
-			if (_forceFramerateCheck || Mathf.Abs(Time.fixedDeltaTime - num7 * num6) > 0.0001f)
+			float num7 = 1f;
+			float num8 = 1f / num6;
+			if (_forceFramerateCheck || Mathf.Abs(Time.fixedDeltaTime - num8 * num7) > 0.0001f)
 			{
 				_forceFramerateCheck = false;
-				float num8 = Time.fixedDeltaTime - num7 * num6;
+				float num9 = Time.fixedDeltaTime - num8 * num7;
 				Debug.Log(" =========== ADJUSTING REFRESH SIZE ========= ");
-				Debug.Log($"!!!! Time.fixedDeltaTime - (1f / newRefreshRate) * {num6}) {num8}");
+				Debug.Log($"!!!! Time.fixedDeltaTime - (1f / newRefreshRate) * {num7}) {num9}");
 				Debug.Log($"Old Refresh rate: {systemDisplayFrequency}");
-				Debug.Log($"New Refresh rate: {num5}");
+				Debug.Log($"New Refresh rate: {num6}");
 				Debug.Log($"   fixedDeltaTime before:\t{Time.fixedDeltaTime}");
-				Debug.Log($"   fixedDeltaTime after :\t{num7}");
-				Application.targetFrameRate = (int)num5;
-				Time.fixedDeltaTime = num7 * num6;
-				OVRPlugin.systemDisplayFrequency = num5;
-				UpdateResolutionScale(num5 <= 72f);
-				GTPlayer.Instance.velocityHistorySize = Mathf.FloorToInt(num5 * (1f / 12f));
+				Debug.Log($"   fixedDeltaTime after :\t{num8}");
+				Application.targetFrameRate = (int)num6;
+				Time.fixedDeltaTime = num8 * num7;
+				OVRPlugin.systemDisplayFrequency = num6;
+				UpdateResolutionScale(num6 <= 72f);
+				GTPlayer.Instance.velocityHistorySize = Mathf.FloorToInt(num6 * (1f / 12f));
 				if (GTPlayer.Instance.velocityHistorySize > 9)
 				{
 					GTPlayer.Instance.velocityHistorySize--;
@@ -731,22 +770,22 @@ public class GorillaTagger : MonoBehaviour, IGuidedRefReceiverMono, IGuidedRefMo
 		else if (!xrSubsystemIsActive && Application.platform != RuntimePlatform.Android)
 		{
 			_defaultRefreshRate = 144f;
-			int num9 = (_forcePerfRefreshRate ? ((int)_perfRefreshRate) : ((int)_defaultRefreshRate));
-			float num10 = 1f / (float)num9;
-			if (_forceFramerateCheck || Mathf.Abs(Time.fixedDeltaTime - num10) > 0.0001f)
+			int num10 = (_forcePerfRefreshRate ? ((int)_perfRefreshRate) : ((int)_defaultRefreshRate));
+			float num11 = 1f / (float)num10;
+			if (_forceFramerateCheck || Mathf.Abs(Time.fixedDeltaTime - num11) > 0.0001f)
 			{
 				_forceFramerateCheck = false;
-				Debug.Log($"Updating delta time. Was: {Time.fixedDeltaTime}. Now it's {num10} at framerate {num9}.");
-				Application.targetFrameRate = num9;
-				Time.fixedDeltaTime = num10;
-				UpdateResolutionScale((float)num9 < _defaultRefreshRate);
-				GTPlayer.Instance.velocityHistorySize = Mathf.Min(Mathf.FloorToInt((float)num9 * (1f / 12f)), 10);
+				Debug.Log($"Updating delta time. Was: {Time.fixedDeltaTime}. Now it's {num11} at framerate {num10}.");
+				Application.targetFrameRate = num10;
+				Time.fixedDeltaTime = num11;
+				UpdateResolutionScale((float)num10 < _defaultRefreshRate);
+				GTPlayer.Instance.velocityHistorySize = Mathf.Min(Mathf.FloorToInt((float)num10 * (1f / 12f)), 10);
 				if (GTPlayer.Instance.velocityHistorySize > 9)
 				{
 					GTPlayer.Instance.velocityHistorySize--;
 				}
 				Debug.Log($"New history size: {GTPlayer.Instance.velocityHistorySize}");
-				GTPlayer.Instance.slideControl = 1f - CalcSlideControl(num9);
+				GTPlayer.Instance.slideControl = 1f - CalcSlideControl(num10);
 				GTPlayer.Instance.InitializeValues();
 			}
 		}
@@ -762,33 +801,33 @@ public class GorillaTagger : MonoBehaviour, IGuidedRefReceiverMono, IGuidedRefMo
 		Vector3 position3 = headCollider.transform.position;
 		Vector3 position4 = bodyCollider.transform.position;
 		float scale = GTPlayer.Instance.scale;
-		float num11 = sphereCastRadius * scale;
+		float num12 = sphereCastRadius * scale;
 		bool bodyHit = false;
 		bool leftHandHit = false;
 		bool canTagHit = false;
 		bool canStunHit = false;
 		if (!(GorillaGameManager.instance is CasualGameMode))
 		{
-			nonAllocHits = Physics.OverlapCapsuleNonAlloc(lastLeftHandPositionForTag, position, num11, colliderOverlaps, gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
+			nonAllocHits = Physics.OverlapCapsuleNonAlloc(lastLeftHandPositionForTag, position, num12, colliderOverlaps, gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
 			TryTaggingAllHitsOverlap(isLeftHand: true, maxTagDistance);
-			nonAllocHits = Physics.OverlapCapsuleNonAlloc(position3, position, num11, colliderOverlaps, gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
+			nonAllocHits = Physics.OverlapCapsuleNonAlloc(position3, position, num12, colliderOverlaps, gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
 			TryTaggingAllHitsOverlap(isLeftHand: true, maxTagDistance);
-			nonAllocHits = Physics.OverlapCapsuleNonAlloc(lastRightHandPositionForTag, position2, num11, colliderOverlaps, gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
+			nonAllocHits = Physics.OverlapCapsuleNonAlloc(lastRightHandPositionForTag, position2, num12, colliderOverlaps, gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
 			TryTaggingAllHitsOverlap(isLeftHand: false, maxTagDistance);
-			nonAllocHits = Physics.OverlapCapsuleNonAlloc(position3, position2, num11, colliderOverlaps, gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
+			nonAllocHits = Physics.OverlapCapsuleNonAlloc(position3, position2, num12, colliderOverlaps, gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
 			TryTaggingAllHitsOverlap(isLeftHand: false, maxTagDistance);
 			for (int i = 0; i < 12; i++)
 			{
 				StiltTagData stiltTagData = this.stiltTagData[i];
 				if (stiltTagData.hasLastPosition && stiltTagData.hasCurrentPosition && (stiltTagData.canTag || stiltTagData.canStun))
 				{
-					nonAllocHits = Physics.OverlapCapsuleNonAlloc(stiltTagData.currentPositionForTag, stiltTagData.lastPositionForTag, num11, colliderOverlaps, gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
+					nonAllocHits = Physics.OverlapCapsuleNonAlloc(stiltTagData.currentPositionForTag, stiltTagData.lastPositionForTag, num12, colliderOverlaps, gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
 					TryTaggingAllHitsOverlap(i == 0 || i == 2, maxStiltTagDistance, stiltTagData.canTag, stiltTagData.canStun);
 				}
 			}
 			topVector = lastHeadPositionForTag;
 			bottomVector = lastBodyPositionForTag - bodyVector;
-			nonAllocHits = Physics.CapsuleCastNonAlloc(topVector, bottomVector, bodyCollider.radius * 2f * GTPlayer.Instance.scale, bodyRaycastSweep.normalized, nonAllocRaycastHits, Mathf.Max(bodyRaycastSweep.magnitude, num11), gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
+			nonAllocHits = Physics.CapsuleCastNonAlloc(topVector, bottomVector, bodyCollider.radius * 2f * GTPlayer.Instance.scale, bodyRaycastSweep.normalized, nonAllocRaycastHits, Mathf.Max(bodyRaycastSweep.magnitude, num12), gorillaTagColliderLayerMask, QueryTriggerInteraction.Collide);
 			TryTaggingAllHitsCapsulecast(maxTagDistance);
 		}
 		if (otherPlayer != null)

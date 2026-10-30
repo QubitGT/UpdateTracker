@@ -7,6 +7,7 @@ using UnityEngine.Serialization;
 [RequireComponent(typeof(GameGrabbable))]
 [RequireComponent(typeof(GameSnappable))]
 [RequireComponent(typeof(GameButtonActivatable))]
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Wrist Jet")]
 public class SIGadgetWristJet : SIGadget, I_SIDisruptable, IEnergyGadget
 {
 	private enum State
@@ -222,6 +223,7 @@ public class SIGadgetWristJet : SIGadget, I_SIDisruptable, IEnergyGadget
 		{
 			m_warnFuelLowSound.UnloadAudioData();
 		}
+		base.OnDisable();
 	}
 
 	protected override void Update()

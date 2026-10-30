@@ -2,6 +2,7 @@ using System;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Useable Object Events")]
 public class UseableObjectEvents : MonoBehaviour
 {
 	[NonSerialized]

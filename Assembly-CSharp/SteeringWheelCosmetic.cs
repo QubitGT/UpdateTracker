@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Steering Wheel Cosmetic")]
 public class SteeringWheelCosmetic : MonoBehaviour
 {
 	[SerializeField]

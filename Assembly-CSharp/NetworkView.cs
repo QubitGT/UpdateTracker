@@ -1,11 +1,9 @@
-using Fusion;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
-[RequireComponent(typeof(PhotonView), typeof(NetworkObject))]
-[NetworkBehaviourWeaved(0)]
-public class NetworkView : NetworkBehaviour, IStateAuthorityChanged, IPublicFacingInterface, IPunOwnershipCallbacks
+[RequireComponent(typeof(PhotonView))]
+public class NetworkView : MonoBehaviour, IPunOwnershipCallbacks
 {
 	[SerializeField]
 	private PhotonView punView;
@@ -14,14 +12,7 @@ public class NetworkView : NetworkBehaviour, IStateAuthorityChanged, IPublicFaci
 	private PhotonView reliableView;
 
 	[SerializeField]
-	internal NetworkObject fusionView;
-
-	[SerializeField]
 	protected bool _sceneObject;
-
-	private bool _spawned;
-
-	private bool changingStatAuth;
 
 	public bool IsMine
 	{
@@ -119,10 +110,6 @@ public class NetworkView : NetworkBehaviour, IStateAuthorityChanged, IPublicFaci
 		{
 			punView = GetComponent<PhotonView>();
 		}
-		if (fusionView == null)
-		{
-			fusionView = GetComponent<NetworkObject>();
-		}
 	}
 
 	protected virtual void Awake()
@@ -158,29 +145,9 @@ public class NetworkView : NetworkBehaviour, IStateAuthorityChanged, IPublicFaci
 		}
 	}
 
-	public override void Spawned()
-	{
-		base.Spawned();
-		_spawned = true;
-	}
-
 	public void RequestOwnership()
 	{
 		GetView.RequestOwnership();
-	}
-
-	public void ReleaseOwnership()
-	{
-		changingStatAuth = true;
-		base.Object.ReleaseStateAuthority();
-	}
-
-	public virtual void StateAuthorityChanged()
-	{
-		if (changingStatAuth)
-		{
-			changingStatAuth = false;
-		}
 	}
 
 	public virtual void OnOwnershipRequest(PhotonView targetView, Player requestingPlayer)
@@ -192,16 +159,6 @@ public class NetworkView : NetworkBehaviour, IStateAuthorityChanged, IPublicFaci
 	}
 
 	public virtual void OnOwnershipTransferFailed(PhotonView targetView, Player senderOfFailedRequest)
-	{
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
 	{
 	}
 }

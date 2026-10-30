@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New TeleportNode Definition", menuName = "Teleportation/TeleportNode Definition", order = 1)]
+[CreateAssetMenu(fileName = "New TeleportNode Definition", menuName = "ScriptableObjects/Gameplay/TeleportNode Definition", order = 1)]
 public class TeleportNodeDefinition : ScriptableObject
 {
 	[SerializeField]

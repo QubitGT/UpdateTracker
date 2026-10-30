@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Age Appeal Email Confirmation")]
 public class KIDUI_AgeAppealEmailConfirmation : MonoBehaviour
 {
 	[SerializeField]

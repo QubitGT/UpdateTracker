@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget List Entry")]
 public class SIGadgetListEntry : MonoBehaviour
 {
 	[SerializeField]

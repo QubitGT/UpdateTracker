@@ -5,6 +5,7 @@ using Liv.Lck.Cosmetics;
 using Liv.Lck.GorillaTag;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering.Universal;
 
 public class LckWallCameraSpawner : MonoBehaviour
 {
@@ -290,7 +291,7 @@ public class LckWallCameraSpawner : MonoBehaviour
 			_prewarmCamera.farClipPlane = main.farClipPlane;
 			_prewarmCamera.cullingMask = main.cullingMask;
 			_prewarmCamera.tag = "Untagged";
-			_prewarmCamera.stereoTargetEye = StereoTargetEyeMask.None;
+			_prewarmCamera.GetUniversalAdditionalCameraData().allowXRRendering = false;
 			_prewarmCamera.targetTexture = new RenderTexture(32, 32, GraphicsFormat.R8G8B8A8_UNorm, GraphicsFormat.D32_SFloat_S8_UInt);
 			_prewarmCamera.transform.SetPositionAndRotation(main.transform.position, main.transform.rotation);
 			StartCoroutine(DestroyPrewarmCameraDelayed());

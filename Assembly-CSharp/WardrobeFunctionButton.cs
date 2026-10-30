@@ -2,6 +2,7 @@ using System.Collections;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Wardrobe Function Button")]
 public class WardrobeFunctionButton : GorillaPressableButton
 {
 	public string function;

@@ -3,7 +3,7 @@ using GorillaGameModes;
 using GorillaTag;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "ScriptableObjects/RoomSystemSettings", order = 2)]
+[CreateAssetMenu(menuName = "ScriptableObjects/Networking/RoomSystemSettings", order = 2)]
 internal class RoomSystemSettings : ScriptableObject
 {
 	[SerializeField]

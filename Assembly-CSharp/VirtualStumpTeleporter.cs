@@ -7,6 +7,7 @@ using Modio.Mods;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Virtual Stump Teleporter")]
 public class VirtualStumpTeleporter : MonoBehaviour, IBuildValidation, IGorillaSliceableSimple
 {
 	[SerializeField]

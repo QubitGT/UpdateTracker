@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Bay")]
 public class GRBay : MonoBehaviour
 {
 	public List<GameObject> hideWhenOpen;

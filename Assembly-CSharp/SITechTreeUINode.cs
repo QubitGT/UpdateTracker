@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Tech Tree UI Node")]
 public class SITechTreeUINode : MonoBehaviour
 {
 	public SIUpgradeType upgradeType;

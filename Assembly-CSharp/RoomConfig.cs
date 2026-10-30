@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using ExitGames.Client.Photon;
-using Fusion;
 using Photon.Realtime;
 
 public class RoomConfig
@@ -80,12 +79,6 @@ public class RoomConfig
 			PublishUserId = true,
 			CustomRoomPropertiesForLobby = AutoCustomLobbyProps()
 		};
-	}
-
-	public void SetFusionOpts(NetworkRunner runnerInst)
-	{
-		runnerInst.SessionInfo.IsVisible = isPublic;
-		runnerInst.SessionInfo.IsOpen = isJoinable;
 	}
 
 	public static RoomConfig SPConfig()

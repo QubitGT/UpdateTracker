@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "JoinTriggerUITemplate", menuName = "ScriptableObjects/JoinTriggerUITemplate")]
+[CreateAssetMenu(fileName = "JoinTriggerUITemplate", menuName = "ScriptableObjects/UI/JoinTriggerUITemplate")]
 public class JoinTriggerUITemplate : ScriptableObject
 {
 	[Serializable]

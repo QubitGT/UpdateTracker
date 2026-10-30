@@ -173,12 +173,12 @@ public class EdibleHoldable : TransferrableObject
 			{
 				if (flag2)
 				{
-					lastBiterActorID = ((!vRRig) ? (-1) : (vRRig.OwningNetPlayer?.ActorNumber ?? (-1)));
+					lastBiterActorID = ((!vRRig) ? (-1) : (vRRig.Creator?.ActorNumber ?? (-1)));
 					onBiteView?.Invoke(vRRig, (int)itemState);
 				}
 				else
 				{
-					lastBiterActorID = ((!vRRig2) ? (-1) : (vRRig2.OwningNetPlayer?.ActorNumber ?? (-1)));
+					lastBiterActorID = ((!vRRig2) ? (-1) : (vRRig2.Creator?.ActorNumber ?? (-1)));
 					onBiteWorld?.Invoke(vRRig2, (int)itemState);
 				}
 			}

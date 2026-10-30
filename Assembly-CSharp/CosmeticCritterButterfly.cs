@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Critter Butterfly")]
 public class CosmeticCritterButterfly : CosmeticCritter
 {
 	[Tooltip("The speed this Butterfly will move at.")]

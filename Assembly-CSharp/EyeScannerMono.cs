@@ -9,6 +9,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Eye Scanner Mono")]
 public class EyeScannerMono : MonoBehaviour, ISpawnable, IGorillaSliceableSimple
 {
 	[FormerlySerializedAs("_scanDistance")]

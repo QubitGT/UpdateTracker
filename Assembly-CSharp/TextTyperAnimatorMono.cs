@@ -7,6 +7,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Text Typer Animator Mono")]
 public class TextTyperAnimatorMono : MonoBehaviour, IGorillaSliceableSimple
 {
 	[FormerlySerializedAs("_textMesh")]

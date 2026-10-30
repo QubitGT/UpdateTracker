@@ -1,6 +1,7 @@
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Shade Jumpscare")]
 public class ShadeJumpscare : MonoBehaviour
 {
 	[SerializeField]

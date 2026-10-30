@@ -3,6 +3,7 @@ using GorillaTag.CosmeticSystem;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Mood Ring")]
 public class MoodRing : MonoBehaviour, ISpawnable
 {
 	[SerializeField]

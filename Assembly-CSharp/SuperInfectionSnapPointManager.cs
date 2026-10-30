@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using GorillaTag;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Super Infection Snap Point Manager")]
 public class SuperInfectionSnapPointManager : MonoBehaviour
 {
 	public List<SuperInfectionSnapPoint> SnapPoints;

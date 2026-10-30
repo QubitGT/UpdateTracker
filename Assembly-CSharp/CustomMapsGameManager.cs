@@ -5,6 +5,7 @@ using GT_CustomMapSupportRuntime;
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Game Manager")]
 public class CustomMapsGameManager : MonoBehaviour, IGameEntityZoneComponent
 {
 	public GameEntityManager gameEntityManager;

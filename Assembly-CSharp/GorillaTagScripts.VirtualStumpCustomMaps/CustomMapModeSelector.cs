@@ -30,6 +30,8 @@ public class CustomMapModeSelector : GameModeSelectorButtonLayout
 
 	private static string reusableString = "";
 
+	public static GameModeType DefaultGamemodeForLoadedMap => defaultGamemodeForLoadedMap;
+
 	private void Awake()
 	{
 		instances.AddIfNew(this);
@@ -40,7 +42,6 @@ public class CustomMapModeSelector : GameModeSelectorButtonLayout
 		if (GorillaComputer.instance != null)
 		{
 			SetupButtons();
-			GorillaComputer.instance.SetGameModeWithoutButton(defaultGamemodeForLoadedMap.ToString());
 		}
 		RoomSystem.JoinedRoomEvent += new Action(OnJoinedRoom);
 		NetworkSystem.Instance.OnMasterClientSwitchedEvent += new Action<NetPlayer>(OnRoomHostSwitched);

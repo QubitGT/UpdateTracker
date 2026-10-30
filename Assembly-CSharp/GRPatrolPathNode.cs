@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Patrol Path Node")]
 public class GRPatrolPathNode : MonoBehaviour
 {
 	public void OnDrawGizmosSelected()

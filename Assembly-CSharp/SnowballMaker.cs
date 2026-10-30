@@ -4,6 +4,7 @@ using GorillaLocomotion;
 using GorillaTag;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Snowball Maker")]
 public class SnowballMaker : MonoBehaviourPostTick
 {
 	public bool isLeftHand;

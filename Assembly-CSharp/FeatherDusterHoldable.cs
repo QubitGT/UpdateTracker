@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Feather Duster Holdable")]
 public class FeatherDusterHoldable : MonoBehaviour, IGorillaSliceableSimple
 {
 	public LayerMask collisionLayer;

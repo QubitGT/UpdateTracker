@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Boss Eye Stare")]
 public class GRBossEyeStare : MonoBehaviour, IGorillaSliceableSimple
 {
 	private Vector3 lastLocalRot;

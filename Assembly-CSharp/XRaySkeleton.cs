@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/X Ray Skeleton")]
 public class XRaySkeleton : SyncToPlayerColor, IGorillaSimpleBackgroundWorker
 {
 	public SkinnedMeshRenderer renderer;

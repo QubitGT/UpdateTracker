@@ -1,4 +1,3 @@
-using Fusion;
 using Photon.Pun;
 
 public struct PhotonMessageInfoWrapped
@@ -21,14 +20,6 @@ public struct PhotonMessageInfoWrapped
 		punInfo = info;
 	}
 
-	public PhotonMessageInfoWrapped(RpcInfo info)
-	{
-		senderID = info.Source.PlayerId;
-		Sender = NetPlayer.Get(info.Source);
-		sentTick = info.Tick.Raw;
-		punInfo = default(PhotonMessageInfo);
-	}
-
 	public PhotonMessageInfoWrapped(int playerID, int tick)
 	{
 		senderID = playerID;
@@ -46,11 +37,6 @@ public struct PhotonMessageInfoWrapped
 	}
 
 	public static implicit operator PhotonMessageInfoWrapped(PhotonMessageInfo info)
-	{
-		return new PhotonMessageInfoWrapped(info);
-	}
-
-	public static implicit operator PhotonMessageInfoWrapped(RpcInfo info)
 	{
 		return new PhotonMessageInfoWrapped(info);
 	}

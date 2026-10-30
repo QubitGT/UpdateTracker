@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Hand Scanner")]
 public class SIHandScanner : MonoBehaviour
 {
 	public UnityEvent<int> onHandScanned;

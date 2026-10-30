@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Geode Atm Trigger")]
 public class GeodeAtmTrigger : MonoBehaviour
 {
 	[SerializeField]

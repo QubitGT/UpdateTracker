@@ -3,6 +3,7 @@ using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Food")]
 public class CrittersFood : CrittersActor
 {
 	public float maxFood;

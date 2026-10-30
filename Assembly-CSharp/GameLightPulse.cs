@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Light Pulse")]
 public class GameLightPulse : GameLight, IGorillaSliceableSimple
 {
 	private float startingIntensity;

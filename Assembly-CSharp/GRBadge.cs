@@ -3,6 +3,7 @@ using GorillaNetworking;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Badge")]
 public class GRBadge : MonoBehaviour, IGameEntityComponent
 {
 	public enum BadgeState

@@ -221,14 +221,14 @@ public class CustomMapsAttackBehaviour : CustomMapsBehaviourBase
 			}
 			else
 			{
-				CustomGameMode.TaggedByAI(controller.entity, gRPlayer.MyRig.OwningNetPlayer.ActorNumber);
+				CustomGameMode.TaggedByAI(controller.entity, gRPlayer.MyRig.Creator.ActorNumber);
 			}
 			break;
 		case AttackType.UseGT:
 			CustomMapsGameManager.instance.OnPlayerHit(controller.entity.id, gRPlayer, controller.transform.position);
 			break;
 		case AttackType.UseLuau:
-			CustomGameMode.OnPlayerHit(controller.entity, gRPlayer.MyRig.OwningNetPlayer.ActorNumber, damageAmount);
+			CustomGameMode.OnPlayerHit(controller.entity, gRPlayer.MyRig.Creator.ActorNumber, damageAmount);
 			break;
 		}
 	}

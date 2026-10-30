@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GorillaLocomotion.Swimming;
 
-[CreateAssetMenu(fileName = "Data", menuName = "ScriptableObjects/WaterParameters", order = 1)]
+[CreateAssetMenu(fileName = "Data", menuName = "ScriptableObjects/Locomotion/WaterParameters", order = 1)]
 public class WaterParameters : ScriptableObject
 {
 	[Header("Splash Effect")]

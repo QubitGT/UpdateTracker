@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Playable Boundary Tracker")]
 public class PlayableBoundaryTracker : MonoBehaviour
 {
 	public float radius = 1f;

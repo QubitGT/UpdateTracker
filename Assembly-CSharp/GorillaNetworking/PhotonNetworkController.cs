@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ExitGames.Client.Photon;
-using Fusion;
 using GorillaGameModes;
 using GorillaLocomotion;
 using GorillaNetworking.ScheduledEvents;
@@ -112,10 +111,6 @@ public class PhotonNetworkController : MonoBehaviour
 	private float partyJoinDeferredUntilTimestamp;
 
 	private DateTime? timeWhenApplicationPaused;
-
-	[NetworkPrefab]
-	[SerializeField]
-	private NetworkObject testPlayerPrefab;
 
 	private string roomToJoin = "";
 
@@ -591,7 +586,7 @@ public class PhotonNetworkController : MonoBehaviour
 		VRRigCache.Instance.InstantiateNetworkObject();
 		if (NetworkSystem.Instance.IsMasterClient)
 		{
-			GorillaGameModes.GameMode.LoadGameModeFromProperty(initialGameMode);
+			GameMode.LoadGameModeFromProperty(initialGameMode);
 		}
 		GorillaComputer.instance.roomFull = false;
 		GorillaComputer.instance.roomNotAllowed = false;

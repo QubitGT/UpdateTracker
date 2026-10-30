@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Spawn Sound On Enable")]
 public class SpawnSoundOnEnable : MonoBehaviour
 {
 	public int soundSubIndex = 3;

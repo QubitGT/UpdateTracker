@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Mask Cyclops Eye")]
 public class MaskCyclopsEye : MonoBehaviour
 {
 	[Tooltip("Invoked when it's time to trigger a blink (e.g., play animation one-shot).")]

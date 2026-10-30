@@ -24,5 +24,6 @@ public enum SceneIndex
 	Rewind_2024_02_Forest,
 	VIMDig_Cave,
 	SpaceMap,
-	VIMGravityRush_Cave
+	VIMGravityRush_Cave,
+	VIMBasementMaze
 }

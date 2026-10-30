@@ -1,10 +1,8 @@
 using System;
 using BoingKit;
-using Fusion;
 using GorillaTag;
 using Photon.Pun;
 using UnityEngine;
-using UnityEngine.Scripting;
 
 public class GTDoor : NetworkSceneObject
 {
@@ -311,61 +309,6 @@ public class GTDoor : NetworkSceneObject
 		ChangeDoorStateShared(shouldOpenState);
 	}
 
-	[Rpc]
-	public unsafe static void RPC_ChangeDoorState(NetworkRunner runner, DoorState shouldOpenState, int doorId)
-	{
-		if (NetworkBehaviourUtils.InvokeRpc)
-		{
-			NetworkBehaviourUtils.InvokeRpc = false;
-		}
-		else
-		{
-			if ((object)runner == null)
-			{
-				throw new ArgumentNullException("runner");
-			}
-			if (runner.Stage == SimulationStages.Resimulate)
-			{
-				return;
-			}
-			int num = 8;
-			num += 4;
-			num += 4;
-			if (!SimulationMessage.CanAllocateUserPayload(num))
-			{
-				NetworkBehaviourUtils.NotifyRpcPayloadSizeExceeded("System.Void GTDoor::RPC_ChangeDoorState(Fusion.NetworkRunner,GTDoor/DoorState,System.Int32)", num);
-				return;
-			}
-			if (runner.HasAnyActiveConnections())
-			{
-				SimulationMessage* ptr = SimulationMessage.Allocate(runner.Simulation, num);
-				byte* ptr2 = (byte*)ptr + 28;
-				*(RpcHeader*)ptr2 = RpcHeader.Create(NetworkBehaviourUtils.GetRpcStaticIndexOrThrow("System.Void GTDoor::RPC_ChangeDoorState(Fusion.NetworkRunner,GTDoor/DoorState,System.Int32)"));
-				int num2 = 8;
-				*(DoorState*)(ptr2 + num2) = shouldOpenState;
-				num2 += 4;
-				*(int*)(ptr2 + num2) = doorId;
-				num2 += 4;
-				ptr->Offset = num2 * 8;
-				ptr->SetStatic();
-				runner.SendRpc(ptr);
-			}
-		}
-		GTDoor[] array = UnityEngine.Object.FindObjectsByType<GTDoor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-		if (array == null || array.Length == 0)
-		{
-			return;
-		}
-		GTDoor[] array2 = array;
-		foreach (GTDoor gTDoor in array2)
-		{
-			if (gTDoor.GTDoorID == doorId)
-			{
-				gTDoor.ChangeDoorStateShared(shouldOpenState);
-			}
-		}
-	}
-
 	private void ChangeDoorStateShared(DoorState shouldOpenState)
 	{
 		switch (shouldOpenState)
@@ -437,22 +380,5 @@ public class GTDoor : NetworkSceneObject
 		{
 			array[i].GTDoorID = i + 1;
 		}
-	}
-
-	[NetworkRpcStaticWeavedInvoker("System.Void GTDoor::RPC_ChangeDoorState(Fusion.NetworkRunner,GTDoor/DoorState,System.Int32)")]
-	[Preserve]
-	[WeaverGenerated]
-	protected unsafe static void RPC_ChangeDoorState_0040Invoker(NetworkRunner runner, SimulationMessage* message)
-	{
-		byte* ptr = (byte*)message + 28;
-		int num = 8;
-		int num2 = *(int*)(ptr + num);
-		num += 4;
-		DoorState shouldOpenState = (DoorState)num2;
-		int num3 = *(int*)(ptr + num);
-		num += 4;
-		int doorId = num3;
-		NetworkBehaviourUtils.InvokeRpc = true;
-		RPC_ChangeDoorState(runner, shouldOpenState, doorId);
 	}
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Localization.SmartFormat.PersistentVariables;
 
+[AddComponentMenu("GorillaTag/KID/KID Age Gate Confirmation")]
 public class KIDAgeGateConfirmation : MonoBehaviour
 {
 	[Header("Localization")]

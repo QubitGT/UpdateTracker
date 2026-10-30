@@ -2,6 +2,7 @@ using GorillaLocomotion;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Force Disable Hoverboard Trigger")]
 public class ForceDisableHoverboardTrigger : MonoBehaviour
 {
 	public bool reEnableOnlyInVStump = true;

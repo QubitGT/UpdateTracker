@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GorillaTag;
 
-[CreateAssetMenu(fileName = "GorillaButtonColorSettings", menuName = "ScriptableObjects/GorillaButtonColorSettings", order = 0)]
+[CreateAssetMenu(fileName = "GorillaButtonColorSettings", menuName = "ScriptableObjects/UI/GorillaButtonColorSettings", order = 0)]
 public class ButtonColorSettings : ScriptableObject
 {
 	public Color UnpressedColor;

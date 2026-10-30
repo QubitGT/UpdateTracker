@@ -1,6 +1,7 @@
 using GorillaLocomotion;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Grenade Gravity")]
 public class SIGadgetGrenadeGravity : SIGadgetGrenade
 {
 	private enum State

@@ -3,6 +3,7 @@ using GorillaNetworking;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Wardrobe")]
 public class CosmeticWardrobe : MonoBehaviour
 {
 	[Serializable]
@@ -226,7 +227,7 @@ public class CosmeticWardrobe : MonoBehaviour
 			{
 				break;
 			}
-			if (VRRig.LocalRig.cosmeticsObjectRegistry.Cosmetic(cosmeticCollectionDisplays[i].currentCosmeticItem.itemName) == null)
+			if (cosmeticCollectionDisplays[i].currentCosmeticItem.itemCategory != CosmeticsController.CosmeticCategory.Hoverboard && VRRig.LocalRig.cosmeticsObjectRegistry.Cosmetic(cosmeticCollectionDisplays[i].currentCosmeticItem.itemName) == null)
 			{
 				RepressButton(button, isLeft, cosmeticCollectionDisplays[i].currentCosmeticItem.itemName);
 				continue;

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using ExitGames.Client.Photon;
-using Fusion;
 using GorillaGameModes;
 using GorillaLocomotion;
 using GorillaNetworking;
@@ -10,10 +9,8 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
-public abstract class GorillaGameManager : MonoBehaviourPunCallbacks, ITickSystemTick, IWrappedSerializable, INetworkStruct
+public abstract class GorillaGameManager : MonoBehaviourPunCallbacks, ITickSystemTick, IWrappedSerializable
 {
-	public delegate void OnTouchDelegate(NetPlayer taggedPlayer, NetPlayer taggingPlayer);
-
 	protected const string GAME_MODE_NONE_KEY = "GAME_MODE_NONE";
 
 	protected const string GAME_MODE_CASUAL_ROOM_LABEL_KEY = "GAME_MODE_CASUAL_ROOM_LABEL";
@@ -82,13 +79,11 @@ public abstract class GorillaGameManager : MonoBehaviourPunCallbacks, ITickSyste
 
 	private GameModeSerializer serializer;
 
-	public static GorillaGameManager instance => GorillaGameModes.GameMode.ActiveGameMode;
+	public static GorillaGameManager instance => GameMode.ActiveGameMode;
 
 	bool ITickSystemTick.TickRunning { get; set; }
 
 	internal GameModeSerializer Serializer => serializer;
-
-	public static event OnTouchDelegate OnTouch;
 
 	public static string GameModeEnumToName(GameModeType gameMode)
 	{
@@ -114,7 +109,7 @@ public abstract class GorillaGameManager : MonoBehaviourPunCallbacks, ITickSyste
 			lastCheck = Time.time;
 			if (NetworkSystem.Instance.IsMasterClient && !ValidGameMode())
 			{
-				GorillaGameModes.GameMode.ChangeGameFromProperty();
+				GameMode.ChangeGameFromProperty();
 			}
 			else
 			{
@@ -125,7 +120,7 @@ public abstract class GorillaGameManager : MonoBehaviourPunCallbacks, ITickSyste
 
 	public virtual void InfrequentUpdate()
 	{
-		GorillaGameModes.GameMode.RefreshPlayers();
+		GameMode.RefreshPlayers();
 		currentNetPlayerArray = NetworkSystem.Instance.AllNetPlayers;
 	}
 
@@ -322,12 +317,6 @@ public abstract class GorillaGameManager : MonoBehaviourPunCallbacks, ITickSyste
 	{
 		return GameType().ToString();
 	}
-
-	public abstract void AddFusionDataBehaviour(NetworkObject behaviour);
-
-	public abstract void OnSerializeRead(object newData);
-
-	public abstract object OnSerializeWrite();
 
 	public abstract void OnSerializeRead(PhotonStream stream, PhotonMessageInfo info);
 

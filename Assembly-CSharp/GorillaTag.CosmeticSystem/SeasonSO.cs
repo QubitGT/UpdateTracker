@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GorillaTag.CosmeticSystem;
 
-[CreateAssetMenu(fileName = "UntitledSeason_SeasonSO", menuName = "- Gorilla Tag/SeasonSO", order = 0)]
+[CreateAssetMenu(fileName = "UntitledSeason_SeasonSO", menuName = "GorillaTag/Cosmetics/SeasonSO", order = 0)]
 public class SeasonSO : ScriptableObject
 {
 	[Delayed]

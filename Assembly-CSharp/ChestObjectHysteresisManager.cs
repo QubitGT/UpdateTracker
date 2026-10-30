@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [DefaultExecutionOrder(2000)]
+[AddComponentMenu("GorillaTag/Cosmetics/Chest Object Hysteresis Manager")]
 public class ChestObjectHysteresisManager : MonoBehaviourTick
 {
 	public static ChestObjectHysteresisManager instance;

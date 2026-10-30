@@ -1,6 +1,7 @@
 using GorillaLocomotion;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Manipulatable Object")]
 public class ManipulatableObject : HoldableObject
 {
 	protected bool isHeld;

@@ -6,6 +6,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Lighting Manager")]
 public class GameLightingManager : MonoBehaviourTick, IGorillaSliceableSimple
 {
 	private struct LightInput

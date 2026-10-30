@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Fusion;
 using GorillaGameModes;
 using GorillaNetworking;
 using Photon.Pun;
@@ -108,11 +107,6 @@ public sealed class GorillaPaintbrawlManager : GorillaGameManager
 	public override GameModeType GameType()
 	{
 		return GameModeType.Paintbrawl;
-	}
-
-	public override void AddFusionDataBehaviour(NetworkObject behaviour)
-	{
-		behaviour.AddBehaviour<BattleGameModeData>();
 	}
 
 	public override string GameModeName()
@@ -295,7 +289,7 @@ public sealed class GorillaPaintbrawlManager : GorillaGameManager
 			{
 				Transition(PaintbrawlState.GameEnd);
 				PlayerGameEvents.GameModeCompleteRound();
-				GorillaGameModes.GameMode.BroadcastRoundComplete();
+				GameMode.BroadcastRoundComplete();
 			}
 			if ((float)RoomSystem.PlayersInRoom.Count < playerMin)
 			{
@@ -535,27 +529,6 @@ public sealed class GorillaPaintbrawlManager : GorillaGameManager
 		{
 			playerStatusDict.Remove(otherPlayer.ActorNumber);
 		}
-	}
-
-	public override void OnSerializeRead(object newData)
-	{
-		PaintbrawlData paintbrawlData = (PaintbrawlData)newData;
-		paintbrawlData.playerActorNumberArray.CopyTo(playerActorNumberArray);
-		paintbrawlData.playerLivesArray.CopyTo(playerLivesArray);
-		paintbrawlData.playerStatusArray.CopyTo(playerStatusArray);
-		currentState = paintbrawlData.currentPaintbrawlState;
-		CopyArrayToBattleDict();
-	}
-
-	public override object OnSerializeWrite()
-	{
-		CopyBattleDictToArray();
-		PaintbrawlData paintbrawlData = default(PaintbrawlData);
-		paintbrawlData.playerActorNumberArray.CopyFrom(playerActorNumberArray, 0, playerActorNumberArray.Length);
-		paintbrawlData.playerLivesArray.CopyFrom(playerLivesArray, 0, playerLivesArray.Length);
-		paintbrawlData.playerStatusArray.CopyFrom(playerStatusArray, 0, playerStatusArray.Length);
-		paintbrawlData.currentPaintbrawlState = currentState;
-		return paintbrawlData;
 	}
 
 	public override void OnSerializeWrite(PhotonStream stream, PhotonMessageInfo info)

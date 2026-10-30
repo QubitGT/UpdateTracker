@@ -138,9 +138,9 @@ public class GorillaPawn : MonoBehaviour
 		if (CanRun())
 		{
 			_id = -1;
-			if ((bool)_rig && _rig.OwningNetPlayer != null)
+			if ((bool)_rig && _rig.Creator != null)
 			{
-				_id = _rig.OwningNetPlayer.ActorNumber;
+				_id = _rig.Creator.ActorNumber;
 			}
 			_index = _gPawnActiveCount++;
 			_gPawns[_index] = this;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KID Age Appeal")]
 public class KIDAgeAppeal : MonoBehaviour
 {
 	[SerializeField]

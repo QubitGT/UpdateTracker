@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Upgrade Piece")]
 public class GRToolUpgradePiece : MonoBehaviour, IGameEntityComponent
 {
 	public GameEntity gameEntity;

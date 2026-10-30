@@ -61,7 +61,7 @@ public class Breakable : MonoBehaviour
 	private void BreakRPC(int owner, PhotonSignalInfo info)
 	{
 		VRRig vRRig = GetComponent<OwnerRig>();
-		if (!(vRRig == null) && vRRig.OwningNetPlayer.ActorNumber == owner && m_spamChecker.CheckCallTime(Time.unscaledTime))
+		if (!(vRRig == null) && vRRig.Creator != null && vRRig.Creator.ActorNumber == owner && m_spamChecker.CheckCallTime(Time.unscaledTime))
 		{
 			OnBreak(callback: true, signal: false);
 		}
@@ -126,6 +126,11 @@ public class Breakable : MonoBehaviour
 		_broken = false;
 		OnReset(callback: false);
 		ShowRenderers(visible: false);
+	}
+
+	private void OnDestroy()
+	{
+		_breakSignal.OnSignal -= BreakRPC;
 	}
 
 	public void Break()
@@ -201,9 +206,9 @@ public class Breakable : MonoBehaviour
 		if (signal && PhotonNetwork.InRoom)
 		{
 			VRRig vRRig = GetComponent<OwnerRig>();
-			if (vRRig != null)
+			if (vRRig != null && vRRig.Creator != null)
 			{
-				_breakSignal.Raise(vRRig.OwningNetPlayer.ActorNumber);
+				_breakSignal.Raise(vRRig.Creator.ActorNumber);
 			}
 		}
 		ShowRenderers(visible: false);

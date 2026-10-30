@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using Fusion;
 using GorillaExtensions;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.AI;
 
-[NetworkBehaviourWeaved(5)]
 public class HalloweenGhostChaser : AnnoyingNetworkComponent
 {
 	public enum ChaseState
@@ -18,26 +15,6 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 		Gong = 4,
 		Chasing = 8,
 		Grabbing = 0x10
-	}
-
-	[StructLayout(LayoutKind.Explicit, Size = 20)]
-	[NetworkStructWeaved(5)]
-	public struct GhostData : INetworkStruct
-	{
-		[FieldOffset(0)]
-		public int TargetActorNumber;
-
-		[FieldOffset(4)]
-		public int CurrentState;
-
-		[FieldOffset(8)]
-		public int SpawnIndex;
-
-		[FieldOffset(12)]
-		public float CurrentSpeed;
-
-		[FieldOffset(16)]
-		public NetworkBool IsSummoned;
 	}
 
 	public float heightAboveNavmesh = 0.5f;
@@ -182,34 +159,6 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 	private float nextPathTimestamp;
 
 	private bool allowedToRun = true;
-
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("Data", 0, 5)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private GhostData _Data;
-
-	[Networked]
-	[NetworkedWeaved(0, 5)]
-	public unsafe GhostData Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing HalloweenGhostChaser.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(GhostData*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing HalloweenGhostChaser.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(GhostData*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	protected override void Awake()
 	{
@@ -684,31 +633,6 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 		}
 	}
 
-	public override void WriteDataFusion()
-	{
-		GhostData data = default(GhostData);
-		data.TargetActorNumber = targetPlayer?.ActorNumber ?? (-1);
-		data.CurrentState = (int)currentState;
-		data.SpawnIndex = spawnIndex;
-		data.CurrentSpeed = currentSpeed;
-		data.IsSummoned = isSummoned;
-		Data = data;
-	}
-
-	public override void ReadDataFusion()
-	{
-		int targetActorNumber = Data.TargetActorNumber;
-		targetPlayer = NetworkSystem.Instance.GetPlayer(targetActorNumber);
-		currentState = (ChaseState)Data.CurrentState;
-		spawnIndex = Data.SpawnIndex;
-		float f = Data.CurrentSpeed;
-		isSummoned = Data.IsSummoned;
-		if (float.IsFinite(f))
-		{
-			currentSpeed = f;
-		}
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (NetworkSystem.Instance.GetPlayer(info.Sender) == NetworkSystem.Instance.MasterClient)
@@ -769,19 +693,5 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 	public override void Allowed(bool v)
 	{
 		allowedToRun = v;
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
 	}
 }

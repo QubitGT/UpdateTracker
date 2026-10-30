@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "BuilderMaterialResourceColors", menuName = "Gorilla Tag/Builder/ResourceColors", order = 0)]
+[CreateAssetMenu(fileName = "BuilderMaterialResourceColors", menuName = "GorillaTag/Builder/ResourceColors", order = 0)]
 public class BuilderResourceColors : ScriptableObject
 {
 	public List<BuilderResourceColor> colors;

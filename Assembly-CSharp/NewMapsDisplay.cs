@@ -9,6 +9,7 @@ using Modio.Unity;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/New Maps Display")]
 public class NewMapsDisplay : MonoBehaviour
 {
 	private struct NewMapData

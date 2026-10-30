@@ -11,6 +11,7 @@ using Oculus.Platform.Models;
 using UnityEngine;
 using UnityEngine.Networking;
 
+[AddComponentMenu("GorillaTag/Seasonal/Monke Vote Controller")]
 public class MonkeVoteController : MonoBehaviour, IGorillaSliceableSimple
 {
 	[Serializable]

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Mod IO Terms Of Use_v1")]
 public class ModIOTermsOfUse_v1 : MonoBehaviour
 {
 	[SerializeField]

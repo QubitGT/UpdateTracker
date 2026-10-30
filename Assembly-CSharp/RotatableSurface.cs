@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Rotatable Surface")]
 public class RotatableSurface : MonoBehaviour
 {
 	public ManipulatableSpinner spinner;

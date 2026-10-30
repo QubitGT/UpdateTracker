@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Seasonal/Gorilla Prop Hunt Game Manager")]
 public sealed class GorillaPropHuntGameManager : GorillaTagManager
 {
 	private enum EPropHuntGameState
@@ -445,18 +446,18 @@ public sealed class GorillaPropHuntGameManager : GorillaTagManager
 		{
 			VRRig vRRig = _g_ph_activePlayerRigs[i];
 			bool flag = vRRig.zoneEntity.currentZone == GTZone.bayou && vRRig.zoneEntity.currentSubZone != GTSubZone.entrance_tunnel;
-			bool flag2 = GameMode.ParticipatingPlayers.Contains(vRRig.OwningNetPlayer);
+			bool flag2 = GameMode.ParticipatingPlayers.Contains(vRRig.Creator);
 			if (flag && !flag2)
 			{
-				GameMode.OptIn(vRRig.OwningNetPlayer.ActorNumber);
+				GameMode.OptIn(vRRig.Creator.ActorNumber);
 			}
 			else if (!flag && flag2)
 			{
-				GameMode.OptOut(vRRig.OwningNetPlayer.ActorNumber);
-				_SetPlayerBlindfoldVisibility(vRRig, vRRig.OwningNetPlayer, shouldEnable: false);
+				GameMode.OptOut(vRRig.Creator.ActorNumber);
+				_SetPlayerBlindfoldVisibility(vRRig, vRRig.Creator, shouldEnable: false);
 			}
 		}
-		_ph_isLocalPlayerParticipating = GameMode.ParticipatingPlayers.Contains(VRRig.LocalRig.OwningNetPlayer);
+		_ph_isLocalPlayerParticipating = GameMode.ParticipatingPlayers.Contains(VRRig.LocalRig.Creator);
 		m_ph_soundNearBorder_audioSource.gameObject.SetActive(_ph_isLocalPlayerParticipating);
 	}
 
@@ -561,7 +562,7 @@ public sealed class GorillaPropHuntGameManager : GorillaTagManager
 				for (int i = 0; i < _g_ph_activePlayerRigs.Count; i++)
 				{
 					VRRig vRRig = _g_ph_activePlayerRigs[i];
-					_SetPlayerBlindfoldVisibility(vRRig, vRRig.OwningNetPlayer, shouldEnable: false);
+					_SetPlayerBlindfoldVisibility(vRRig, vRRig.Creator, shouldEnable: false);
 				}
 			}
 			int num2 = m_ph_playState_startLightning_strikeTimes.Length;
@@ -628,7 +629,7 @@ public sealed class GorillaPropHuntGameManager : GorillaTagManager
 
 	private bool _GetRigShouldBeSkeleton(VRRig rig, List<NetPlayer> participatingPlayers)
 	{
-		if (rig.zoneEntity.currentZone == GTZone.bayou && participatingPlayers.Count >= 2 && participatingPlayers.Contains(rig.OwningNetPlayer))
+		if (rig.zoneEntity.currentZone == GTZone.bayou && participatingPlayers.Count >= 2 && participatingPlayers.Contains(rig.Creator))
 		{
 			return !IsInfected(rig.Creator);
 		}
@@ -667,7 +668,7 @@ public sealed class GorillaPropHuntGameManager : GorillaTagManager
 			num2 = value.prevSignedDistanceToBoundary;
 			if (PhotonNetwork.IsMasterClient && !value.IsInsideZone() && value.timeSinceCrossingBorder > m_ph_playBoundary_timeLimit)
 			{
-				AddInfectedPlayer(rig.OwningNetPlayer);
+				AddInfectedPlayer(rig.Creator);
 			}
 		}
 		if (rig.isOfflineVRRig)
@@ -787,7 +788,7 @@ public sealed class GorillaPropHuntGameManager : GorillaTagManager
 	{
 		rig.bodyRenderer.SetSkeletonBodyActive(active: true);
 		rig.bodyRenderer.SetGameModeBodyType(GorillaBodyType.Default);
-		_SetPlayerBlindfoldVisibility(rig, rig.OwningNetPlayer, shouldEnable: false);
+		_SetPlayerBlindfoldVisibility(rig, rig.Creator, shouldEnable: false);
 		rig.ChangeMaterialLocal(0);
 		rig.SetInvisibleToLocalPlayer(invisible: false);
 		if (rig == VRRig.LocalRig)
@@ -914,7 +915,7 @@ public sealed class GorillaPropHuntGameManager : GorillaTagManager
 
 	public void PH_OnRoundStartRPC(long timeRoundStartedMillis, int seed)
 	{
-		_ph_isLocalPlayerParticipating = GameMode.ParticipatingPlayers.Contains(VRRig.LocalRig.OwningNetPlayer);
+		_ph_isLocalPlayerParticipating = GameMode.ParticipatingPlayers.Contains(VRRig.LocalRig.Creator);
 		_ph_timeRoundStartedMillis = timeRoundStartedMillis;
 		_ph_randomSeed = seed;
 		_PH_OnRoundStart();
@@ -1007,7 +1008,7 @@ public sealed class GorillaPropHuntGameManager : GorillaTagManager
 		}
 		foreach (PropHuntHandFollower g_ph_allHandFollower in _g_ph_allHandFollowers)
 		{
-			if (GameMode.ParticipatingPlayers.Contains(g_ph_allHandFollower.attachedToRig.OwningNetPlayer))
+			if (GameMode.ParticipatingPlayers.Contains(g_ph_allHandFollower.attachedToRig.Creator))
 			{
 				g_ph_allHandFollower.OnRoundStart();
 			}
@@ -1064,7 +1065,7 @@ public sealed class GorillaPropHuntGameManager : GorillaTagManager
 
 	private void _SetPlayerBlindfoldVisibility(VRRig vrRig, NetPlayer netPlayer, bool shouldEnable)
 	{
-		if (netPlayer == VRRig.LocalRig.OwningNetPlayer)
+		if (netPlayer == VRRig.LocalRig.Creator)
 		{
 			if (!_ph_blindfold_forCamera_isInitialized)
 			{

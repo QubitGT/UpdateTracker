@@ -1,30 +1,19 @@
-using System;
-using System.Runtime.InteropServices;
-using Fusion;
 using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
-[NetworkBehaviourWeaved(15)]
 internal class GorillaNetworkTransform : NetworkComponent, ITickSystemTick
 {
-	[StructLayout(LayoutKind.Explicit, Size = 60)]
-	[NetworkStructWeaved(15)]
-	private struct NetTransformData : INetworkStruct
+	private struct NetTransformData
 	{
-		[FieldOffset(0)]
 		public Vector3 position;
 
-		[FieldOffset(12)]
 		public Vector3 velocity;
 
-		[FieldOffset(24)]
 		public Quaternion rotation;
 
-		[FieldOffset(40)]
 		public Vector3 scale;
 
-		[FieldOffset(52)]
 		public double SentTime;
 	}
 
@@ -71,36 +60,9 @@ internal class GorillaNetworkTransform : NetworkComponent, ITickSystemTick
 
 	private bool m_firstTake;
 
-	[WeaverGenerated]
-	[DefaultForProperty("data", 0, 15)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private NetTransformData _data;
-
 	public bool RespectOwnership => respectOwnership;
 
 	public bool TickRunning { get; set; }
-
-	[Networked]
-	[NetworkedWeaved(0, 15)]
-	private unsafe NetTransformData data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing GorillaNetworkTransform.data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(NetTransformData*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing GorillaNetworkTransform.data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(NetTransformData*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	public new void Awake()
 	{
@@ -113,7 +75,6 @@ internal class GorillaNetworkTransform : NetworkComponent, ITickSystemTick
 
 	private new void OnEnable()
 	{
-		NetworkBehaviourUtils.InternalOnEnable(this);
 		m_firstTake = true;
 		if (clampToSpawn)
 		{
@@ -124,7 +85,6 @@ internal class GorillaNetworkTransform : NetworkComponent, ITickSystemTick
 
 	private new void OnDisable()
 	{
-		NetworkBehaviourUtils.InternalOnDisable(this);
 		TickSystem<object>.RemoveTickCallback(this);
 	}
 
@@ -141,19 +101,6 @@ internal class GorillaNetworkTransform : NetworkComponent, ITickSystemTick
 				base.transform.SetPositionAndRotation(Vector3.MoveTowards(base.transform.position, m_NetworkPosition, m_Distance * Time.deltaTime * (float)NetworkSystem.Instance.TickRate), Quaternion.RotateTowards(base.transform.rotation, m_NetworkRotation, m_Angle * Time.deltaTime * (float)NetworkSystem.Instance.TickRate));
 			}
 		}
-	}
-
-	public override void WriteDataFusion()
-	{
-		NetTransformData netTransformData = SharedWrite();
-		double sentTime = (double)(uint)NetworkSystem.Instance.SimTick / 1000.0;
-		netTransformData.SentTime = sentTime;
-		data = netTransformData;
-	}
-
-	public override void ReadDataFusion()
-	{
-		SharedRead(data);
 	}
 
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
@@ -183,22 +130,22 @@ internal class GorillaNetworkTransform : NetworkComponent, ITickSystemTick
 		NetPlayer player = NetworkSystem.Instance.GetPlayer(info.Sender);
 		if (!respectOwnership || player == base.Owner)
 		{
-			NetTransformData netTransformData = default(NetTransformData);
+			NetTransformData data = default(NetTransformData);
 			if (m_SynchronizePosition)
 			{
-				netTransformData.position = (Vector3)stream.ReceiveNext();
-				netTransformData.velocity = (Vector3)stream.ReceiveNext();
+				data.position = (Vector3)stream.ReceiveNext();
+				data.velocity = (Vector3)stream.ReceiveNext();
 			}
 			if (m_SynchronizeRotation)
 			{
-				netTransformData.rotation = (Quaternion)stream.ReceiveNext();
+				data.rotation = (Quaternion)stream.ReceiveNext();
 			}
 			if (m_SynchronizeScale)
 			{
-				netTransformData.scale = (Vector3)stream.ReceiveNext();
+				data.scale = (Vector3)stream.ReceiveNext();
 			}
-			netTransformData.SentTime = (float)info.SentServerTime;
-			SharedRead(netTransformData);
+			data.SentTime = (float)info.SentServerTime;
+			SharedRead(data);
 		}
 	}
 
@@ -315,19 +262,5 @@ internal class GorillaNetworkTransform : NetworkComponent, ITickSystemTick
 	public void GTAddition_DoTeleport()
 	{
 		m_firstTake = true;
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		data = _data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_data = data;
 	}
 }

@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Enemy Boss Moon")]
 public class GREnemyBossMoon : MonoBehaviour, IGameEntityComponent, IGameEntitySerialize, IGameHittable, IGameAgentComponent, IGameEntityDebugComponent, IGRSummoningEntity
 {
 	[Serializable]
@@ -838,7 +839,7 @@ public class GREnemyBossMoon : MonoBehaviour, IGameEntityComponent, IGameEntityS
 		senseNearby.UpdateNearby(tempRigs, senseLineOfSight);
 		float outDistanceSq;
 		VRRig vRRig = senseNearby.PickClosest(out outDistanceSq);
-		agent.RequestTarget((vRRig == null) ? null : vRRig.OwningNetPlayer);
+		agent.RequestTarget((vRRig == null) ? null : vRRig.Creator);
 		if (currAbility != null)
 		{
 			currAbility.Think(dt);

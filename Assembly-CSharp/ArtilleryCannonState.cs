@@ -1,11 +1,9 @@
 using System;
-using System.Runtime.InteropServices;
-using Fusion;
 using Photon.Pun;
 using UnityEngine;
 
 [RequireComponent(typeof(XSceneRefTarget))]
-[NetworkBehaviourWeaved(8)]
+[AddComponentMenu("GorillaTag/Environment/Artillery Cannon State")]
 public class ArtilleryCannonState : NetworkComponent
 {
 	internal struct CrankSyncState
@@ -24,35 +22,6 @@ public class ArtilleryCannonState : NetworkComponent
 		CrankRelease,
 		CrankInput,
 		Fire
-	}
-
-	[StructLayout(LayoutKind.Explicit, Size = 32)]
-	[NetworkStructWeaved(8)]
-	private struct FusionSyncState : INetworkStruct
-	{
-		[FieldOffset(0)]
-		public float pitch;
-
-		[FieldOffset(4)]
-		public float yaw;
-
-		[FieldOffset(8)]
-		public int pitchHolderActorNr;
-
-		[FieldOffset(12)]
-		public NetworkBool pitchIsLeftHand;
-
-		[FieldOffset(16)]
-		public float pitchCrankAngle;
-
-		[FieldOffset(20)]
-		public int yawHolderActorNr;
-
-		[FieldOffset(24)]
-		public NetworkBool yawIsLeftHand;
-
-		[FieldOffset(28)]
-		public float yawCrankAngle;
 	}
 
 	internal const int CRANK_PITCH = 0;
@@ -90,11 +59,6 @@ public class ArtilleryCannonState : NetworkComponent
 
 	private float yawPendingGrabTime;
 
-	[WeaverGenerated]
-	[DefaultForProperty("FusionData", 0, 8)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private FusionSyncState _FusionData;
-
 	internal float CurrentPitch => currentPitch;
 
 	internal float CurrentYaw => currentYaw;
@@ -114,28 +78,6 @@ public class ArtilleryCannonState : NetworkComponent
 				return -1;
 			}
 			return PhotonNetwork.LocalPlayer.ActorNumber;
-		}
-	}
-
-	[Networked]
-	[NetworkedWeaved(0, 8)]
-	private unsafe FusionSyncState FusionData
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing ArtilleryCannonState.FusionData. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(FusionSyncState*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing ArtilleryCannonState.FusionData. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(FusionSyncState*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
 		}
 	}
 
@@ -340,77 +282,5 @@ public class ArtilleryCannonState : NetworkComponent
 		crank.holderActorNr = num;
 		crank.isLeftHand = isLeftHand;
 		crank.angle = angle;
-	}
-
-	public override void WriteDataFusion()
-	{
-		FusionData = new FusionSyncState
-		{
-			pitch = currentPitch,
-			yaw = currentYaw,
-			pitchHolderActorNr = pitchCrankSync.holderActorNr,
-			pitchIsLeftHand = pitchCrankSync.isLeftHand,
-			pitchCrankAngle = pitchCrankSync.angle,
-			yawHolderActorNr = yawCrankSync.holderActorNr,
-			yawIsLeftHand = yawCrankSync.isLeftHand,
-			yawCrankAngle = yawCrankSync.angle
-		};
-	}
-
-	public override void ReadDataFusion()
-	{
-		FusionSyncState fusionData = FusionData;
-		int localActorNr = LocalActorNr;
-		ReadCrankSyncFusion(ref pitchCrankSync, ref pitchPendingGrabTime, localActorNr, fusionData.pitchHolderActorNr, fusionData.pitchIsLeftHand, fusionData.pitchCrankAngle);
-		ReadCrankSyncFusion(ref yawCrankSync, ref yawPendingGrabTime, localActorNr, fusionData.yawHolderActorNr, fusionData.yawIsLeftHand, fusionData.yawCrankAngle);
-		if (pitchCrankSync.holderActorNr != localActorNr)
-		{
-			currentPitch = fusionData.pitch;
-		}
-		if (yawCrankSync.holderActorNr != localActorNr)
-		{
-			currentYaw = fusionData.yaw;
-		}
-		this.onRotationChanged?.Invoke();
-	}
-
-	private void ReadCrankSyncFusion(ref CrankSyncState crank, ref float pendingTime, int localActor, int incomingHolder, bool incomingLeftHand, float incomingAngle)
-	{
-		if (pendingTime > 0f && crank.holderActorNr == localActor)
-		{
-			if (incomingHolder == localActor)
-			{
-				pendingTime = 0f;
-			}
-			else if (incomingHolder != -1)
-			{
-				pendingTime = 0f;
-			}
-			else
-			{
-				if (!(Time.time - pendingTime > 1f))
-				{
-					return;
-				}
-				pendingTime = 0f;
-			}
-		}
-		crank.holderActorNr = incomingHolder;
-		crank.isLeftHand = incomingLeftHand;
-		crank.angle = incomingAngle;
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		FusionData = _FusionData;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_FusionData = FusionData;
 	}
 }

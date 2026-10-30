@@ -1,10 +1,7 @@
-using System;
-using Fusion;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Splines;
 
-[NetworkBehaviourWeaved(1)]
 public class GTSplineAnimateFixedUpdater : NetworkComponent
 {
 	[SerializeField]
@@ -26,34 +23,6 @@ public class GTSplineAnimateFixedUpdater : NetworkComponent
 	private float progressLerpEnd;
 
 	private float progressLerpStartTime;
-
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("Netdata", 0, 1)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private float _Netdata;
-
-	[Networked]
-	[NetworkedWeaved(0, 1)]
-	public unsafe float Netdata
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing GTSplineAnimateFixedUpdater.Netdata. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(float*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing GTSplineAnimateFixedUpdater.Netdata. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(float*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	protected override void Awake()
 	{
@@ -97,16 +66,6 @@ public class GTSplineAnimateFixedUpdater : NetworkComponent
 		}
 	}
 
-	public override void WriteDataFusion()
-	{
-		Netdata = progress + 1f;
-	}
-
-	public override void ReadDataFusion()
-	{
-		SharedReadData(Netdata);
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (info.Sender.IsMasterClient)
@@ -144,19 +103,5 @@ public class GTSplineAnimateFixedUpdater : NetworkComponent
 		}
 		progressLerpStart = progress;
 		progressLerpStartTime = Time.time;
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Netdata = _Netdata;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Netdata = Netdata;
 	}
 }

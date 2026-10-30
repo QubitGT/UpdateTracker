@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Tech Tree UI Page")]
 public class SITechTreeUIPage : MonoBehaviour
 {
 	[SerializeField]

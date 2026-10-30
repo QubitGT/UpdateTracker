@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Animation Event Controller")]
 public class AnimationEventController : MonoBehaviour
 {
 	public GameObject fxAttack;

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Photon.Voice.Unity;
 using UnityEngine;
@@ -34,8 +35,23 @@ public class GTRecorder : Recorder, ITickSystemPost
 
 	protected override MicWrapper CreateMicWrapper(string micDev, int samplingRateInt, VoiceLogger logger)
 	{
+		samplingRateInt = ClampToDeviceCaps(micDev, samplingRateInt);
 		_micWrapper = new GTMicWrapper(micDev, samplingRateInt, AllowPitchAdjustment, PitchAdjustment, AllowVolumeAdjustment, VolumeAdjustment, logger);
 		return _micWrapper;
+	}
+
+	private static int ClampToDeviceCaps(string micDev, int suggestedFrequency)
+	{
+		if (!string.IsNullOrEmpty(micDev) && Array.IndexOf(UnityMicrophone.devices, micDev) < 0)
+		{
+			micDev = null;
+		}
+		UnityMicrophone.GetDeviceCaps(micDev, out var minFreq, out var maxFreq);
+		if (suggestedFrequency < minFreq || (maxFreq != 0 && suggestedFrequency > maxFreq))
+		{
+			return maxFreq;
+		}
+		return suggestedFrequency;
 	}
 
 	private IEnumerator DoTestEcho()

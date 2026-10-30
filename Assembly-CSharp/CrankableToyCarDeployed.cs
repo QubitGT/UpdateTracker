@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Crankable Toy Car Deployed")]
 public class CrankableToyCarDeployed : MonoBehaviour
 {
 	[SerializeField]

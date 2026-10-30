@@ -4,6 +4,7 @@ using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Rig Actor Setup")]
 public class CrittersRigActorSetup : MonoBehaviour
 {
 	[Serializable]

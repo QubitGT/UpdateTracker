@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(SIGadgetBlasterProjectile))]
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Projectile Stretch Visuals")]
 public class SIGadgetProjectileStretchVisuals : MonoBehaviourTick
 {
 	private SIGadgetBlasterProjectile projectile;

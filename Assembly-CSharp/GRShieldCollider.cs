@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Shield Collider")]
 public class GRShieldCollider : MonoBehaviour
 {
 	[SerializeField]

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace GorillaNetworking;
 
-[CreateAssetMenu(fileName = "VoiceSettings", menuName = "Gorilla Tag/VoiceSettings")]
+[CreateAssetMenu(fileName = "VoiceSettings", menuName = "GorillaTag/VoiceSettings")]
 public class SO_NetworkVoiceSettings : ScriptableObject
 {
 	[Header("Voice settings")]

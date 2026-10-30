@@ -1,13 +1,10 @@
 using System;
-using System.Runtime.InteropServices;
-using Fusion;
-using Fusion.CodeGen;
 using GorillaExtensions;
 using Photon.Pun;
 using UnityEngine;
 
 [RequireComponent(typeof(XSceneRefTarget))]
-[NetworkBehaviourWeaved(62)]
+[AddComponentMenu("GorillaTag/Environment/Battery Charger State")]
 public class BatteryChargerState : NetworkComponent
 {
 	internal struct CrankSyncState
@@ -25,31 +22,6 @@ public class BatteryChargerState : NetworkComponent
 		CrankGrabRight,
 		CrankRelease,
 		CrankInput
-	}
-
-	[StructLayout(LayoutKind.Explicit, Size = 12)]
-	[NetworkStructWeaved(3)]
-	private struct FusionCrankData : INetworkStruct
-	{
-		[FieldOffset(0)]
-		public int holderActorNr;
-
-		[FieldOffset(4)]
-		public NetworkBool isLeftHand;
-
-		[FieldOffset(8)]
-		public float angle;
-	}
-
-	[StructLayout(LayoutKind.Explicit, Size = 8)]
-	[NetworkStructWeaved(2)]
-	private struct FusionSyncState : INetworkStruct
-	{
-		[FieldOffset(0)]
-		public float charge;
-
-		[FieldOffset(4)]
-		public int eventPhase;
 	}
 
 	internal const int MAX_CRANKS = 20;
@@ -89,16 +61,6 @@ public class BatteryChargerState : NetworkComponent
 
 	private bool m_disableNetworking;
 
-	[WeaverGenerated]
-	[DefaultForProperty("FusionData", 0, 2)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private FusionSyncState _FusionData;
-
-	[WeaverGenerated]
-	[DefaultForProperty("FusionCranks", 2, 60)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private FusionCrankData[] _FusionCranks;
-
 	internal float CurrentCharge => currentCharge;
 
 	internal float MaxCharge => maxCharge;
@@ -128,44 +90,6 @@ public class BatteryChargerState : NetworkComponent
 				return -1;
 			}
 			return PhotonNetwork.LocalPlayer.ActorNumber;
-		}
-	}
-
-	[Networked]
-	[NetworkedWeaved(0, 2)]
-	private unsafe FusionSyncState FusionData
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing BatteryChargerState.FusionData. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(FusionSyncState*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing BatteryChargerState.FusionData. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(FusionSyncState*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
-
-	[Networked]
-	[Capacity(20)]
-	[NetworkedWeaved(2, 60)]
-	[NetworkedWeavedArray(20, 3, typeof(ReaderWriter_0040BatteryChargerState__FusionCrankData))]
-	private unsafe NetworkArray<FusionCrankData> FusionCranks
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing BatteryChargerState.FusionCranks. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return new NetworkArray<FusionCrankData>((byte*)(((NetworkBehaviour)this).Ptr + 2), 20, ReaderWriter_0040BatteryChargerState__FusionCrankData.GetInstance());
 		}
 	}
 
@@ -445,91 +369,5 @@ public class BatteryChargerState : NetworkComponent
 			eventPhase = num2;
 			this.onEventPhaseChanged?.Invoke(eventPhase);
 		}
-	}
-
-	public override void WriteDataFusion()
-	{
-		FusionData = new FusionSyncState
-		{
-			charge = currentCharge,
-			eventPhase = eventPhase
-		};
-		for (int i = 0; i < 20; i++)
-		{
-			FusionCranks.Set(i, new FusionCrankData
-			{
-				holderActorNr = crankSyncs[i].holderActorNr,
-				isLeftHand = crankSyncs[i].isLeftHand,
-				angle = crankSyncs[i].angle
-			});
-		}
-	}
-
-	public override void ReadDataFusion()
-	{
-		FusionSyncState fusionData = FusionData;
-		int localActorNr = LocalActorNr;
-		for (int i = 0; i < 20; i++)
-		{
-			FusionCrankData fusionCrankData = FusionCranks[i];
-			int holderActorNr = fusionCrankData.holderActorNr;
-			if (pendingGrabTime[i] > 0f && crankSyncs[i].holderActorNr == localActorNr)
-			{
-				if (holderActorNr == localActorNr)
-				{
-					pendingGrabTime[i] = 0f;
-				}
-				else if (holderActorNr != -1)
-				{
-					pendingGrabTime[i] = 0f;
-				}
-				else
-				{
-					if (!(Time.time - pendingGrabTime[i] > 1f))
-					{
-						continue;
-					}
-					pendingGrabTime[i] = 0f;
-				}
-			}
-			crankSyncs[i].holderActorNr = holderActorNr;
-			crankSyncs[i].isLeftHand = fusionCrankData.isLeftHand;
-			crankSyncs[i].angle = fusionCrankData.angle;
-		}
-		bool flag = false;
-		for (int j = 0; j < 20; j++)
-		{
-			if (crankSyncs[j].holderActorNr == localActorNr)
-			{
-				flag = true;
-				break;
-			}
-		}
-		if (!flag)
-		{
-			currentCharge = fusionData.charge;
-		}
-		this.onChargeChanged?.Invoke();
-		if (fusionData.eventPhase != eventPhase)
-		{
-			eventPhase = fusionData.eventPhase;
-			this.onEventPhaseChanged?.Invoke(eventPhase);
-		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		FusionData = _FusionData;
-		NetworkBehaviourUtils.InitializeNetworkArray(FusionCranks, _FusionCranks, "FusionCranks");
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_FusionData = FusionData;
-		NetworkBehaviourUtils.CopyFromNetworkArray(FusionCranks, ref _FusionCranks);
 	}
 }

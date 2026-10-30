@@ -2,6 +2,7 @@ using System;
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Critter Shade Fleeing")]
 public class CosmeticCritterShadeFleeing : CosmeticCritter
 {
 	[Serializable]

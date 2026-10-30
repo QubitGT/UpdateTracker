@@ -3,6 +3,7 @@ using CjLib;
 using Unity.Collections;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Noise Event Manager")]
 public class GRNoiseEventManager : MonoBehaviourTick
 {
 	private List<GameNoiseEvent> noiseEvents = new List<GameNoiseEvent>();

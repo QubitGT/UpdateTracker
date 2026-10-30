@@ -1,11 +1,8 @@
-using System;
-using Fusion;
 using Photon.Pun;
 using UnityEngine;
 
 namespace GorillaLocomotion.Gameplay;
 
-[NetworkBehaviourWeaved(1)]
 public class TraverseSpline : NetworkComponent
 {
 	public BezierSpline spline;
@@ -43,34 +40,6 @@ public class TraverseSpline : NetworkComponent
 
 	[SerializeField]
 	private bool constantVelocity;
-
-	[WeaverGenerated]
-	[SerializeField]
-	[DefaultForProperty("Data", 0, 1)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private float _Data;
-
-	[Networked]
-	[NetworkedWeaved(0, 1)]
-	public unsafe float Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing TraverseSpline.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(float*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing TraverseSpline.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(float*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	protected override void Awake()
 	{
@@ -132,17 +101,6 @@ public class TraverseSpline : NetworkComponent
 		}
 	}
 
-	public override void WriteDataFusion()
-	{
-		Data = progress + currentSpeedMultiplier * 1f / duration;
-	}
-
-	public override void ReadDataFusion()
-	{
-		progressLerpEnd = Data;
-		ReadDataShared();
-	}
-
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
 	{
 		stream.SendNext(progress + currentSpeedMultiplier * 1f / duration);
@@ -180,19 +138,5 @@ public class TraverseSpline : NetworkComponent
 	public float GetCurrentSpeed()
 	{
 		return currentSpeedMultiplier;
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
 	}
 }

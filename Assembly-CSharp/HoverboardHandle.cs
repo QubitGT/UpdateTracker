@@ -1,5 +1,6 @@
 using GorillaExtensions;
 using GorillaLocomotion;
+using GorillaNetworking;
 using UnityEngine;
 
 public class HoverboardHandle : HoldableObject
@@ -53,6 +54,8 @@ public class HoverboardHandle : HoldableObject
 			}
 			parentVisual.SetIsHeld(flag, localPosition, localRotation, parentVisual.boardColor);
 			EquipmentInteractor.instance.UpdateHandEquipment(this, flag);
+			string skinDisplayName = ((CosmeticsController.instance != null) ? CosmeticsController.instance.currentWornSet.items[32].displayName : null);
+			FreeHoverboardManager.instance.SendHeldBoardSkinRPC(skinDisplayName);
 		}
 	}
 

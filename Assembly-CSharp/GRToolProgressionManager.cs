@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Progression Manager")]
 public class GRToolProgressionManager : MonoBehaviourTick
 {
 	public class ToolProgressionMetaData

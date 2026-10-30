@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Vending Machine")]
 public class GRVendingMachine : MonoBehaviour
 {
 	[Serializable]

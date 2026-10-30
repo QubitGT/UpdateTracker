@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/D20_Shader Manager")]
 public class D20_ShaderManager : MonoBehaviour
 {
 	private Rigidbody rb;

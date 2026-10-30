@@ -1,11 +1,9 @@
 using System;
-using Fusion;
 using GorillaTag;
 using Photon.Pun;
 using UnityEngine;
 
-[NetworkBehaviourWeaved(0)]
-internal abstract class GorillaWrappedSerializer : NetworkBehaviour, IPunObservable, IPunInstantiateMagicCallback, IOnPhotonViewPreNetDestroy, IPhotonViewCallback
+internal abstract class GorillaWrappedSerializer : MonoBehaviour, IPunObservable, IPunInstantiateMagicCallback, IOnPhotonViewPreNetDestroy, IPhotonViewCallback
 {
 	protected bool successfullInstantiate;
 
@@ -19,8 +17,6 @@ internal abstract class GorillaWrappedSerializer : NetworkBehaviour, IPunObserva
 	protected NetworkView netView;
 
 	public NetworkView NetView => netView;
-
-	protected virtual object data { get; set; }
 
 	public bool IsLocallyOwned => netView.IsMine;
 
@@ -41,12 +37,6 @@ internal abstract class GorillaWrappedSerializer : NetworkBehaviour, IPunObserva
 			PhotonMessageInfoWrapped wrappedInfo = new PhotonMessageInfoWrapped(info);
 			ProcessSpawn(wrappedInfo);
 		}
-	}
-
-	public override void Spawned()
-	{
-		PhotonMessageInfoWrapped wrappedInfo = new PhotonMessageInfoWrapped(base.Object.StateAuthority.PlayerId, base.Runner.Tick.Raw);
-		ProcessSpawn(wrappedInfo);
 	}
 
 	private void ProcessSpawn(PhotonMessageInfoWrapped wrappedInfo)
@@ -100,19 +90,6 @@ internal abstract class GorillaWrappedSerializer : NetworkBehaviour, IPunObserva
 		return true;
 	}
 
-	public override void FixedUpdateNetwork()
-	{
-		data = serializeTarget.OnSerializeWrite();
-	}
-
-	public override void Render()
-	{
-		if (!base.Object.HasStateAuthority)
-		{
-			serializeTarget.OnSerializeRead(data);
-		}
-	}
-
 	void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (successfullInstantiate && serializeTarget != null && ValidOnSerialize(stream, in info))
@@ -126,11 +103,6 @@ internal abstract class GorillaWrappedSerializer : NetworkBehaviour, IPunObserva
 				serializeTarget.OnSerializeRead(stream, info);
 			}
 		}
-	}
-
-	public override void Despawned(NetworkRunner runner, bool hasState)
-	{
-		OnBeforeDespawn();
 	}
 
 	void IOnPhotonViewPreNetDestroy.OnPreNetDestroy(PhotonView rootView)
@@ -154,26 +126,8 @@ internal abstract class GorillaWrappedSerializer : NetworkBehaviour, IPunObserva
 		netView.SendRPC(rpcName, target, data);
 	}
 
-	protected virtual void FusionDataRPC(string method, RpcTarget target, params object[] parameters)
-	{
-	}
-
-	protected virtual void FusionDataRPC(string method, NetPlayer targetPlayer, params object[] parameters)
-	{
-	}
-
 	public void SendRPC(string rpcName, NetPlayer targetPlayer, params object[] data)
 	{
 		netView.GetView.RPC(rpcName, ((PunNetPlayer)targetPlayer).PlayerRef, data);
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
 	}
 }

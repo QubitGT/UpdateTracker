@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 
+[AddComponentMenu("GorillaTag/Environment/Skybox Controller")]
 public class SkyboxController : MonoBehaviour
 {
 	public MeshRenderer skyFront;

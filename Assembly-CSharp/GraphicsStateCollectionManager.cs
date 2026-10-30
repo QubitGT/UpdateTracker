@@ -43,10 +43,11 @@ public class GraphicsStateCollectionManager : MonoBehaviour
 		{
 			Debug.LogError("Only one instance of GraphicsStateCollectionManager is allowed!");
 			Object.Destroy(base.gameObject);
+			return;
 		}
-		else
+		Instance = this;
+		if (base.transform.parent == null)
 		{
-			Instance = this;
 			Object.DontDestroyOnLoad(base.gameObject);
 		}
 	}

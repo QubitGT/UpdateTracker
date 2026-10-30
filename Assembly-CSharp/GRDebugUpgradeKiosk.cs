@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Debug Upgrade Kiosk")]
 public class GRDebugUpgradeKiosk : MonoBehaviour
 {
 	public Transform upgradeSpawnNode;

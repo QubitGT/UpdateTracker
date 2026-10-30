@@ -4,6 +4,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Anchors")]
 public class CosmeticAnchors : MonoBehaviour, ISpawnable
 {
 	[SerializeField]

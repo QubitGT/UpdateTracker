@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Light")]
 public class GameLight : MonoBehaviour
 {
 	public const float DEFAULT_RANGE = 0.005f;

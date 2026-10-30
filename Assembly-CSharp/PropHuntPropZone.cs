@@ -3,6 +3,7 @@ using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Prop Hunt Prop Zone")]
 public class PropHuntPropZone : MonoBehaviour, IDelayedExecListener
 {
 	private const string preLog = "PropHuntPropZone: ";

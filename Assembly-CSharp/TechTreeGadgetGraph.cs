@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 using XNode;
 
-[CreateAssetMenu(fileName = "TechTreeGadgetGraph", menuName = "SuperInfection/TechTree Gadget Graph")]
+[CreateAssetMenu(fileName = "TechTreeGadgetGraph", menuName = "GorillaTag/Super Infection/TechTree Gadget Graph")]
 public class TechTreeGadgetGraph : NodeGraph
 {
 	public string nickName;

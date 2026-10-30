@@ -5,6 +5,7 @@ using Modio.Mods;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Virtual Stump/Virtual Stump Serializer")]
 internal class VirtualStumpSerializer : GorillaSerializer
 {
 	private static bool waitingForRoomInitialization;
@@ -160,7 +161,7 @@ internal class VirtualStumpSerializer : GorillaSerializer
 	private void UnloadMap_RPC(PhotonMessageInfo info)
 	{
 		MonkeAgent.IncrementRPCCall(info, "UnloadMap_RPC");
-		if (info.Sender.ActorNumber == CustomMapsTerminal.GetDriverID() && CustomMapManager.AreAllPlayersInVirtualStump())
+		if (info.Sender.ActorNumber == CustomMapsTerminal.GetDriverID() && CustomMapManager.AreAllPlayersAtMapTerminal())
 		{
 			CustomMapManager.UnloadMap();
 		}
@@ -181,7 +182,7 @@ internal class VirtualStumpSerializer : GorillaSerializer
 		if (NetworkSystem.Instance.IsMasterClient && !CustomMapsTerminal.IsLocalOnly)
 		{
 			NetPlayer player = NetworkSystem.Instance.GetPlayer(info.Sender);
-			if (VRRigCache.Instance.TryGetVrrig(player, out var playerRig) && playerRig.Rig.fxSettings.callSettings[19].CallLimitSettings.CheckCallTime(Time.unscaledTime) && !player.IsNull && (!lockedStatus || CustomMapManager.IsRemotePlayerInVirtualStumpOrHallway(info.Sender.UserId)))
+			if (VRRigCache.Instance.TryGetVrrig(player, out var playerRig) && playerRig.Rig.fxSettings.callSettings[19].CallLimitSettings.CheckCallTime(Time.unscaledTime) && !player.IsNull && (!lockedStatus || CustomMapManager.IsRemotePlayerAtMapTerminal(info.Sender.UserId)))
 			{
 				CustomMapsTerminal.HandleTerminalControlStatusChangeRequest(lockedStatus, info.Sender.ActorNumber);
 			}
@@ -232,7 +233,7 @@ internal class VirtualStumpSerializer : GorillaSerializer
 	private void UpdateScreen_RPC(int currentScreen, long modDetailsID, int driverID, PhotonMessageInfo info)
 	{
 		MonkeAgent.IncrementRPCCall(info, "UpdateScreen_RPC");
-		if (!CustomMapsTerminal.IsLocalOnly && info.Sender.ActorNumber == CustomMapsTerminal.GetDriverID() && CustomMapManager.IsRemotePlayerInVirtualStumpOrHallway(info.Sender.UserId) && currentScreen >= -1 && currentScreen <= 7 && NetworkSystem.Instance.GetPlayer(driverID) != null)
+		if (!CustomMapsTerminal.IsLocalOnly && info.Sender.ActorNumber == CustomMapsTerminal.GetDriverID() && CustomMapManager.IsRemotePlayerAtMapTerminal(info.Sender.UserId) && currentScreen >= -1 && currentScreen <= 8 && NetworkSystem.Instance.GetPlayer(driverID) != null)
 		{
 			NetPlayer player = NetworkSystem.Instance.GetPlayer(info.Sender);
 			if (VRRigCache.Instance.TryGetVrrig(player, out var playerRig) && playerRig.Rig.fxSettings.callSettings[17].CallLimitSettings.CheckCallTime(Time.unscaledTime))

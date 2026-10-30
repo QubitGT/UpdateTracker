@@ -3,6 +3,7 @@ using GorillaTag.Audio;
 using UnityEngine;
 using UnityEngine.Events;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Touchscreen Button")]
 public class SITouchscreenButton : MonoBehaviour, IClickable
 {
 	public enum ButtonMode

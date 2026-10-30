@@ -231,6 +231,15 @@ public class CosmeticSwapper : MonoBehaviour, ITickSystemTick
 		return value;
 	}
 
+	public void RestoreAllPreviousCosmetics()
+	{
+		while (newSwappedCosmetics.Count > 0)
+		{
+			CosmeticState state = newSwappedCosmetics.Pop();
+			RestorePreviousCosmetic(state);
+		}
+	}
+
 	private void RestorePreviousCosmetic(CosmeticState state)
 	{
 		if (controller == null)
@@ -301,22 +310,14 @@ public class CosmeticSwapper : MonoBehaviour, ITickSystemTick
 			}
 			if (Time.time - lastCosmeticSwapTime > stepTimeout)
 			{
-				while (newSwappedCosmetics.Count > 0)
-				{
-					CosmeticState state = newSwappedCosmetics.Pop();
-					RestorePreviousCosmetic(state);
-				}
+				RestoreAllPreviousCosmetics();
 				isAtFinalCosmeticStep = false;
 				lastCosmeticSwapTime = float.PositiveInfinity;
 			}
 		}
 		else if (GetCurrentMode() == SwapMode.AllAtOnce && Time.time - lastCosmeticSwapTime > stepTimeout)
 		{
-			while (newSwappedCosmetics.Count > 0)
-			{
-				CosmeticState state2 = newSwappedCosmetics.Pop();
-				RestorePreviousCosmetic(state2);
-			}
+			RestoreAllPreviousCosmetics();
 			lastCosmeticSwapTime = float.PositiveInfinity;
 			isAtFinalCosmeticStep = false;
 		}

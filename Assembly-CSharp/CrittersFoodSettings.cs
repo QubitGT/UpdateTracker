@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Food Settings")]
 public class CrittersFoodSettings : CrittersActorSettings
 {
 	public float _maxFood;

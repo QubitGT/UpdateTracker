@@ -3,6 +3,7 @@ using GorillaExtensions;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Game Entity/Super Infection Snap Point")]
 public class SuperInfectionSnapPoint : MonoBehaviour
 {
 	private const string preLog = "[SuperInfectionSnapPoint]  ";

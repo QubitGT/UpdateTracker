@@ -226,15 +226,7 @@ public class GorillaPlayerScoreboardLine : MonoBehaviour
 				}
 			}
 		}
-		Material material = ((playerVRRig.setMatIndex == 0) ? playerVRRig.scoreboardMaterial : playerVRRig.materialsToChangeTo[playerVRRig.setMatIndex]);
-		if (playerSwatch.material != material)
-		{
-			playerSwatch.material = material;
-		}
-		if (playerSwatch.color != playerVRRig.materialsToChangeTo[0].color)
-		{
-			playerSwatch.color = playerVRRig.materialsToChangeTo[0].color;
-		}
+		UpdateSwatch(playerSwatch, playerVRRig);
 		if (myRecorder == null)
 		{
 			myRecorder = NetworkSystem.Instance.LocalRecorder;
@@ -272,6 +264,19 @@ public class GorillaPlayerScoreboardLine : MonoBehaviour
 		{
 			muteForRoomButton.isOn = flag;
 			muteForRoomButton.UpdateColor();
+		}
+	}
+
+	public static void UpdateSwatch(Image swatch, VRRig rig)
+	{
+		Material material = ((rig.setMatIndex == 0) ? rig.scoreboardMaterial : rig.materialsToChangeTo[rig.setMatIndex]);
+		if (swatch.material != material)
+		{
+			swatch.material = material;
+		}
+		if (swatch.color != rig.materialsToChangeTo[0].color)
+		{
+			swatch.color = rig.materialsToChangeTo[0].color;
 		}
 	}
 

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Hose Simulator Anchors")]
 public class HoseSimulatorAnchors : MonoBehaviour
 {
 	public Transform leftAnchorPoint;

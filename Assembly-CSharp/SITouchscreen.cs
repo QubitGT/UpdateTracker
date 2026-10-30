@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Touchscreen")]
 public class SITouchscreen : MonoBehaviour
 {
 	public Transform controllingTransform;

@@ -1,6 +1,7 @@
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Cosmetic Boundary Trigger")]
 public class CosmeticBoundaryTrigger : GorillaTriggerBox
 {
 	public VRRig rigRef;

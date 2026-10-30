@@ -1,6 +1,7 @@
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Hot Pepper Events")]
 public class HotPepperEvents : MonoBehaviour
 {
 	public enum EdibleState

@@ -56,13 +56,15 @@ public class GorillaPressableDelayButton : GorillaPressableButton, IGorillaSlice
 		}
 	}
 
-	public new void OnEnable()
+	protected override void OnEnable()
 	{
+		base.OnEnable();
 		GorillaSlicerSimpleManager.RegisterSliceable(this, GorillaSlicerSimpleManager.UpdateStep.Update);
 	}
 
-	public new void OnDisable()
+	protected override void OnDisable()
 	{
+		base.OnDisable();
 		GorillaSlicerSimpleManager.UnregisterSliceable(this, GorillaSlicerSimpleManager.UpdateStep.Update);
 	}
 

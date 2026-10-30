@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Upgrade Purchase Station Full")]
 public class GRToolUpgradePurchaseStationFull : MonoBehaviour, ITickSystemTick
 {
 	public enum ShelfMovementState

@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Fusion;
 using GorillaExtensions;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.Events;
 
-[NetworkBehaviourWeaved(1)]
 public class WanderingGhost : NetworkComponent
 {
 	[Serializable]
@@ -65,6 +63,8 @@ public class WanderingGhost : NetworkComponent
 
 	public string debugForceWaypointRegion;
 
+	private bool needsStartSnap;
+
 	[SerializeField]
 	private AudioSource audioSource;
 
@@ -94,33 +94,6 @@ public class WanderingGhost : NetworkComponent
 
 	private Collider[] hitColliders = new Collider[10];
 
-	[WeaverGenerated]
-	[DefaultForProperty("Data", 0, 1)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private ghostState _Data;
-
-	[Networked]
-	[NetworkedWeaved(0, 1)]
-	private unsafe ghostState Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing WanderingGhost.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(ghostState*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing WanderingGhost.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(ghostState*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
-
 	protected override void Start()
 	{
 		base.Start();
@@ -136,10 +109,20 @@ public class WanderingGhost : NetworkComponent
 
 	private void DelayedStart()
 	{
-		PickNextWaypoint();
-		base.transform.position = currentWaypoint._transform.position;
-		PickNextWaypoint();
+		needsStartSnap = true;
+		TrySnapToStartWaypoint();
 		ChangeState(ghostState.patrol);
+	}
+
+	private void TrySnapToStartWaypoint()
+	{
+		PickNextWaypoint();
+		if (!(currentWaypoint._transform == null))
+		{
+			base.transform.position = currentWaypoint._transform.position;
+			PickNextWaypoint();
+			needsStartSnap = false;
+		}
 	}
 
 	private void LateUpdate()
@@ -171,9 +154,12 @@ public class WanderingGhost : NetworkComponent
 				waypoints.Add(new Waypoint(item.name.Contains("_v_"), item));
 			}
 		}
-		int index = UnityEngine.Random.Range(0, waypoints.Count);
-		currentWaypoint = waypoints[index];
-		waypoints.RemoveAt(index);
+		if (waypoints.Count != 0)
+		{
+			int index = UnityEngine.Random.Range(0, waypoints.Count);
+			currentWaypoint = waypoints[index];
+			waypoints.RemoveAt(index);
+		}
 	}
 
 	private void Patrol()
@@ -234,7 +220,14 @@ public class WanderingGhost : NetworkComponent
 		case ghostState.patrol:
 			if (currentWaypoint._transform == null)
 			{
-				PickNextWaypoint();
+				if (needsStartSnap)
+				{
+					TrySnapToStartWaypoint();
+				}
+				else
+				{
+					PickNextWaypoint();
+				}
 				break;
 			}
 			Patrol();
@@ -272,16 +265,6 @@ public class WanderingGhost : NetworkComponent
 				TriggerHauntedObjects?.Invoke(array[i].gameObject);
 			}
 		}
-	}
-
-	public override void WriteDataFusion()
-	{
-		Data = currentState;
-	}
-
-	public override void ReadDataFusion()
-	{
-		ReadDataShared(Data);
 	}
 
 	protected override void WriteDataPUN(PhotonStream stream, PhotonMessageInfo info)
@@ -351,19 +334,5 @@ public class WanderingGhost : NetworkComponent
 			throwableSetDressing.transform.position = position;
 			throwableSetDressing.StartRespawnTimer(flowerSpawnDuration);
 		}
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
 	}
 }

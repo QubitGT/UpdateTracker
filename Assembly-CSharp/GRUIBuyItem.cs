@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GRUI Buy Item")]
 public class GRUIBuyItem : MonoBehaviour
 {
 	[SerializeField]

@@ -4,6 +4,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Seasonal/Finger Flag Wearable")]
 public class FingerFlagWearable : MonoBehaviour, ISpawnable
 {
 	[Header("Wearable Settings")]

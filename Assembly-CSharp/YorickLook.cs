@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Yorick Look")]
 public class YorickLook : MonoBehaviour
 {
 	public Transform leftEye;

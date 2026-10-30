@@ -1,6 +1,7 @@
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Springy Wobbler")]
 public class SpringyWobbler : MonoBehaviour
 {
 	[SerializeField]

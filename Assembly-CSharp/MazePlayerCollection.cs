@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Maze Player Collection")]
 public class MazePlayerCollection : MonoBehaviour
 {
 	public List<VRRig> containedRigs = new List<VRRig>();

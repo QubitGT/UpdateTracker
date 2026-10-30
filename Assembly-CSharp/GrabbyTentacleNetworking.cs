@@ -2,6 +2,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Grabby Tentacle Networking")]
 public class GrabbyTentacleNetworking : MonoBehaviourPunCallbacks
 {
 	[SerializeField]

@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Setup Screen")]
 public class KIDUI_SetupScreen : MonoBehaviour
 {
 	[SerializeField]

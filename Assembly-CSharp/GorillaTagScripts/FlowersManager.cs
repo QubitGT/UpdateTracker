@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Fusion;
 using Photon.Pun;
 using UnityEngine;
 
 namespace GorillaTagScripts;
 
-[NetworkBehaviourWeaved(13)]
 public class FlowersManager : NetworkComponent
 {
 	[Serializable]
@@ -34,34 +32,7 @@ public class FlowersManager : NetworkComponent
 
 	private bool hasBeenSerialized;
 
-	[WeaverGenerated]
-	[DefaultForProperty("Data", 0, 13)]
-	[DrawIf("IsEditorWritable", true, CompareOperator.Equal, DrawIfMode.ReadOnly)]
-	private FlowersDataStruct _Data;
-
 	public static FlowersManager Instance { get; private set; }
-
-	[Networked]
-	[NetworkedWeaved(0, 13)]
-	private unsafe FlowersDataStruct Data
-	{
-		get
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing FlowersManager.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			return *(FlowersDataStruct*)((byte*)((NetworkBehaviour)this).Ptr + 0);
-		}
-		set
-		{
-			if (((NetworkBehaviour)this).Ptr == null)
-			{
-				throw new InvalidOperationException("Error when accessing FlowersManager.Data. Networked properties can only be accessed when Spawned() has been called.");
-			}
-			*(FlowersDataStruct*)((byte*)((NetworkBehaviour)this).Ptr + 0) = value;
-		}
-	}
 
 	protected override void Awake()
 	{
@@ -109,7 +80,6 @@ public class FlowersManager : NetworkComponent
 
 	private void OnDestroy()
 	{
-		NetworkBehaviourUtils.InternalOnDestroy(this);
 		SlingshotProjectileHitNotifier[] array = hitNotifiers;
 		foreach (SlingshotProjectileHitNotifier slingshotProjectileHitNotifier in array)
 		{
@@ -213,32 +183,6 @@ public class FlowersManager : NetworkComponent
 		}
 	}
 
-	public override void WriteDataFusion()
-	{
-		if (base.HasStateAuthority)
-		{
-			Data = new FlowersDataStruct(allFlowers);
-		}
-	}
-
-	public override void ReadDataFusion()
-	{
-		if (Data.FlowerCount <= 0)
-		{
-			return;
-		}
-		for (int i = 0; i < Data.FlowerCount; i++)
-		{
-			bool isWatered = Data.FlowerWateredData[i] == 1;
-			Flower.FlowerState currentState = allFlowers[i].GetCurrentState();
-			Flower.FlowerState flowerState = (Flower.FlowerState)Data.FlowerStateData[i];
-			if (currentState != flowerState)
-			{
-				allFlowers[i].UpdateFlowerState(flowerState, isWatered);
-			}
-		}
-	}
-
 	private void Update()
 	{
 		for (int i = flowerCheckIndex + 1; i < allFlowers.Count && i < flowerCheckIndex + flowersToCheck; i++)
@@ -246,19 +190,5 @@ public class FlowersManager : NetworkComponent
 			allFlowers[i].AnimCatch();
 		}
 		flowerCheckIndex = ((flowerCheckIndex + flowersToCheck < allFlowers.Count) ? (flowerCheckIndex + flowersToCheck) : 0);
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-		Data = _Data;
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
-		_Data = Data;
 	}
 }

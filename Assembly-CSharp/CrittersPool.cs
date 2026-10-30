@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Pool")]
 public class CrittersPool : MonoBehaviour
 {
 	[Serializable]

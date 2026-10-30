@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Distillery Deposit")]
 public class GRDistilleryDeposit : MonoBehaviour
 {
 	public float hapticStrength;

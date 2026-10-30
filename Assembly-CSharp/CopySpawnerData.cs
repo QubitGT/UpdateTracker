@@ -3,6 +3,7 @@ using System.Linq;
 using Critters.Scripts;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Copy Spawner Data")]
 public class CopySpawnerData : MonoBehaviour
 {
 	public Transform spawnerDataParent;

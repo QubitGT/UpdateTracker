@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[AddComponentMenu("GorillaTag/Super Infection/SIUI Progress Bar")]
 public class SIUIProgressBar : MonoBehaviour
 {
 	public Image backgroundImage;

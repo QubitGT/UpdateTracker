@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Game Entity/Game Button Activatable")]
 public class GameButtonActivatable : MonoBehaviour, IGameActivatable
 {
 	public enum InputButton

@@ -7,6 +7,7 @@ using GorillaTag.CosmeticSystem;
 using UnityEngine;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Head Model")]
 public class HeadModel : MonoBehaviour, IDelayedExecListener
 {
 	protected struct _CosmeticPartLoadInfo

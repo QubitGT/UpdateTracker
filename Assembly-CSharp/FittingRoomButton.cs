@@ -2,6 +2,7 @@ using GorillaExtensions;
 using GorillaNetworking;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Fitting Room Button")]
 public class FittingRoomButton : GorillaPressableButton
 {
 	public CosmeticsController.CosmeticItem currentCosmeticItem;

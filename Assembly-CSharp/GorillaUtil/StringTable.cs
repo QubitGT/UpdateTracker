@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GorillaUtil;
 
-[CreateAssetMenu(fileName = "StringTable", menuName = "Scriptable Objects/StringTable")]
+[CreateAssetMenu(fileName = "StringTable", menuName = "ScriptableObjects/Data/StringTable")]
 public class StringTable : ScriptableObject
 {
 	[Serializable]

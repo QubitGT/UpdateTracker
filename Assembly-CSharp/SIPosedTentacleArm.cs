@@ -2,6 +2,7 @@ using GorillaExtensions;
 using UnityEngine;
 
 [ExecuteAlways]
+[AddComponentMenu("GorillaTag/Super Infection/SI Posed Tentacle Arm")]
 public class SIPosedTentacleArm : MonoBehaviour
 {
 	public float LengthFactor = 1.5f;

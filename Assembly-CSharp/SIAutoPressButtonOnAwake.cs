@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Auto Press Button On Awake")]
 public class SIAutoPressButtonOnAwake : MonoBehaviour
 {
 	private SICombinedTerminal terminalParent;

@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(ParticleSystem))]
+[AddComponentMenu("GorillaTag/Seasonal/Particle Vertex Snapper")]
 public class ParticleVertexSnapper : MonoBehaviour
 {
 	[SerializeField]

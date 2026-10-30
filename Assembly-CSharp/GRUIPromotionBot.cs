@@ -5,6 +5,7 @@ using Photon.Pun;
 using TMPro;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GRUI Promotion Bot")]
 public class GRUIPromotionBot : MonoBehaviourTick
 {
 	public enum PromotionBotState

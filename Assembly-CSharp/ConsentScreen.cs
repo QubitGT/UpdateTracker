@@ -149,10 +149,12 @@ public class ConsentScreen : MonoBehaviour
 	private void ShowPrompt(string itemDisplayName, List<ConsentCost> costs, Action<bool, Action<string>> onConsentChosen)
 	{
 		pendingCallback = onConsentChosen;
-		promptText.text = ComposePrompt(itemDisplayName, costs);
+		bool flag = CanAfford(costs);
+		promptText.text = ComposePrompt(itemDisplayName, costs, flag);
 		promptText.gameObject.SetActive(value: true);
 		resultText.gameObject.SetActive(value: false);
 		SetButtonsVisible(visible: true);
+		yesButton.SetInteractable(flag);
 		state = PopupState.Prompt;
 		popupRoot.SetActive(value: true);
 		UpdatePopupTransform();
@@ -174,7 +176,23 @@ public class ConsentScreen : MonoBehaviour
 		}
 	}
 
-	private static string ComposePrompt(string itemDisplayName, List<ConsentCost> costs)
+	private static bool CanAfford(List<ConsentCost> costs)
+	{
+		if (costs == null)
+		{
+			return true;
+		}
+		foreach (ConsentCost cost in costs)
+		{
+			if (cost.HasBalance && cost.CurrentBalance < cost.Amount)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static string ComposePrompt(string itemDisplayName, List<ConsentCost> costs, bool canAfford)
 	{
 		StringBuilder stringBuilder = new StringBuilder();
 		if (!string.IsNullOrEmpty(itemDisplayName))
@@ -185,16 +203,26 @@ public class ConsentScreen : MonoBehaviour
 		{
 			foreach (ConsentCost cost in costs)
 			{
-				string arg = (string.IsNullOrEmpty(cost.DisplayName) ? "credits" : cost.DisplayName);
-				stringBuilder.Append($"<b>You are about to spend {cost.Amount} {arg}.</b>\n\n");
-				if (cost.HasBalance)
+				string text = (string.IsNullOrEmpty(cost.DisplayName) ? "credits" : cost.DisplayName);
+				if (cost.HasBalance && cost.CurrentBalance < cost.Amount)
 				{
-					stringBuilder.Append($"This will leave you with {cost.CurrentBalance - cost.Amount} {arg}.\n\n");
+					stringBuilder.Append("<b>You don't have enough " + text + " to complete this purchase.</b>\n\n");
+				}
+				else if (canAfford)
+				{
+					stringBuilder.Append($"<b>You are about to spend {cost.Amount} {text}.</b>\n\n");
+					if (cost.HasBalance)
+					{
+						stringBuilder.Append($"This will leave you with {cost.CurrentBalance - cost.Amount} {text}.\n\n");
+					}
 				}
 			}
 		}
-		stringBuilder.Append("<b>Are you sure?</b>");
-		return stringBuilder.ToString();
+		if (canAfford)
+		{
+			stringBuilder.Append("<b>Are you sure?</b>");
+		}
+		return stringBuilder.ToString().TrimEnd('\n');
 	}
 
 	private void OnChoice(bool consented)

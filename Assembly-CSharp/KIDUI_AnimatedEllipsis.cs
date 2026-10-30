@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/KID/KIDUI_Animated Ellipsis")]
 public class KIDUI_AnimatedEllipsis : MonoBehaviour
 {
 	[Header("Ellipsis Spawning")]

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Random Audio Start")]
 public class RandomAudioStart : MonoBehaviour, IBuildValidation
 {
 	public AudioSource audioSource;

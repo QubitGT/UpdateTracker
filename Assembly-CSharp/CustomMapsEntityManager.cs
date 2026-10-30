@@ -1,8 +1,7 @@
-using Fusion;
 using GorillaNetworking;
 using UnityEngine;
 
-[NetworkBehaviourWeaved(0)]
+[AddComponentMenu("GorillaTag/Virtual Stump/Custom Maps Entity Manager")]
 public class CustomMapsEntityManager : GameEntityManager
 {
 	private static bool IsOverrideEnabled()
@@ -36,17 +35,5 @@ public class CustomMapsEntityManager : GameEntityManager
 			flag &= zoneComponents[i].IsZoneReady();
 		}
 		return flag;
-	}
-
-	[WeaverGenerated]
-	public override void CopyBackingFieldsToState(bool P_0)
-	{
-		base.CopyBackingFieldsToState(P_0);
-	}
-
-	[WeaverGenerated]
-	public override void CopyStateToBackingFields()
-	{
-		base.CopyStateToBackingFields();
 	}
 }

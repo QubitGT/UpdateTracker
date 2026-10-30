@@ -7,6 +7,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Pawn")]
 public class CrittersPawn : CrittersActor, IEyeScannable
 {
 	public enum CreatureState

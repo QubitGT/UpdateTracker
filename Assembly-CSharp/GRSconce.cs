@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Sconce")]
 public class GRSconce : MonoBehaviour
 {
 	private enum State

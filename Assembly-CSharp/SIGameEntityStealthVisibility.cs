@@ -1,6 +1,7 @@
 using GorillaLocomotion;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Game Entity Stealth Visibility")]
 public class SIGameEntityStealthVisibility : MonoBehaviour
 {
 	[SerializeField]

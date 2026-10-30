@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/Ghost Reactor Level Section")]
 public class GhostReactorLevelSection : MonoBehaviour
 {
 	public enum SectionType

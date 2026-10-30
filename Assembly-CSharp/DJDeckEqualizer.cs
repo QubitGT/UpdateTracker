@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/DJ Deck Equalizer")]
 public class DJDeckEqualizer : MonoBehaviour
 {
 	[SerializeField]

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Critters Grabber")]
 public class CrittersGrabber : CrittersActor
 {
 	public Transform grabPosition;

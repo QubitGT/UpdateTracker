@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "PlatformTagJoin", menuName = "ScriptableObjects/PlatformTagJoin", order = 0)]
+[CreateAssetMenu(fileName = "PlatformTagJoin", menuName = "ScriptableObjects/Networking/PlatformTagJoin", order = 0)]
 public class PlatformTagJoin : ScriptableObject
 {
 	public string PlatformTag = "";

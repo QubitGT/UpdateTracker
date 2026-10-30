@@ -8,6 +8,7 @@ using UnityEngine;
 [RequireComponent(typeof(GameSnappable))]
 [RequireComponent(typeof(GameButtonActivatable))]
 [RequireComponent(typeof(SIGadgetBlasterType))]
+[AddComponentMenu("GorillaTag/Super Infection/SI Gadget Blaster")]
 public class SIGadgetBlaster : SIGadget, ITickSystemTick
 {
 	public enum RPCCalls
@@ -99,9 +100,17 @@ public class SIGadgetBlaster : SIGadget, ITickSystemTick
 		TickSystem<object>.AddTickCallback(this);
 	}
 
-	private new void OnDisable()
+	protected override void OnDisable()
 	{
 		base.OnDisable();
+		GameEntity obj = gameEntity;
+		obj.OnGrabbed = (Action)Delegate.Remove(obj.OnGrabbed, new Action(StartGrabbing));
+		GameEntity obj2 = gameEntity;
+		obj2.OnSnapped = (Action)Delegate.Remove(obj2.OnSnapped, new Action(StartGrabbing));
+		GameEntity obj3 = gameEntity;
+		obj3.OnReleased = (Action)Delegate.Remove(obj3.OnReleased, new Action(StopGrabbing));
+		GameEntity obj4 = gameEntity;
+		obj4.OnUnsnapped = (Action)Delegate.Remove(obj4.OnUnsnapped, new Action(StopGrabbing));
 		TickSystem<object>.RemoveTickCallback(this);
 	}
 

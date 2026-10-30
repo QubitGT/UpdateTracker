@@ -1,5 +1,7 @@
 using GorillaNetworking.Store;
+using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Try On Bundle Button")]
 public class TryOnBundleButton : GorillaPressableButton
 {
 	public int buttonIndex;

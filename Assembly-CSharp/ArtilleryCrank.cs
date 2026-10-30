@@ -2,6 +2,7 @@ using GorillaExtensions;
 using GorillaLocomotion;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Environment/Artillery Crank")]
 public class ArtilleryCrank : HoldableObject
 {
 	[SerializeField]

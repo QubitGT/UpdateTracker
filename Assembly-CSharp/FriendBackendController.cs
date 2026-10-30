@@ -300,7 +300,7 @@ public class FriendBackendController : MonoBehaviour
 
 	private IEnumerator SendGetFriendsRequest(GetFriendsRequest data, Action<GetFriendsResponse> callback)
 	{
-		UnityWebRequest request = new UnityWebRequest(PlayFabAuthenticatorSettings.FriendApiBaseUrl + "/api/GetFriendsV2", "POST");
+		UnityWebRequest request = new UnityWebRequest(BackendApiUrl.Build(PlayFabAuthenticatorSettings.FriendApiBaseUrl, "/api/GetFriendsV2"), "POST");
 		byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data));
 		request.uploadHandler = new UploadHandlerRaw(bytes);
 		request.downloadHandler = new DownloadHandlerBuffer();
@@ -403,7 +403,7 @@ public class FriendBackendController : MonoBehaviour
 
 	private IEnumerator SendSetPrivacyStateRequest(SetPrivacyStateRequest data, Action<SetPrivacyStateResponse> callback)
 	{
-		UnityWebRequest request = new UnityWebRequest(PlayFabAuthenticatorSettings.FriendApiBaseUrl + "/api/SetPrivacyState", "POST");
+		UnityWebRequest request = new UnityWebRequest(BackendApiUrl.Build(PlayFabAuthenticatorSettings.FriendApiBaseUrl, "/api/SetPrivacyState"), "POST");
 		byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data));
 		request.uploadHandler = new UploadHandlerRaw(bytes);
 		request.downloadHandler = new DownloadHandlerBuffer();
@@ -483,7 +483,7 @@ public class FriendBackendController : MonoBehaviour
 
 	private IEnumerator SendAddFriendRequest(FriendRequestRequest data, Action<bool> callback)
 	{
-		UnityWebRequest request = new UnityWebRequest(PlayFabAuthenticatorSettings.FriendApiBaseUrl + "/api/RequestFriend", "POST");
+		UnityWebRequest request = new UnityWebRequest(BackendApiUrl.Build(PlayFabAuthenticatorSettings.FriendApiBaseUrl, "/api/RequestFriend"), "POST");
 		byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data));
 		request.uploadHandler = new UploadHandlerRaw(bytes);
 		request.downloadHandler = new DownloadHandlerBuffer();
@@ -565,7 +565,7 @@ public class FriendBackendController : MonoBehaviour
 
 	private IEnumerator SendRemoveFriendRequest(RemoveFriendRequest data, Action<bool> callback)
 	{
-		UnityWebRequest request = new UnityWebRequest(PlayFabAuthenticatorSettings.FriendApiBaseUrl + "/api/RemoveFriend", "POST");
+		UnityWebRequest request = new UnityWebRequest(BackendApiUrl.Build(PlayFabAuthenticatorSettings.FriendApiBaseUrl, "/api/RemoveFriend"), "POST");
 		byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data));
 		request.uploadHandler = new UploadHandlerRaw(bytes);
 		request.downloadHandler = new DownloadHandlerBuffer();

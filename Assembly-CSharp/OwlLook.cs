@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Owl Look")]
 public class OwlLook : MonoBehaviour
 {
 	public Transform head;

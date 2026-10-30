@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Prop Selector")]
 public class PropSelector : MonoBehaviour
 {
 	[SerializeField]

@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ICSharpCode.SharpZipLib;
 using ICSharpCode.SharpZipLib.Zip;
 using Modio.Errors;
 using Modio.Mods;
@@ -466,9 +467,21 @@ public class BaseDataStorage : IModioDataStorage
 		{
 			error2 = new Error(ErrorCode.FILE_NOT_FOUND);
 		}
-		if (!(await IsThereEnoughSpaceForExtracting(modFilePath)))
+		else
 		{
-			error2 = new Error(ErrorCode.INSUFFICIENT_SPACE);
+			try
+			{
+				if (!(await IsThereEnoughSpaceForExtracting(modFilePath)))
+				{
+					error2 = new Error(ErrorCode.INSUFFICIENT_SPACE);
+				}
+			}
+			catch (Exception ex) when (ex is SharpZipBaseException || ex is IOException)
+			{
+				ModioLog.Error?.Log($"Modfile archive for {mod} is corrupt, deleting it so it can be re-downloaded: {ex.Message}\nModfile Path:{modFilePath}");
+				await DeleteModfile(mod.Id, modfileId);
+				return new Error(ErrorCode.BINARY_FILE_CORRUPTED);
+			}
 		}
 		if ((bool)error2)
 		{

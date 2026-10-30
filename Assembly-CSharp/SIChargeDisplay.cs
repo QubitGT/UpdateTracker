@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Charge Display")]
 public class SIChargeDisplay : MonoBehaviour
 {
 	[SerializeField]

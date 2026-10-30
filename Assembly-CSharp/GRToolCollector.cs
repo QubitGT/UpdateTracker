@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.XR;
 
+[AddComponentMenu("GorillaTag/Ghost Reactor/GR Tool Collector")]
 public class GRToolCollector : MonoBehaviour, IGameEntityDebugComponent, IGameEntityComponent
 {
 	private enum State

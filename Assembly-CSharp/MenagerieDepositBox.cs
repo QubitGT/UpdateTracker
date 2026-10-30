@@ -2,6 +2,7 @@ using System;
 using GorillaExtensions;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Critters/Menagerie Deposit Box")]
 public class MenagerieDepositBox : MonoBehaviour
 {
 	public Action<MenagerieCritter> OnCritterInserted;

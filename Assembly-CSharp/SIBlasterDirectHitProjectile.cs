@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Super Infection/SI Blaster Direct Hit Projectile")]
 public class SIBlasterDirectHitProjectile : MonoBehaviour, SIGadgetProjectileType
 {
 	private SIGadgetBlasterProjectile projectile;

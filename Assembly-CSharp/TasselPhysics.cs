@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Cosmetics/Tassel Physics")]
 public class TasselPhysics : MonoBehaviour
 {
 	[SerializeField]

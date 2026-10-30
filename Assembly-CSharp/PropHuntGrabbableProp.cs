@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("GorillaTag/Seasonal/Prop Hunt Grabbable Prop")]
 public class PropHuntGrabbableProp : HoldableObject
 {
 	public PropHuntHandFollower handFollower;
