@@ -36,4 +36,9 @@ public interface IGameEntityZoneComponent
 	bool ValidateCreateItem(int nedId, int entityTypeId, Vector3 position, Quaternion rotation, long createData, int createdByEntityNetId);
 
 	bool ValidateCreateItemBatchSize(int size);
+
+	bool ValidateDeserializeItem(int netId, int entityTypeId, Vector3 position, Quaternion rotation)
+	{
+		return true;
+	}
 }

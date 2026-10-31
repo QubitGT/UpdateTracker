@@ -90,7 +90,11 @@ public class SuperInfectionManager : MonoBehaviour, IGameEntityZoneComponent, IF
 
 	private bool hasInitialized;
 
+	private readonly HashSet<int> resourceEntityTypeIds = new HashSet<int>();
+
 	private const int roomFXTypeCount = 5;
+
+	private static readonly int MonkeIdolEntityTypeId = "SIMonkeIdol".GetStaticHash();
 
 	public bool HasSIZonePlatform => zoneSuperInfectionRef.TargetID != 0;
 
@@ -122,21 +126,23 @@ public class SuperInfectionManager : MonoBehaviour, IGameEntityZoneComponent, IF
 			PendingZoneInit = false;
 			OnZoneInit();
 		}
-		if (gameEntityManager.PendingTableData)
-		{
-			gameEntityManager.ResolveTableData();
-		}
 		if (!hasInitialized)
 		{
 			List<GameEntity> list = new List<GameEntity>();
 			SIResourceRegion[] resourceRegions = zoneSuperInfection.resourceRegions;
-			foreach (SIResourceRegion sIResourceRegion in resourceRegions)
+			for (int i = 0; i < resourceRegions.Length; i++)
 			{
-				list.Add(sIResourceRegion.resourcePrefab.GetComponent<GameEntity>());
+				GameEntity component = resourceRegions[i].resourcePrefab.GetComponent<GameEntity>();
+				list.Add(component);
+				resourceEntityTypeIds.Add(component.gameObject.name.GetStaticHash());
 			}
 			GameEntityManager.AddToFactory(list);
 		}
 		hasInitialized = true;
+		if (gameEntityManager.PendingTableData)
+		{
+			gameEntityManager.ResolveTableData();
+		}
 	}
 
 	private void OnEnable()
@@ -837,7 +843,7 @@ public class SuperInfectionManager : MonoBehaviour, IGameEntityZoneComponent, IF
 
 	public bool ValidateMigratedGameEntity(int netId, int entityTypeId, Vector3 position, Quaternion rotation, long createData, int actorNr)
 	{
-		if (techTreeSO.IsSpawnableEntityTypeId(entityTypeId) && !IsSuperGameMode())
+		if (!IsSuperInfectionEntityType(entityTypeId) || !IsSuperGameMode())
 		{
 			return false;
 		}
@@ -896,10 +902,28 @@ public class SuperInfectionManager : MonoBehaviour, IGameEntityZoneComponent, IF
 		return false;
 	}
 
+	private bool IsSuperInfectionEntityType(int entityTypeId)
+	{
+		if (!techTreeSO.IsSpawnableEntityTypeId(entityTypeId) && !resourceEntityTypeIds.Contains(entityTypeId))
+		{
+			return entityTypeId == MonkeIdolEntityTypeId;
+		}
+		return true;
+	}
+
+	public bool ValidateDeserializeItem(int nedId, int entityTypeId, Vector3 position, Quaternion rotation)
+	{
+		if (!IsSuperInfectionEntityType(entityTypeId) || !IsSuperGameMode())
+		{
+			return false;
+		}
+		return true;
+	}
+
 	public bool ValidateCreateItem(int nedId, int entityTypeId, Vector3 position, Quaternion rotation, long createData, int createdByEntityNetId)
 	{
 		gameEntityManager.IsAuthority();
-		if (techTreeSO.IsSpawnableEntityTypeId(entityTypeId) && !IsSuperGameMode())
+		if (!IsSuperInfectionEntityType(entityTypeId) || !IsSuperGameMode())
 		{
 			return false;
 		}

@@ -3166,17 +3166,28 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 				{
 					gameEntityFromNetId.transform.SetPositionAndRotation(position, rotation);
 				}
+				continue;
 			}
-			else if (IsScenePlacedNetId(netId))
+			if (IsScenePlacedNetId(netId))
 			{
 				span[j] = true;
+				continue;
 			}
-			else
+			bool flag = false;
+			for (int k = 0; k < zoneComponents.Count; k++)
+			{
+				if (!zoneComponents[k].ValidateDeserializeItem(netId, entityTypeId, position, rotation))
+				{
+					flag = true;
+					break;
+				}
+			}
+			if (!flag)
 			{
 				CreateItemLocal(netId, entityTypeId, position, rotation);
 			}
 		}
-		for (int k = 0; k < num; k++)
+		for (int l = 0; l < num; l++)
 		{
 			int num2 = binaryReader.ReadInt32();
 			long createData = binaryReader.ReadInt64();
@@ -3185,7 +3196,7 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 			GameEntity gameEntityFromNetId2 = GetGameEntityFromNetId(num2);
 			if (gameEntityFromNetId2 != null)
 			{
-				if (!span[k])
+				if (!span[l])
 				{
 					InitItemLocal(gameEntityFromNetId2, createData, createdByEntityNetId);
 					gameEntityFromNetId2.SetState(state);
@@ -3216,6 +3227,10 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 			{
 				long data4 = binaryReader.ReadInt64();
 				int playerID = binaryReader.ReadInt32();
+				if (gameEntityFromNetId2 == null)
+				{
+					continue;
+				}
 				Vector3 destination = BitPackUtils.UnpackWorldPosFromNetwork(data4);
 				GameAgent component = gameEntityFromNetId2.GetComponent<GameAgent>();
 				if (component != null)
@@ -3228,32 +3243,35 @@ public class GameEntityManager : NetworkComponent, IRequestableOwnershipGuardCal
 				}
 			}
 			byte b = binaryReader.ReadByte();
-			for (int l = 0; l < b; l++)
+			if (!(gameEntityFromNetId2 == null))
 			{
-				gameEntityFromNetId2.entitySerialize[l].OnGameEntityDeserialize(binaryReader);
-			}
-			for (int m = 0; m < zoneComponents.Count; m++)
-			{
-				zoneComponents[m].DeserializeZoneEntityData(binaryReader, gameEntityFromNetId2);
+				for (int m = 0; m < b; m++)
+				{
+					gameEntityFromNetId2.entitySerialize[m].OnGameEntityDeserialize(binaryReader);
+				}
+				for (int n = 0; n < zoneComponents.Count; n++)
+				{
+					zoneComponents[n].DeserializeZoneEntityData(binaryReader, gameEntityFromNetId2);
+				}
 			}
 		}
 		int num4 = binaryReader.ReadInt32();
-		for (int n = 0; n < num4; n++)
+		for (int num5 = 0; num5 < num4; num5++)
 		{
 			int actorNumber = binaryReader.ReadInt32();
 			if (binaryReader.ReadBoolean())
 			{
 				GamePlayer.TryGetGamePlayer(actorNumber, out var out_gamePlayer);
 				GamePlayer.DeserializeNetworkState(binaryReader, out_gamePlayer, this);
-				for (int num5 = 0; num5 < zoneComponents.Count; num5++)
+				for (int num6 = 0; num6 < zoneComponents.Count; num6++)
 				{
-					zoneComponents[num5].DeserializeZonePlayerData(binaryReader, actorNumber);
+					zoneComponents[num6].DeserializeZonePlayerData(binaryReader, actorNumber);
 				}
 			}
 		}
-		for (int num6 = 0; num6 < tempAttachments.Count; num6++)
+		for (int num7 = 0; num7 < tempAttachments.Count; num7++)
 		{
-			AttachmentData attachmentData = tempAttachments[num6];
+			AttachmentData attachmentData = tempAttachments[num7];
 			GameEntityId entityIdFromNetId = GetEntityIdFromNetId(attachmentData.entityNetId);
 			GameEntityId entityIdFromNetId2 = GetEntityIdFromNetId(attachmentData.attachToEntityNetId);
 			if (!(entityIdFromNetId == entityIdFromNetId2))
