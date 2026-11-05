@@ -1351,6 +1351,10 @@ public class VRRig : MonoBehaviour, IWrappedSerializable, IPreDisable, IUserCosm
 		{
 			return true;
 		}
+		if (CosmeticsController.instance.IsGlobalCosmeticAutoGrant(itemName))
+		{
+			return true;
+		}
 		bool canTryOn = CosmeticsController.instance.GetItemFromDict(itemName).canTryOn;
 		if (inTryOnRoom && canTryOn)
 		{
