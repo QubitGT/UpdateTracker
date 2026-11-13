@@ -1734,7 +1734,7 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 		return ModId.Null;
 	}
 
-	public static async Task LoadMap(ModId modId, GTMapLoadSource loadSource = GTMapLoadSource.none)
+	public static async Task LoadMap(ModId modId, GTMapLoadSource loadSource = GTMapLoadSource.none, GTMapLoadOrigin loadOrigin = default(GTMapLoadOrigin))
 	{
 		if (!hasInstance || loadInProgress)
 		{
@@ -1756,6 +1756,7 @@ public class CustomMapManager : MonoBehaviour, IBuildValidation
 		loadInProgress = true;
 		loadingMapId = modId;
 		pendingMapLoadSource = loadSource;
+		GorillaTelemetry.PostCustomMapLoadEvent(modId._id, loadSource, loadOrigin);
 		lastSelectedMapModId = modId;
 		lastSelectedMapApproved = true;
 		switch (loadSource)

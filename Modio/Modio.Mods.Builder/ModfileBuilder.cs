@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Modio.API;
 using Modio.API.SchemaDefinitions;
@@ -111,19 +112,58 @@ public class ModfileBuilder
 		string installPath = ModioClient.DataStorage.GetInstallPath(ParentId, 0L);
 		Directory.CreateDirectory(installPath);
 		string temporaryFilePath = Path.Combine(installPath, "upload.zip");
-		Error error;
-		await using (Stream outputTo = File.Open(temporaryFilePath, FileMode.Create))
+		Stream writerStream = File.Open(temporaryFilePath, FileMode.Create);
+		object obj = null;
+		int num = 0;
+		Error error = default(Error);
+		Error result = default(Error);
+		try
 		{
-			error = await ModioClient.DataStorage.CompressToZip(FilePath, outputTo);
+			error = await ModioClient.DataStorage.CompressToZip(FilePath, writerStream);
 			if ((bool)error)
 			{
-				return error;
+				result = error;
+				num = 1;
 			}
+		}
+		catch (object obj2)
+		{
+			obj = obj2;
+		}
+		if (writerStream != null)
+		{
+			await ((IAsyncDisposable)writerStream).DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
 		}
 		if (new FileInfo(temporaryFilePath).Length > 104857600)
 		{
-			await using Stream outputTo = File.Open(temporaryFilePath, FileMode.Open);
-			error = await AddMultipartModfile(outputTo);
+			writerStream = File.Open(temporaryFilePath, FileMode.Open);
+			obj = null;
+			try
+			{
+				error = await AddMultipartModfile(writerStream);
+			}
+			catch (object obj2)
+			{
+				obj = obj2;
+			}
+			if (writerStream != null)
+			{
+				await ((IAsyncDisposable)writerStream).DisposeAsync();
+			}
+			obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+			}
 		}
 		else
 		{

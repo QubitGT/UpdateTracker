@@ -39,6 +39,9 @@ public class ObjectPools : MonoBehaviour, IBuildValidation
 
 	private Dictionary<int, SinglePool> lookUp;
 
+	[OnEnterPlay_Clear]
+	private static readonly List<List<SinglePool>> pendingPools = new List<List<SinglePool>>();
+
 	private const int k_delayedInitialCount = 16;
 
 	[OnEnterPlay_Set(0)]
@@ -75,27 +78,45 @@ public class ObjectPools : MonoBehaviour, IBuildValidation
 			return;
 		}
 		lookUp = new Dictionary<int, SinglePool>();
-		foreach (SinglePool pool in pools)
-		{
-			pool.Initialize(base.gameObject);
-			int num = pool.PoolGUID();
-			if (lookUp.ContainsKey(num))
-			{
-				foreach (SinglePool pool2 in pools)
-				{
-					if (pool2.PoolGUID() == num)
-					{
-						Debug.LogError("Pools contain more then one instance of the same object\n" + $"First object in question is {pool2.objectToPool} tag: {pool2.objectToPool.tag}\n" + $"Second object is {pool.objectToPool} tag: {pool.objectToPool.tag}");
-						break;
-					}
-				}
-			}
-			else
-			{
-				lookUp.Add(pool.PoolGUID(), pool);
-			}
-		}
+		PrivInitializePools(pools);
 		initialized = true;
+		foreach (List<SinglePool> pendingPool in pendingPools)
+		{
+			PrivInitializePools(pendingPool);
+		}
+		pendingPools.Clear();
+	}
+
+	public static void AddPools(List<SinglePool> poolsToAdd)
+	{
+		if (instance == null || !instance.initialized)
+		{
+			pendingPools.Add(poolsToAdd);
+		}
+		else
+		{
+			instance.PrivInitializePools(poolsToAdd);
+		}
+	}
+
+	private void PrivInitializePools(List<SinglePool> poolsToInit)
+	{
+		foreach (SinglePool item in poolsToInit)
+		{
+			if (item.objectToPool == null)
+			{
+				Debug.LogError("ObjectPools: skipping a pool with no objectToPool.");
+				continue;
+			}
+			int key = item.PoolGUID();
+			if (lookUp.TryGetValue(key, out var value))
+			{
+				Debug.LogError("Pools contain more then one instance of the same object\n" + $"First object in question is {value.objectToPool} tag: {value.objectToPool.tag}\n" + $"Second object is {item.objectToPool} tag: {item.objectToPool.tag}");
+				continue;
+			}
+			item.Initialize(base.gameObject);
+			lookUp.Add(key, item);
+		}
 	}
 
 	public bool DoesPoolExist(GameObject obj)
@@ -172,12 +193,17 @@ public class ObjectPools : MonoBehaviour, IBuildValidation
 
 	public bool BuildValidationCheck()
 	{
+		return ValidatePools(pools, "GlobalObjectPools");
+	}
+
+	private static bool ValidatePools(List<SinglePool> poolsToCheck, string listName)
+	{
 		bool result = true;
-		foreach (SinglePool pool in pools)
+		foreach (SinglePool pool in poolsToCheck)
 		{
 			if (pool.objectToPool == null)
 			{
-				Debug.Log("GlobalObjectPools contains a nullref. Failing build validation.");
+				Debug.Log(listName + " contains a nullref. Failing build validation.");
 				result = false;
 				continue;
 			}

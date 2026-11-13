@@ -1674,9 +1674,13 @@ public class BuilderTable : MonoBehaviour, ITickSystemTick
 			{
 				ClearTable();
 				ClearQueuedCommands();
-				byte[] array = GZipStream.UncompressBuffer(localTableInit.serializedTableState);
-				localTableInit.totalSerializedBytes = array.Length;
-				Array.Copy(array, 0, localTableInit.serializedTableState, 0, localTableInit.totalSerializedBytes);
+				if (!Utils.GZipTryUncompressBuffer(localTableInit.serializedTableState, 1048576, out var result))
+				{
+					SetTableState(TableState.BadData);
+					break;
+				}
+				localTableInit.totalSerializedBytes = result.Length;
+				Array.Copy(result, 0, localTableInit.serializedTableState, 0, localTableInit.totalSerializedBytes);
 				DeserializeTableState(localTableInit.serializedTableState, localTableInit.numSerializedBytes);
 				if (tableState != TableState.BadData)
 				{

@@ -36,6 +36,8 @@ public static class GorillaTelemetry
 
 		public const string telemetry_zone_event = "telemetry_zone_event";
 
+		public const string custom_map_load = "custom_map_load";
+
 		public const string telemetry_shop_event = "telemetry_shop_event";
 
 		public const string telemetry_kid_event = "telemetry_kid_event";
@@ -103,6 +105,14 @@ public static class GorillaTelemetry
 		public const string MapId = "MapId";
 
 		public const string MapSource = "MapSource";
+
+		public const string MapTerminal = "MapTerminal";
+
+		public const string MapTerminalPage = "MapTerminalPage";
+
+		public const string MapBrowseSort = "MapBrowseSort";
+
+		public const string MapBrowsePage = "MapBrowsePage";
 
 		public const string CustomMapRegistry = "CustomMapRegistry";
 
@@ -204,6 +214,8 @@ public static class GorillaTelemetry
 	private static Dictionary<string, object> gCustomMapDownloadMetrics;
 
 	private static Dictionary<string, object> gCustomMapRegistryMetrics;
+
+	private static readonly Dictionary<string, object> gCustomMapLoadArgs;
 
 	private static readonly Dictionary<string, object> gGeodeSpendArgs;
 
@@ -357,6 +369,17 @@ public static class GorillaTelemetry
 			["MapSizeChangerCount"] = null,
 			["MapHandHoldCount"] = null,
 			["MapMapperAssetCount"] = null
+		};
+		gCustomMapLoadArgs = new Dictionary<string, object>
+		{
+			["User"] = null,
+			["MapId"] = null,
+			["MapSource"] = null,
+			["MapTerminal"] = null,
+			["MapTerminalPage"] = null,
+			["MapBrowseSort"] = null,
+			["MapBrowsePage"] = 0,
+			["IsPrivateRoom"] = false
 		};
 		gGeodeSpendArgs = new Dictionary<string, object>
 		{
@@ -1146,6 +1169,28 @@ public static class GorillaTelemetry
 			dictionary["MapHandHoldCount"] = handHoldCount.ToString();
 			dictionary["MapMapperAssetCount"] = mapperAssetCount.ToString();
 			EnqueueTelemetryEvent("CustomMapRegistry", dictionary);
+		}
+	}
+
+	public static void PostCustomMapLoadEvent(long mapId, GTMapLoadSource mapSource, GTMapLoadOrigin mapOrigin)
+	{
+		if (IsConnectedToPlayfab())
+		{
+			string value = PlayFabUserId();
+			if (!string.IsNullOrEmpty(value))
+			{
+				bool flag = NetworkSystem.Instance.InRoom && NetworkSystem.Instance.SessionIsPrivate;
+				Dictionary<string, object> dictionary = gCustomMapLoadArgs;
+				dictionary["User"] = value;
+				dictionary["MapId"] = mapId.ToString();
+				dictionary["MapSource"] = mapSource.GetName();
+				dictionary["MapTerminal"] = mapOrigin.Terminal.GetName();
+				dictionary["MapTerminalPage"] = mapOrigin.Page.GetName();
+				dictionary["MapBrowseSort"] = mapOrigin.BrowseSort.GetName();
+				dictionary["MapBrowsePage"] = mapOrigin.BrowsePage;
+				dictionary["IsPrivateRoom"] = flag;
+				EnqueueTelemetryEvent("custom_map_load", dictionary);
+			}
 		}
 	}
 

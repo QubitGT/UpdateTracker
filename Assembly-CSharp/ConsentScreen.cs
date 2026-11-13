@@ -96,6 +96,22 @@ public class ConsentScreen : MonoBehaviour
 
 	private Transform watchAnchor;
 
+	public static bool IsBusy
+	{
+		get
+		{
+			if (_activeReference != null)
+			{
+				if (_activeReference.state != PopupState.Prompt)
+				{
+					return _activeReference.state == PopupState.Processing;
+				}
+				return true;
+			}
+			return false;
+		}
+	}
+
 	private void Awake()
 	{
 		if (_activeReference == null)

@@ -573,19 +573,48 @@ public class ModIOManager : MonoBehaviour, ISteamCredentialProvider, IOculusCred
 		return (false, -1);
 	}
 
-	public static async Task<bool> HasNewerModfileAvailable(ModId modId)
+	public static async Task<long> GetNewerModfileId(ModId modId)
 	{
 		if (!hasInstance)
 		{
-			return false;
+			return 0L;
 		}
 		var (error, mod) = await GetMod(modId, forceUpdate: true);
 		if ((bool)error || mod?.File == null)
 		{
-			return false;
+			return 0L;
 		}
 		long installedModfileId = ModInstallationManagement.GetInstalledModfileId(mod);
-		return installedModfileId > 0 && mod.File.Id > 0 && mod.File.Id != installedModfileId;
+		if (installedModfileId > 0 && mod.File.Id > 0 && mod.File.Id != installedModfileId)
+		{
+			return mod.File.Id;
+		}
+		return 0L;
+	}
+
+	public static async Task<bool> WaitForModfileToInstall(ModId modId, long modfileId)
+	{
+		for (int attempt = 0; attempt < 6; attempt++)
+		{
+			if (!hasInstance)
+			{
+				return false;
+			}
+			var (error, mod) = await GetMod(modId, forceUpdate: true);
+			if (!error && mod?.File != null)
+			{
+				if (ModInstallationManagement.GetInstalledModfileId(mod) == modfileId)
+				{
+					return false;
+				}
+				if (mod.File.Id == modfileId)
+				{
+					return true;
+				}
+			}
+			await Task.Delay(5000);
+		}
+		return false;
 	}
 
 	public static void SaveFavoriteMods()

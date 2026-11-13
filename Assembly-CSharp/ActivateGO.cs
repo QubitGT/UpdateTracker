@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -29,6 +30,9 @@ public class ActivateGO : MonoBehaviour
 	[SerializeField]
 	private ActivateGOMode mode;
 
+	[SerializeField]
+	private float startupTimeout = 30f;
+
 	private bool active;
 
 	private bool flashing;
@@ -36,8 +40,36 @@ public class ActivateGO : MonoBehaviour
 	private void OnEnable()
 	{
 		active = PlayerPrefFlags.Check(flag) != invertFlag;
-		SetGOsActive(0);
+		if (mode == ActivateGOMode.EnableRenderers)
+		{
+			StartCoroutine(SetGOsActiveStartup(0));
+		}
+		else
+		{
+			SetGOsActive(0);
+		}
 		PlayerPrefFlags.OnFlagChange = (Action<PlayerPrefFlags.Flag, bool>)Delegate.Combine(PlayerPrefFlags.OnFlagChange, new Action<PlayerPrefFlags.Flag, bool>(OnFlagChange));
+	}
+
+	private IEnumerator SetGOsActiveStartup(int fls)
+	{
+		float time = Time.time;
+		List<Renderer> renderers = new List<Renderer>();
+		while (true)
+		{
+			renderers.AddRange(targetGO.GetComponentsInChildren<MeshRenderer>(includeInactive: true));
+			renderers.AddRange(targetGO.GetComponentsInChildren<SkinnedMeshRenderer>(includeInactive: true));
+			if (renderers.Count > 0)
+			{
+				break;
+			}
+			if (Time.time - time > startupTimeout)
+			{
+				yield break;
+			}
+			yield return null;
+		}
+		SetGOsActive(fls);
 	}
 
 	private void OnDisable()

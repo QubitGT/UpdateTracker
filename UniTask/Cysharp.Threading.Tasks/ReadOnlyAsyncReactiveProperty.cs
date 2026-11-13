@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 
 namespace Cysharp.Threading.Tasks;
@@ -251,6 +252,7 @@ public class ReadOnlyAsyncReactiveProperty<T> : IReadOnlyAsyncReactiveProperty<T
 	private async UniTaskVoid ConsumeEnumerator(IUniTaskAsyncEnumerable<T> source, CancellationToken cancellationToken)
 	{
 		enumerator = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await enumerator.MoveNextAsync())
@@ -259,10 +261,16 @@ public class ReadOnlyAsyncReactiveProperty<T> : IReadOnlyAsyncReactiveProperty<T
 				triggerEvent.SetResult(result);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			await enumerator.DisposeAsync();
-			enumerator = null;
+			obj = obj2;
+		}
+		await enumerator.DisposeAsync();
+		enumerator = null;
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 	}
 

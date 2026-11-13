@@ -7,6 +7,9 @@ public class AllCosmeticsArraySO : ScriptableObject
 	[SerializeField]
 	public GTDirectAssetRef<CosmeticSO>[] sturdyAssetRefs;
 
+	[SerializeField]
+	public CosmeticObjectPoolsSO objectPools;
+
 	public CosmeticSO SearchForCosmeticSO(string playfabId)
 	{
 		GTDirectAssetRef<CosmeticSO>[] array = sturdyAssetRefs;

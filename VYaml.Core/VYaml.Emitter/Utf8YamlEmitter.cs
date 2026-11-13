@@ -733,7 +733,7 @@ public ref struct Utf8YamlEmitter
 		{
 			whiteSpaces = Enumerable.Repeat((byte)32, num * 2).ToArray();
 		}
-		Span<byte> span = whiteSpaces.AsSpan(0, num);
+		Span<byte> span = MemoryExtensions.AsSpan(whiteSpaces, 0, num);
 		Span<byte> span2 = output;
 		int num2 = offset;
 		span.CopyTo(span2.Slice(num2, span2.Length - num2));

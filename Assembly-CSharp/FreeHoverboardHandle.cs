@@ -52,13 +52,13 @@ public class FreeHoverboardHandle : HoldableObject
 				Transform obj = (flag ? VRRig.LocalRig.leftHand.rigTarget : VRRig.LocalRig.rightHand.rigTarget);
 				Quaternion rot = obj.InverseTransformRotation(base.transform.rotation);
 				Vector3 pos = obj.InverseTransformPoint(base.transform.position);
-				GTPlayer.Instance.GrabPersonalHoverboard(flag, pos, rot, parentFreeBoard.boardColor);
+				GTPlayer.Instance.GrabPersonalHoverboard(flag, pos, rot, parentFreeBoard.boardColor, parentFreeBoard.skinActorNumber);
 			}
 			else
 			{
 				Quaternion rot2 = (flag ? defaultHoldAngleLeft : defaultHoldAngleRight);
 				Vector3 pos2 = (flag ? defaultHoldPosLeft : defaultHoldPosRight);
-				GTPlayer.Instance.GrabPersonalHoverboard(flag, pos2, rot2, VRRig.LocalRig.playerColor);
+				GTPlayer.Instance.GrabPersonalHoverboard(flag, pos2, rot2, VRRig.LocalRig.playerColor, NetworkSystem.Instance.LocalPlayer.ActorNumber);
 			}
 		}
 	}

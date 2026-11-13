@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Zip;
 using Modio.API;
@@ -583,32 +584,93 @@ public class ModBuilder
 
 	private static async Task<(Error error, ModioAPIFileParameter file)> GalleryZipFromFilePaths(ICollection<string> imageFilePaths)
 	{
+		(Error, ModioAPIFileParameter) result = default((Error, ModioAPIFileParameter));
 		foreach (string imageFilePath in imageFilePaths)
 		{
 			if (!ValidateImageFilePath(imageFilePath))
 			{
 				ModioLog.Error?.Log($"Can't upload {imageFilePaths.Count} gallery images, {imageFilePath} is invalid.");
-				return (error: new Error(ErrorCode.BAD_PARAMETER), file: default(ModioAPIFileParameter));
+				result = (new Error(ErrorCode.BAD_PARAMETER), default(ModioAPIFileParameter));
+				return result;
 			}
 		}
-		(Error error, ModioAPIFileParameter file) result;
-		await using (MemoryStream memStream = new MemoryStream())
+		MemoryStream memStream = new MemoryStream();
+		object obj = null;
+		int num = 0;
+		(Error error, ModioAPIFileParameter file) result2 = default((Error error, ModioAPIFileParameter file));
+		object obj5;
+		try
 		{
-			(Error error, ModioAPIFileParameter file) tuple;
-			await using (ZipOutputStream zipStream = new ZipOutputStream(memStream))
+			ZipOutputStream zipStream = new ZipOutputStream(memStream);
+			object obj2 = null;
+			int num2 = 0;
+			(Error error, ModioAPIFileParameter file) tuple = default((Error error, ModioAPIFileParameter file));
+			try
 			{
 				foreach (string imageFilePath2 in imageFilePaths)
 				{
 					ZipEntry entry = new ZipEntry(Path.GetFileName(imageFilePath2));
 					zipStream.PutNextEntry(entry);
-					await using Stream readStream = File.Open(imageFilePath2, FileMode.Open);
-					await readStream.CopyToAsync(zipStream);
-					zipStream.CloseEntry();
+					Stream readStream = File.Open(imageFilePath2, FileMode.Open);
+					object obj3 = null;
+					try
+					{
+						await readStream.CopyToAsync(zipStream);
+						zipStream.CloseEntry();
+					}
+					catch (object obj4)
+					{
+						obj3 = obj4;
+					}
+					if (readStream != null)
+					{
+						await ((IAsyncDisposable)readStream).DisposeAsync();
+					}
+					obj5 = obj3;
+					if (obj5 != null)
+					{
+						ExceptionDispatchInfo.Capture((obj5 as Exception) ?? throw obj5).Throw();
+					}
 				}
 				memStream.Position = 0L;
 				tuple = (error: Error.None, file: new ModioAPIFileParameter(memStream, "images.zip", "application/zip"));
+				num2 = 1;
 			}
-			result = tuple;
+			catch (object obj4)
+			{
+				obj2 = obj4;
+			}
+			if (zipStream != null)
+			{
+				await ((IAsyncDisposable)zipStream).DisposeAsync();
+			}
+			obj5 = obj2;
+			if (obj5 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj5 as Exception) ?? throw obj5).Throw();
+			}
+			if (num2 == 1)
+			{
+				result2 = tuple;
+				num = 1;
+			}
+		}
+		catch (object obj4)
+		{
+			obj = obj4;
+		}
+		if (memStream != null)
+		{
+			await ((IAsyncDisposable)memStream).DisposeAsync();
+		}
+		obj5 = obj;
+		if (obj5 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj5 as Exception) ?? throw obj5).Throw();
+		}
+		if (num == 1)
+		{
+			return result2;
 		}
 		return result;
 	}

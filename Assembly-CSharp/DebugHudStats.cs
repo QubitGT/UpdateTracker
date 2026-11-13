@@ -23,6 +23,7 @@ public class DebugHudStats : MonoBehaviour
 		ShowLog,
 		ShowError,
 		ShowStats,
+		HandPrecision,
 		ShowRBs,
 		TimeAdjust,
 		RecordingMode,
@@ -121,6 +122,14 @@ public class DebugHudStats : MonoBehaviour
 
 	private bool _button8Down;
 
+	private double _handErrSumSq;
+
+	private double _handErrMax;
+
+	private double _handAngleMax;
+
+	private int _handErrCount;
+
 	[SerializeField]
 	private StringTable betaTitleDataOveride;
 
@@ -185,15 +194,15 @@ public class DebugHudStats : MonoBehaviour
 				bool flag8 = vector.y < -0.5f;
 				if (_button1Down && !flag)
 				{
-					GorillaComputer.instance.AddSeverTime(flag4 ? (-60) : 60);
+					GorillaComputer.instance.AddServerTime(flag4 ? (-60) : 60);
 				}
 				if (_button2Down && !flag2)
 				{
-					GorillaComputer.instance.AddSeverTime(flag4 ? (-1) : 5);
+					GorillaComputer.instance.AddServerTime(flag4 ? (-1) : 5);
 				}
 				if (_button3Down && !flag3)
 				{
-					GorillaComputer.instance.AddSeverTime(flag4 ? (-1440) : 1440);
+					GorillaComputer.instance.AddServerTime(flag4 ? (-1440) : 1440);
 				}
 				if (!_button5Down && flag5)
 				{
@@ -265,6 +274,10 @@ public class DebugHudStats : MonoBehaviour
 		if (_firstAwake == 0f)
 		{
 			_firstAwake = Time.time;
+		}
+		if (_currentState == State.HandPrecision)
+		{
+			SampleHandPrecision();
 		}
 		if (_updateTimer < delayUpdateRate)
 		{
@@ -411,6 +424,9 @@ public class DebugHudStats : MonoBehaviour
 				_builder.AppendLine(headCenterPosition.ToString("F2"));
 				break;
 			}
+			case State.HandPrecision:
+				AppendHandPrecision();
+				break;
 			case State.TimeAdjust:
 			{
 				_builder.AppendLine("\nAdjust Time\n");
@@ -497,10 +513,13 @@ public class DebugHudStats : MonoBehaviour
 			_currentState = (fwd ? State.ShowStats : State.ShowLog);
 			break;
 		case State.ShowStats:
-			_currentState = (fwd ? State.ShowRBs : State.ShowError);
+			_currentState = (fwd ? State.HandPrecision : State.ShowError);
+			break;
+		case State.HandPrecision:
+			_currentState = (fwd ? State.ShowRBs : State.ShowStats);
 			break;
 		case State.ShowRBs:
-			_currentState = (fwd ? State.TitleDataMonitor : State.ShowStats);
+			_currentState = (fwd ? State.TitleDataMonitor : State.HandPrecision);
 			break;
 		case State.TitleDataMonitor:
 			_currentState = (fwd ? State.TimeAdjust : State.ShowRBs);
@@ -516,7 +535,84 @@ public class DebugHudStats : MonoBehaviour
 		{
 			BetterDayNightManager.instance.SetFixedWeather((BetterDayNightManager.WeatherType)_fixedWeathers.GetValue(_fixedWeatherIndex));
 		}
+		ResetHandPrecisionWindow();
 		UpdateLog();
+	}
+
+	private void SampleHandPrecision()
+	{
+		GTPlayer instance = GTPlayer.Instance;
+		if (!(instance == null) && !(instance.AveragedVelocity.magnitude > 0.1f * instance.scale))
+		{
+			Vector3 position = instance.headCollider.transform.position;
+			AddHandPrecisionSample(instance.DebugHandPrecisionErrorLeft, instance.GetHandFollower(isLeftHand: true).position - position);
+			AddHandPrecisionSample(instance.DebugHandPrecisionErrorRight, instance.GetHandFollower(isLeftHand: false).position - position);
+		}
+	}
+
+	private void AddHandPrecisionSample(double error, Vector3 cameraToHand)
+	{
+		if (!(error < 0.0))
+		{
+			_handErrSumSq += error * error;
+			_handErrMax = Math.Max(_handErrMax, error);
+			_handErrCount++;
+			float magnitude = cameraToHand.magnitude;
+			if (magnitude > 0f)
+			{
+				_handAngleMax = Math.Max(_handAngleMax, error / (double)magnitude * (180.0 / Math.PI) * 60.0);
+			}
+		}
+	}
+
+	private void ResetHandPrecisionWindow()
+	{
+		_handErrSumSq = 0.0;
+		_handErrMax = 0.0;
+		_handAngleMax = 0.0;
+		_handErrCount = 0;
+	}
+
+	private void AppendHandPrecision()
+	{
+		GTPlayer instance = GTPlayer.Instance;
+		_builder.AppendLine("\nHand Precision");
+		Vector3 position = instance.headCollider.transform.position;
+		float num = Mathf.Max(Mathf.Abs(position.x), Mathf.Max(Mathf.Abs(position.y), Mathf.Abs(position.z)));
+		double num2 = ((num > 0f) ? Math.Pow(2.0, Math.Floor(Math.Log(num, 2.0)) - 23.0) : 0.0);
+		float scale = instance.scale;
+		_builder.Append("scale: ");
+		_builder.Append(scale.ToString("F3"));
+		_builder.Append("  |pos|: ");
+		_builder.Append(num.ToString("F0"));
+		_builder.Append("m  float step: ");
+		_builder.Append((num2 * 1000000.0).ToString("F1"));
+		_builder.AppendLine("um");
+		if (_handErrCount == 0)
+		{
+			_builder.AppendLine("no samples (hands touching or player moving)");
+		}
+		else
+		{
+			double num3 = Math.Sqrt(_handErrSumSq / (double)_handErrCount);
+			_builder.Append("hand err rms: ");
+			_builder.Append((num3 * 1000000.0).ToString("F1"));
+			_builder.Append("um  max: ");
+			_builder.Append((_handErrMax * 1000000.0).ToString("F1"));
+			_builder.Append("um (");
+			_builder.Append(((num2 > 0.0) ? (_handErrMax / num2) : 0.0).ToString("F1"));
+			_builder.AppendLine(" steps)");
+			_builder.Append("max angle: ");
+			_builder.Append(_handAngleMax.ToString("F2"));
+			_builder.AppendLine("' (1px ~ 2.4' on Quest 3)");
+			_builder.Append("at normal size: rms ");
+			_builder.Append((num3 / (double)scale * 1000.0).ToString("F2"));
+			_builder.Append("mm  max ");
+			_builder.Append((_handErrMax / (double)scale * 1000.0).ToString("F2"));
+			_builder.AppendLine("mm");
+		}
+		_builder.AppendLine("Measures the hand target only; rig/IK/GPU error is on top of this.");
+		ResetHandPrecisionWindow();
 	}
 
 	private void DisplayLog(List<string> log)

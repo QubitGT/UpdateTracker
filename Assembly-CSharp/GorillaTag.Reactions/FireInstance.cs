@@ -22,7 +22,7 @@ public class FireInstance : MonoBehaviour
 	[SerializeField]
 	internal AudioSource _loopingAudioSource;
 
-	[Tooltip("The emissive color will be darkened on the materials of these renderers as the fire is extinguished.")]
+	[Tooltip("Not currently applied: intended to darken the emissive color of these renderers as the fire is extinguished.")]
 	[SerializeField]
 	internal Renderer[] _emissiveRenderers;
 
@@ -43,14 +43,15 @@ public class FireInstance : MonoBehaviour
 	[SerializeField]
 	internal bool _despawnOnExtinguish = true;
 
+	[Tooltip("Seconds before the fire burns out and despawns. Only used when Despawn On Extinguish is enabled.")]
 	[SerializeField]
 	internal float _maxLifetime = 10f;
 
-	[Tooltip("How long it should take to reheat to it's default temperature.")]
+	[Tooltip("Degrees celsius per second the fire regains, up to its default temperature, after being partially or fully extinguished.")]
 	[SerializeField]
 	internal float _reheatSpeed = 1f;
 
-	[Tooltip("If you completely extinguish the object, how long should it stay extinguished?")]
+	[Tooltip("If you completely extinguish the object, how long should it stay extinguished before it starts reheating?")]
 	[SerializeField]
 	internal float _stayExtinguishedDuration = 1f;
 
@@ -62,19 +63,27 @@ public class FireInstance : MonoBehaviour
 
 	internal float _timeAlive;
 
-	internal float _psDefaultEmissionRate;
-
-	internal ParticleSystem.EmissionModule _psEmissionModule;
-
-	internal Vector3Int _spatialGridPosition;
+	internal float _dyingStartTemperature;
 
 	internal bool _isDespawning;
 
 	internal float _deathStateDuration;
 
-	internal MaterialPropertyBlock[] _emiRenderers_matPropBlocks;
+	internal bool _isRegistered;
 
-	internal Color[] _emiRenderers_defaultColors;
+	internal int _enabledIndex = -1;
+
+	internal Transform _transform;
+
+	internal int _gameObjectId;
+
+	internal Vector3Int _spatialGridPosition;
+
+	internal bool _isInSpatialGrid;
+
+	internal bool _hasAudioSlot;
+
+	internal bool isExtinguished => _timeSinceExtinguished < _stayExtinguishedDuration;
 
 	protected void Awake()
 	{

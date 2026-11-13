@@ -17,11 +17,21 @@ public class BuilderZoneRenderers : MonoBehaviour
 	private void Start()
 	{
 		allRenderers.Clear();
-		allRenderers.AddRange(renderers);
+		foreach (Renderer renderer in renderers)
+		{
+			if (renderer != null)
+			{
+				allRenderers.Add(renderer);
+			}
+		}
 		foreach (GameObject rootObject in rootObjects)
 		{
-			allRenderers.AddRange(rootObject.GetComponentsInChildren<Renderer>(includeInactive: true));
+			if (rootObject != null)
+			{
+				allRenderers.AddRange(rootObject.GetComponentsInChildren<Renderer>(includeInactive: true));
+			}
 		}
+		canvases.RemoveAll((Canvas c) => c == null);
 		ZoneManagement instance = ZoneManagement.instance;
 		instance.onZoneChanged = (Action)Delegate.Combine(instance.onZoneChanged, new Action(OnZoneChanged));
 		inBuilderZone = true;
@@ -40,33 +50,28 @@ public class BuilderZoneRenderers : MonoBehaviour
 	private void OnZoneChanged()
 	{
 		bool flag = ZoneManagement.instance.IsZoneActive(GTZone.monkeBlocks);
-		if (flag && !inBuilderZone)
+		if (flag != inBuilderZone)
 		{
 			inBuilderZone = flag;
-			foreach (Renderer allRenderer in allRenderers)
+			SetVisible(flag);
+		}
+	}
+
+	private void SetVisible(bool visible)
+	{
+		foreach (Renderer allRenderer in allRenderers)
+		{
+			if (allRenderer != null)
 			{
-				allRenderer.enabled = true;
+				allRenderer.enabled = visible;
 			}
+		}
+		foreach (Canvas canvase in canvases)
+		{
+			if (canvase != null)
 			{
-				foreach (Canvas canvase in canvases)
-				{
-					canvase.enabled = true;
-				}
-				return;
+				canvase.enabled = visible;
 			}
-		}
-		if (flag || !inBuilderZone)
-		{
-			return;
-		}
-		inBuilderZone = flag;
-		foreach (Renderer allRenderer2 in allRenderers)
-		{
-			allRenderer2.enabled = false;
-		}
-		foreach (Canvas canvase2 in canvases)
-		{
-			canvase2.enabled = false;
 		}
 	}
 }

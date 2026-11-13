@@ -27,6 +27,16 @@ public class CustomMapUpdateWatcher : MonoBehaviour
 
 	private bool hmdCallbackHooked;
 
+	private bool hasRoomUpdate;
+
+	private ModId roomUpdateModId = ModId.Null;
+
+	private long roomUpdateModfileId;
+
+	private bool roomUpdateReturnToPosition;
+
+	private Coroutine roomUpdateCoroutine;
+
 	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 	private static void Bootstrap()
 	{
@@ -53,6 +63,9 @@ public class CustomMapUpdateWatcher : MonoBehaviour
 		CustomMapDevWatchMode.OnWatchStarted.RemoveListener(OnWatchStarted);
 		CustomMapDevWatchMode.OnWatchStopped.RemoveListener(OnWatchStopped);
 		TeardownPolling();
+		roomUpdateCoroutine = null;
+		hasRoomUpdate = false;
+		reloadInProgress = false;
 	}
 
 	private void OnWatchStarted(ModId modId)
@@ -151,11 +164,16 @@ public class CustomMapUpdateWatcher : MonoBehaviour
 		try
 		{
 			ModId modId = watchedModId;
-			bool flag = await ModIOManager.HasNewerModfileAvailable(modId);
-			if (CustomMapDevWatchMode.IsWatchingMap(modId) && !reloadInProgress && flag && CanReloadNow() && IsPlayerInStump() && !CustomMapManager.IsLoading() && !CustomMapManager.IsUnloading())
+			long num = await ModIOManager.GetNewerModfileId(modId);
+			if (CustomMapDevWatchMode.IsWatchingMap(modId) && !reloadInProgress && num > 0 && CanReloadNow() && IsPlayerInStump() && !CustomMapManager.IsLoading() && !CustomMapManager.IsUnloading())
 			{
 				GTDev.Log($"[CustomMapUpdateWatcher] Newer version of {modId} found; reloading.");
-				StartCoroutine(ReloadSequence(modId));
+				bool returnToPosition = CustomMapDevWatchMode.ReturnToPosition;
+				if (VirtualStumpSerializer.Instance != null)
+				{
+					VirtualStumpSerializer.Instance.SendRoomMapUpdated(modId, num, returnToPosition);
+				}
+				StartCoroutine(ReloadSequence(modId, returnToPosition));
 			}
 		}
 		finally
@@ -164,10 +182,66 @@ public class CustomMapUpdateWatcher : MonoBehaviour
 		}
 	}
 
-	private IEnumerator ReloadSequence(ModId modId)
+	public static void OnRoomMapUpdated(ModId modId, long modfileId, bool returnToPosition)
+	{
+		if (!(instance == null) && !(modId == ModId.Null) && modfileId > 0)
+		{
+			instance.hasRoomUpdate = true;
+			instance.roomUpdateModId = modId;
+			instance.roomUpdateModfileId = modfileId;
+			instance.roomUpdateReturnToPosition = returnToPosition;
+			if (instance.roomUpdateCoroutine == null)
+			{
+				instance.roomUpdateCoroutine = instance.StartCoroutine(instance.ApplyRoomUpdates());
+			}
+		}
+	}
+
+	private IEnumerator ApplyRoomUpdates()
+	{
+		while (hasRoomUpdate)
+		{
+			while (reloadInProgress || CustomMapManager.IsLoading() || CustomMapManager.IsUnloading())
+			{
+				yield return null;
+			}
+			hasRoomUpdate = false;
+			ModId modId = roomUpdateModId;
+			long modfileId = roomUpdateModfileId;
+			bool returnToPosition = roomUpdateReturnToPosition;
+			if (!IsInPrivateRoom() || !CustomMapLoader.IsMapLoaded(modId))
+			{
+				continue;
+			}
+			Task<bool> waitForModfile = ModIOManager.WaitForModfileToInstall(modId, modfileId);
+			while (!waitForModfile.IsCompleted)
+			{
+				yield return null;
+			}
+			if (waitForModfile.Status != TaskStatus.RanToCompletion || !waitForModfile.Result)
+			{
+				GTDev.Log($"[CustomMapUpdateWatcher] Modfile {modfileId} of {modId} is already installed or " + "not available; not reloading.");
+			}
+			else if (!hasRoomUpdate)
+			{
+				if (CustomMapManager.IsLoading() || CustomMapManager.IsUnloading())
+				{
+					hasRoomUpdate = true;
+				}
+				else if (IsInPrivateRoom() && CustomMapLoader.IsMapLoaded(modId))
+				{
+					GTDev.Log($"[CustomMapUpdateWatcher] Room watcher updated {modId}; reloading.");
+					yield return ReloadSequence(modId, returnToPosition);
+				}
+			}
+		}
+		roomUpdateCoroutine = null;
+	}
+
+	private IEnumerator ReloadSequence(ModId modId, bool returnToPosition)
 	{
 		reloadInProgress = true;
-		CustomMapDevWatchMode.CapturePlayerPosition();
+		CustomMapDevWatchMode.CapturePlayerPosition(returnToPosition);
 		CustomMapManager.ReturnToVirtualStump();
 		yield return null;
 		bool unloadComplete = false;
@@ -204,7 +278,7 @@ public class CustomMapUpdateWatcher : MonoBehaviour
 		if (loadSucceeded)
 		{
 			yield return null;
-			GTDev.Log(CustomMapDevWatchMode.RestorePlayerPosition() ? "[CustomMapUpdateWatcher] Reload complete; restored player position." : "[CustomMapUpdateWatcher] Reload complete (no position restore).");
+			GTDev.Log(CustomMapDevWatchMode.RestorePlayerPosition(returnToPosition) ? "[CustomMapUpdateWatcher] Reload complete; restored player position." : "[CustomMapUpdateWatcher] Reload complete (no position restore).");
 		}
 		else
 		{
@@ -221,17 +295,23 @@ public class CustomMapUpdateWatcher : MonoBehaviour
 	private static bool CanReloadNow()
 	{
 		NetworkSystem networkSystem = NetworkSystem.Instance;
-		if (networkSystem == null)
+		if (networkSystem == null || !networkSystem.InRoom)
 		{
 			return true;
 		}
-		if (!networkSystem.InRoom)
+		if (networkSystem.SessionIsPrivate)
 		{
-			return true;
+			return CustomMapsTerminal.IsDriver;
 		}
-		if (networkSystem.SessionIsPrivate && networkSystem.AllNetPlayers != null)
+		return false;
+	}
+
+	private static bool IsInPrivateRoom()
+	{
+		NetworkSystem networkSystem = NetworkSystem.Instance;
+		if (networkSystem != null && networkSystem.InRoom)
 		{
-			return networkSystem.AllNetPlayers.Length <= 1;
+			return networkSystem.SessionIsPrivate;
 		}
 		return false;
 	}

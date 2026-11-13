@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 
 namespace Cysharp.Threading.Tasks.Linq;
@@ -10,6 +11,7 @@ internal static class Average
 		long count = 0L;
 		int sum = 0;
 		IUniTaskAsyncEnumerator<int> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -20,13 +22,18 @@ internal static class Average
 					count++;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum / (double)count;
 		}
@@ -37,6 +44,7 @@ internal static class Average
 		long count = 0L;
 		int sum = 0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -47,13 +55,18 @@ internal static class Average
 					count++;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum / (double)count;
 		}
@@ -64,6 +77,7 @@ internal static class Average
 		long count = 0L;
 		int sum = 0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -75,13 +89,18 @@ internal static class Average
 					count++;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum / (double)count;
 		}
@@ -92,6 +111,7 @@ internal static class Average
 		long count = 0L;
 		int sum = 0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -103,13 +123,18 @@ internal static class Average
 					count++;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum / (double)count;
 		}
@@ -120,6 +145,7 @@ internal static class Average
 		long count = 0L;
 		long sum = 0L;
 		IUniTaskAsyncEnumerator<long> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -130,13 +156,18 @@ internal static class Average
 					count++;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum / (double)count;
 		}
@@ -147,6 +178,7 @@ internal static class Average
 		long count = 0L;
 		long sum = 0L;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -157,13 +189,18 @@ internal static class Average
 					count++;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum / (double)count;
 		}
@@ -174,6 +211,7 @@ internal static class Average
 		long count = 0L;
 		long sum = 0L;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -185,13 +223,18 @@ internal static class Average
 					count++;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum / (double)count;
 		}
@@ -202,6 +245,7 @@ internal static class Average
 		long count = 0L;
 		long sum = 0L;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -213,13 +257,18 @@ internal static class Average
 					count++;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum / (double)count;
 		}
@@ -230,6 +279,7 @@ internal static class Average
 		long count = 0L;
 		float sum = 0f;
 		IUniTaskAsyncEnumerator<float> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -238,13 +288,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (float)count;
 	}
@@ -254,6 +309,7 @@ internal static class Average
 		long count = 0L;
 		float sum = 0f;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -262,13 +318,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (float)count;
 	}
@@ -278,6 +339,7 @@ internal static class Average
 		long count = 0L;
 		float sum = 0f;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -287,13 +349,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (float)count;
 	}
@@ -303,6 +370,7 @@ internal static class Average
 		long count = 0L;
 		float sum = 0f;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -312,13 +380,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (float)count;
 	}
@@ -328,6 +401,7 @@ internal static class Average
 		long count = 0L;
 		double sum = 0.0;
 		IUniTaskAsyncEnumerator<double> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -336,13 +410,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (double)count;
 	}
@@ -352,6 +431,7 @@ internal static class Average
 		long count = 0L;
 		double sum = 0.0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -360,13 +440,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (double)count;
 	}
@@ -376,6 +461,7 @@ internal static class Average
 		long count = 0L;
 		double sum = 0.0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -385,13 +471,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (double)count;
 	}
@@ -401,6 +492,7 @@ internal static class Average
 		long count = 0L;
 		double sum = 0.0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -410,13 +502,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (double)count;
 	}
@@ -426,6 +523,7 @@ internal static class Average
 		long count = 0L;
 		decimal sum = default(decimal);
 		IUniTaskAsyncEnumerator<decimal> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -434,13 +532,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (decimal)count;
 	}
@@ -450,6 +553,7 @@ internal static class Average
 		long count = 0L;
 		decimal sum = default(decimal);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -458,13 +562,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (decimal)count;
 	}
@@ -474,6 +583,7 @@ internal static class Average
 		long count = 0L;
 		decimal sum = default(decimal);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -483,13 +593,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (decimal)count;
 	}
@@ -499,6 +614,7 @@ internal static class Average
 		long count = 0L;
 		decimal sum = default(decimal);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -508,13 +624,18 @@ internal static class Average
 				count = checked(count + 1);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (decimal)count;
 	}
@@ -524,6 +645,7 @@ internal static class Average
 		long count = 0L;
 		int? sum = 0;
 		IUniTaskAsyncEnumerator<int?> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -538,13 +660,18 @@ internal static class Average
 					}
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum.Value / (double)count;
 		}
@@ -555,6 +682,7 @@ internal static class Average
 		long count = 0L;
 		int? sum = 0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -569,13 +697,18 @@ internal static class Average
 					}
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum.Value / (double)count;
 		}
@@ -586,6 +719,7 @@ internal static class Average
 		long count = 0L;
 		int? sum = 0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -600,13 +734,18 @@ internal static class Average
 					}
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum.Value / (double)count;
 		}
@@ -617,6 +756,7 @@ internal static class Average
 		long count = 0L;
 		int? sum = 0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -631,13 +771,18 @@ internal static class Average
 					}
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum.Value / (double)count;
 		}
@@ -648,6 +793,7 @@ internal static class Average
 		long count = 0L;
 		long? sum = 0L;
 		IUniTaskAsyncEnumerator<long?> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -662,13 +808,18 @@ internal static class Average
 					}
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum.Value / (double)count;
 		}
@@ -679,6 +830,7 @@ internal static class Average
 		long count = 0L;
 		long? sum = 0L;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -693,13 +845,18 @@ internal static class Average
 					}
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum.Value / (double)count;
 		}
@@ -710,6 +867,7 @@ internal static class Average
 		long count = 0L;
 		long? sum = 0L;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -724,13 +882,18 @@ internal static class Average
 					}
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum.Value / (double)count;
 		}
@@ -741,6 +904,7 @@ internal static class Average
 		long count = 0L;
 		long? sum = 0L;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		checked
 		{
 			try
@@ -755,13 +919,18 @@ internal static class Average
 					}
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
+			}
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			return (double)sum.Value / (double)count;
 		}
@@ -772,6 +941,7 @@ internal static class Average
 		long count = 0L;
 		float? sum = 0f;
 		IUniTaskAsyncEnumerator<float?> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -784,13 +954,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return (sum / (float)count).Value;
 	}
@@ -800,6 +975,7 @@ internal static class Average
 		long count = 0L;
 		float? sum = 0f;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -812,13 +988,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return (sum / (float)count).Value;
 	}
@@ -828,6 +1009,7 @@ internal static class Average
 		long count = 0L;
 		float? sum = 0f;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -840,13 +1022,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return (sum / (float)count).Value;
 	}
@@ -856,6 +1043,7 @@ internal static class Average
 		long count = 0L;
 		float? sum = 0f;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -868,13 +1056,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return (sum / (float)count).Value;
 	}
@@ -884,6 +1077,7 @@ internal static class Average
 		long count = 0L;
 		double? sum = 0.0;
 		IUniTaskAsyncEnumerator<double?> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -896,13 +1090,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (double)count;
 	}
@@ -912,6 +1111,7 @@ internal static class Average
 		long count = 0L;
 		double? sum = 0.0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -924,13 +1124,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (double)count;
 	}
@@ -940,6 +1145,7 @@ internal static class Average
 		long count = 0L;
 		double? sum = 0.0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -952,13 +1158,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (double)count;
 	}
@@ -968,6 +1179,7 @@ internal static class Average
 		long count = 0L;
 		double? sum = 0.0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -980,13 +1192,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (double)count;
 	}
@@ -996,6 +1213,7 @@ internal static class Average
 		long count = 0L;
 		decimal? sum = default(decimal);
 		IUniTaskAsyncEnumerator<decimal?> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -1008,13 +1226,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (decimal?)count;
 	}
@@ -1024,6 +1247,7 @@ internal static class Average
 		long count = 0L;
 		decimal? sum = default(decimal);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -1036,13 +1260,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (decimal?)count;
 	}
@@ -1052,6 +1281,7 @@ internal static class Average
 		long count = 0L;
 		decimal? sum = default(decimal);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -1064,13 +1294,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (decimal?)count;
 	}
@@ -1080,6 +1315,7 @@ internal static class Average
 		long count = 0L;
 		decimal? sum = default(decimal);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -1092,13 +1328,18 @@ internal static class Average
 				}
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum / (decimal?)count;
 	}

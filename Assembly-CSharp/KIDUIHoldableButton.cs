@@ -47,8 +47,6 @@ public class KIDUIHoldableButton : MonoBehaviour, IPointerDownHandler, IEventSys
 
 	private float _elapsedTime;
 
-	private ControllerBehaviour controllerBehaviour;
-
 	private bool inside;
 
 	private bool _isHoldingMouse;
@@ -74,7 +72,7 @@ public class KIDUIHoldableButton : MonoBehaviour, IPointerDownHandler, IEventSys
 	private void OnEnable()
 	{
 		_holdProgressFill.rectTransform.localScale = new Vector3(0f, 1f, 1f);
-		if ((bool)controllerBehaviour)
+		if ((bool)ControllerBehaviour.Instance)
 		{
 			ControllerBehaviour.Instance.OnAction += PostUpdate;
 		}
@@ -167,6 +165,10 @@ public class KIDUIHoldableButton : MonoBehaviour, IPointerDownHandler, IEventSys
 
 	private void PostUpdate()
 	{
+		if (!ControllerBehaviour.Instance)
+		{
+			return;
+		}
 		if (!_canTrigger)
 		{
 			_canTrigger = !ControllerBehaviour.Instance.TriggerDown;
@@ -214,10 +216,18 @@ public class KIDUIHoldableButton : MonoBehaviour, IPointerDownHandler, IEventSys
 
 	protected void OnDisable()
 	{
-		if ((bool)controllerBehaviour)
+		if ((bool)ControllerBehaviour.Instance)
 		{
 			ControllerBehaviour.Instance.OnAction -= PostUpdate;
 		}
 		inside = false;
+		_isHoldingMouse = false;
+		if (_isHoldingButton)
+		{
+			_isHoldingButton = false;
+			_elapsedTime = 0f;
+			_holdProgressFill.rectTransform.localScale = new Vector3(0f, 1f, 1f);
+			KIDAudioManager.Instance?.StopButtonHeldSound();
+		}
 	}
 }

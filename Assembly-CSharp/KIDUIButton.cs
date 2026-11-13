@@ -105,13 +105,17 @@ public class KIDUIButton : Button, IPointerEnterHandler, IEventSystemHandler, IP
 	[SerializeField]
 	private UXSettings _cbUXSettings;
 
-	private ControllerBehaviour controllerBehaviour;
-
 	private bool inside;
 
 	private static bool _triggeredThisFrame = false;
 
 	private static bool _canTrigger = true;
+
+	private const float STEAM_CLICK_DEDUPE_WINDOW = 0.25f;
+
+	private float _lastSteamTriggerClickTime = float.NegativeInfinity;
+
+	private float _lastPointerDownTime = float.NegativeInfinity;
 
 	private XRUIInputModule InputModule => EventSystem.current.currentInputModule as XRUIInputModule;
 
@@ -126,17 +130,21 @@ public class KIDUIButton : Button, IPointerEnterHandler, IEventSystemHandler, IP
 
 	private void PostUpdate()
 	{
-		if (!_canTrigger)
+		if ((bool)ControllerBehaviour.Instance)
 		{
-			_canTrigger = !ControllerBehaviour.Instance.TriggerDown;
-		}
-		if (base.interactable && inside && _canTrigger && (bool)ControllerBehaviour.Instance && ControllerBehaviour.Instance.TriggerDown && !_triggeredThisFrame)
-		{
-			string text = "[" + base.transform.parent.parent.parent.name + "." + base.transform.parent.parent.name + "." + base.transform.parent.name + "." + base.transform.name + "]";
-			Debug.Log("[KID::UIBUTTON::DEBUG] " + text + " - STEAM - OnClick is pressed. Time: [" + Time.time + "]", this);
-			base.onClick?.Invoke();
-			_triggeredThisFrame = true;
-			_canTrigger = false;
+			if (!_canTrigger)
+			{
+				_canTrigger = !ControllerBehaviour.Instance.TriggerDown;
+			}
+			if (base.interactable && inside && _canTrigger && (bool)ControllerBehaviour.Instance && ControllerBehaviour.Instance.TriggerDown && !_triggeredThisFrame)
+			{
+				string text = "[" + base.transform.parent.parent.parent.name + "." + base.transform.parent.parent.name + "." + base.transform.parent.name + "." + base.transform.name + "]";
+				Debug.Log("[KID::UIBUTTON::DEBUG] " + text + " - STEAM - OnClick is pressed. Time: [" + Time.time + "]", this);
+				_lastSteamTriggerClickTime = Time.unscaledTime;
+				base.onClick?.Invoke();
+				_triggeredThisFrame = true;
+				_canTrigger = false;
+			}
 		}
 	}
 
@@ -156,6 +164,14 @@ public class KIDUIButton : Button, IPointerEnterHandler, IEventSystemHandler, IP
 		inside = false;
 	}
 
+	public override void OnPointerClick(PointerEventData eventData)
+	{
+		if (!(_lastSteamTriggerClickTime >= _lastPointerDownTime - 0.25f))
+		{
+			base.OnPointerClick(eventData);
+		}
+	}
+
 	public void ResetButton()
 	{
 		inside = false;
@@ -165,7 +181,7 @@ public class KIDUIButton : Button, IPointerEnterHandler, IEventSystemHandler, IP
 	protected override void OnDisable()
 	{
 		FixStuckPressedState();
-		if ((bool)controllerBehaviour)
+		if ((bool)ControllerBehaviour.Instance)
 		{
 			ControllerBehaviour.Instance.OnAction -= PostUpdate;
 		}
@@ -235,7 +251,7 @@ public class KIDUIButton : Button, IPointerEnterHandler, IEventSystemHandler, IP
 	public override void OnPointerDown(PointerEventData eventData)
 	{
 		base.OnPointerDown(eventData);
-		inside = false;
+		_lastPointerDownTime = Time.unscaledTime;
 		if (IsInteractable() && IsActive())
 		{
 			KIDAudioManager.Instance?.PlaySound(onClickSound);

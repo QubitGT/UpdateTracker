@@ -32,19 +32,19 @@ internal class Scalar : ITokenContent
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Span<byte> AsSpan()
 	{
-		return buffer.AsSpan(0, Length);
+		return MemoryExtensions.AsSpan(buffer, 0, Length);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Span<byte> AsSpan(int start, int length)
 	{
-		return buffer.AsSpan(start, length);
+		return MemoryExtensions.AsSpan(buffer, start, length);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public ReadOnlySpan<byte> AsUtf8()
 	{
-		return buffer.AsSpan(0, Length);
+		return MemoryExtensions.AsSpan(buffer, 0, Length);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -83,7 +83,7 @@ internal class Scalar : ITokenContent
 	public void Write(ReadOnlySpan<byte> codes)
 	{
 		Grow(Length + codes.Length);
-		codes.CopyTo(buffer.AsSpan(Length, codes.Length));
+		codes.CopyTo(MemoryExtensions.AsSpan(buffer, Length, codes.Length));
 		Length += codes.Length;
 	}
 

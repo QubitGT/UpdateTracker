@@ -141,15 +141,19 @@ public class PrivateUIRoom : MonoBehaviourTick
 
 	private void ToggleHands(VREvent_t ev)
 	{
-		Debug.Log($"[PrivateUIRoom::ToggleHands] Toggling hands visibility. Event: {ev.eventType} ({(EVREventType)ev.eventType})");
-		Debug.Log($"[PrivateUIRoom::ToggleHands] _handsShowing: {instance.rightHandObject.activeSelf}");
-		if (instance.rightHandObject.activeSelf)
+		bool flag = OpenVR.System == null || OpenVR.System.IsInputAvailable();
+		bool flag2 = instance.inOverlay && flag;
+		Debug.Log($"[PrivateUIRoom::ToggleHands] Input focus changed. Event: {ev.eventType} ({(EVREventType)ev.eventType}). " + $"In overlay: {instance.inOverlay}, input available: {flag}, hands showing: {instance.rightHandObject.activeSelf}");
+		if (flag2 != instance.rightHandObject.activeSelf)
 		{
-			HideHands();
-		}
-		else
-		{
-			ShowHands();
+			if (flag2)
+			{
+				ShowHands();
+			}
+			else
+			{
+				HideHands();
+			}
 		}
 	}
 

@@ -19,7 +19,7 @@ internal static class KeyNameMutator
 
 	public static string ToLowerCamelCase(string s)
 	{
-		ReadOnlySpan<char> readOnlySpan = s.AsSpan();
+		ReadOnlySpan<char> readOnlySpan = MemoryExtensions.AsSpan(s);
 		if (readOnlySpan.Length <= 0 || (readOnlySpan.Length <= 1 && char.IsLower(readOnlySpan[0])))
 		{
 			return s;
@@ -35,7 +35,7 @@ internal static class KeyNameMutator
 
 	public static string ToSnakeCase(string s, char separator = '_')
 	{
-		ReadOnlySpan<char> readOnlySpan = s.AsSpan();
+		ReadOnlySpan<char> readOnlySpan = MemoryExtensions.AsSpan(s);
 		if (readOnlySpan.Length <= 0)
 		{
 			return s;

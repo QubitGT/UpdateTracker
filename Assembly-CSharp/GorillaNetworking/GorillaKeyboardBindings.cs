@@ -44,5 +44,7 @@ public enum GorillaKeyboardBindings
 	W,
 	X,
 	Y,
-	Z
+	Z,
+	option4,
+	none
 }

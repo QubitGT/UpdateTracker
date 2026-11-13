@@ -125,7 +125,7 @@ public class CreditsView : MonoBehaviour
 		stringBuilder.AppendLine();
 		defaultResult = "PRESS ENTER TO CHANGE PAGES";
 		LocalisationManager.TryGetKeyForCurrentLocale("CREDITS_PRESS_ENTER", out var result3, defaultResult);
-		stringBuilder.AppendLine(result3);
+		stringBuilder.AppendLine(GorillaComputer.HighlightEnterKey(result3));
 		return stringBuilder.ToString();
 	}
 }

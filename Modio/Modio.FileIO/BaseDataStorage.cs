@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -310,7 +311,9 @@ public class BaseDataStorage : IModioDataStorage
 			using MD5 md5 = MD5.Create();
 			Stream writerStream = CreateFileStream(filePath, FileMode.Create);
 			long totalBytesWritten = 0L;
-			await using (writerStream)
+			Stream stream = writerStream;
+			object obj = null;
+			try
 			{
 				while (true)
 				{
@@ -332,6 +335,19 @@ public class BaseDataStorage : IModioDataStorage
 					}
 					break;
 				}
+			}
+			catch (object obj2)
+			{
+				obj = obj2;
+			}
+			if (stream != null)
+			{
+				await ((IAsyncDisposable)stream).DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 			downloadStream.Dispose();
 			if ((bool)error)
@@ -397,19 +413,44 @@ public class BaseDataStorage : IModioDataStorage
 
 	public static async Task<byte[]> CalculateMd5Hash(string filePath, byte[] buffer)
 	{
-		using MD5 md5 = MD5.Create();
-		byte[] hash;
-		await using (Stream stream = File.OpenRead(filePath))
+		byte[] result = default(byte[]);
+		using (MD5 md5 = MD5.Create())
 		{
-			int inputCount;
-			while ((inputCount = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+			Stream stream = File.OpenRead(filePath);
+			object obj = null;
+			int num = 0;
+			byte[] hash = default(byte[]);
+			try
 			{
-				md5.TransformBlock(buffer, 0, inputCount, null, 0);
+				int inputCount;
+				while ((inputCount = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+				{
+					md5.TransformBlock(buffer, 0, inputCount, null, 0);
+				}
+				md5.TransformFinalBlock(buffer, 0, 0);
+				hash = md5.Hash;
+				num = 1;
 			}
-			md5.TransformFinalBlock(buffer, 0, 0);
-			hash = md5.Hash;
+			catch (object obj2)
+			{
+				obj = obj2;
+			}
+			if (stream != null)
+			{
+				await ((IAsyncDisposable)stream).DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+			}
+			if (num == 1)
+			{
+				result = hash;
+				return result;
+			}
 		}
-		return hash;
+		return result;
 	}
 
 	public virtual Task<Error> DeleteModfile(long modId, long modfileId)
@@ -524,10 +565,17 @@ public class BaseDataStorage : IModioDataStorage
 			using CancellationTokenSource combinedCts = CancellationTokenSource.CreateLinkedTokenSource(token, ShutdownToken);
 			token = combinedCts.Token;
 			MD5ComputingStreamWrapper md5Stream = new MD5ComputingStreamWrapper(stream);
+			object obj = null;
+			int num = 0;
+			Error result = default(Error);
+			object obj4;
 			try
 			{
-				Error result;
-				await using (ZipInputStream zipStream = new ZipInputStream(md5Stream))
+				ZipInputStream zipStream = new ZipInputStream(md5Stream);
+				object obj2 = null;
+				int num2 = 0;
+				Error error4 = default(Error);
+				try
 				{
 					zipStream.IsStreamOwner = false;
 					ModInstallProgressTracker tracker = new ModInstallProgressTracker(mod, mod.File.FileSize, () => md5Stream.TotalBytesRead);
@@ -561,7 +609,8 @@ public class BaseDataStorage : IModioDataStorage
 								{
 									ModioLog.Message?.Log("Error cleaning up temporary download location: " + error3.GetMessage() + "\nAt: " + temporaryDirectoryPath);
 								}
-								result = error;
+								error4 = error;
+								num2 = 1;
 								break;
 							}
 							continue;
@@ -577,22 +626,44 @@ public class BaseDataStorage : IModioDataStorage
 							ModioLog.Error?.Log("Error installing mod: md5 mismatch\n" + text + " != " + md5Hash + "\nInstall Path: " + installDirectoryPath + "\nTemp Path: " + temporaryDirectoryPath + "\n");
 							error = new Error(ErrorCode.MD5DOES_NOT_MATCH);
 						}
-						goto end_IL_0297;
+						break;
 					}
-					goto IL_068f;
-					end_IL_0297:;
 				}
-				goto end_IL_0264;
-				IL_068f:
-				return result;
-				end_IL_0264:;
-			}
-			finally
-			{
-				if (md5Stream != null)
+				catch (object obj3)
 				{
-					await ((IAsyncDisposable)md5Stream).DisposeAsync();
+					obj2 = obj3;
 				}
+				if (zipStream != null)
+				{
+					await ((IAsyncDisposable)zipStream).DisposeAsync();
+				}
+				obj4 = obj2;
+				if (obj4 != null)
+				{
+					ExceptionDispatchInfo.Capture((obj4 as Exception) ?? throw obj4).Throw();
+				}
+				if (num2 == 1)
+				{
+					result = error4;
+					num = 1;
+				}
+			}
+			catch (object obj3)
+			{
+				obj = obj3;
+			}
+			if (md5Stream != null)
+			{
+				await ((IAsyncDisposable)md5Stream).DisposeAsync();
+			}
+			obj4 = obj;
+			if (obj4 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj4 as Exception) ?? throw obj4).Throw();
+			}
+			if (num == 1)
+			{
+				return result;
 			}
 		}
 		catch (TaskCanceledException)
@@ -620,10 +691,10 @@ public class BaseDataStorage : IModioDataStorage
 			{
 				ModioLog.Error?.Log($"Extraction operation for Modfile {mod.Id} aborted.");
 			}
-			Error error4 = DeleteDirectoryAndContents(temporaryDirectoryPath);
-			if ((bool)error4)
+			Error error5 = DeleteDirectoryAndContents(temporaryDirectoryPath);
+			if ((bool)error5)
 			{
-				ModioLog.Message?.Log("Error cleaning up temporary download location: " + error4.GetMessage() + "\nAt: " + temporaryDirectoryPath);
+				ModioLog.Message?.Log("Error cleaning up temporary download location: " + error5.GetMessage() + "\nAt: " + temporaryDirectoryPath);
 			}
 			return error;
 		}
@@ -645,10 +716,10 @@ public class BaseDataStorage : IModioDataStorage
 		{
 			error = new Error((ErrorCode)(IsShuttingDown ? (-2147483588) : (-2147483598)));
 			ModioLog.Verbose?.Log("Cancelled installing mod: \nInstall Path: " + installDirectoryPath + "\nTemp Path: " + temporaryDirectoryPath + "\n");
-			Error error5 = DeleteDirectoryAndContents(temporaryDirectoryPath);
-			if ((bool)error5)
+			Error error6 = DeleteDirectoryAndContents(temporaryDirectoryPath);
+			if ((bool)error6)
 			{
-				ModioLog.Message?.Log("Error cleaning up temporary download location: " + error5.GetMessage() + "\nAt: " + temporaryDirectoryPath);
+				ModioLog.Message?.Log("Error cleaning up temporary download location: " + error6.GetMessage() + "\nAt: " + temporaryDirectoryPath);
 			}
 			return error;
 		}
@@ -698,7 +769,9 @@ public class BaseDataStorage : IModioDataStorage
 		}
 		Stream writerStream = CreateFileStream(filePath, FileMode.Create);
 		byte[] buffer = new byte[1048576];
-		await using (writerStream)
+		Stream stream = writerStream;
+		object obj = null;
+		try
 		{
 			while (true)
 			{
@@ -710,6 +783,19 @@ public class BaseDataStorage : IModioDataStorage
 				}
 				await writerStream.WriteAsync(buffer, 0, num, token);
 			}
+		}
+		catch (object obj2)
+		{
+			obj = obj2;
+		}
+		if (stream != null)
+		{
+			await ((IAsyncDisposable)stream).DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return Error.None;
 	}
@@ -940,13 +1026,20 @@ public class BaseDataStorage : IModioDataStorage
 		{
 			return new Error(ErrorCode.FILE_NOT_FOUND);
 		}
-		bool result;
-		await using (Stream fileStream = File.Open(archiveFilePath, FileMode.Open))
+		Stream fileStream = File.Open(archiveFilePath, FileMode.Open);
+		object obj = null;
+		int num = 0;
+		bool result = default(bool);
+		object obj4;
+		try
 		{
-			bool flag;
-			await using (ZipInputStream stream = new ZipInputStream(fileStream))
+			ZipInputStream stream = new ZipInputStream(fileStream);
+			object obj2 = null;
+			int num2 = 0;
+			bool flag = default(bool);
+			try
 			{
-				long num = 0L;
+				long num3 = 0L;
 				while (true)
 				{
 					ZipEntry nextEntry = stream.GetNextEntry();
@@ -960,14 +1053,50 @@ public class BaseDataStorage : IModioDataStorage
 					}
 					else
 					{
-						num += nextEntry.Size;
+						num3 += nextEntry.Size;
 					}
 				}
-				flag = await IsThereAvailableFreeSpaceForModInstall(num);
+				flag = await IsThereAvailableFreeSpaceForModInstall(num3);
+				num2 = 1;
 			}
-			result = flag;
+			catch (object obj3)
+			{
+				obj2 = obj3;
+			}
+			if (stream != null)
+			{
+				await ((IAsyncDisposable)stream).DisposeAsync();
+			}
+			obj4 = obj2;
+			if (obj4 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj4 as Exception) ?? throw obj4).Throw();
+			}
+			if (num2 == 1)
+			{
+				result = flag;
+				num = 1;
+			}
 		}
-		return result;
+		catch (object obj3)
+		{
+			obj = obj3;
+		}
+		if (fileStream != null)
+		{
+			await ((IAsyncDisposable)fileStream).DisposeAsync();
+		}
+		obj4 = obj;
+		if (obj4 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj4 as Exception) ?? throw obj4).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		bool result2 = default(bool);
+		return result2;
 	}
 
 	protected virtual bool IsThereEnoughDiskSpaceFor(long bytes)
@@ -1098,14 +1227,36 @@ public class BaseDataStorage : IModioDataStorage
 		OngoingTaskCount++;
 		try
 		{
-			Error none;
-			await using (FileStream fileStream = File.Open(path, FileMode.Create))
+			FileStream fileStream = File.Open(path, FileMode.Create);
+			object obj = null;
+			int num = 0;
+			Error none = default(Error);
+			try
 			{
 				fileStream.Position = 0L;
 				await fileStream.WriteAsync(data, 0, bytesToWrite, CancellationToken.None);
 				none = Error.None;
+				num = 1;
 			}
-			return none;
+			catch (object obj2)
+			{
+				obj = obj2;
+			}
+			if (fileStream != null)
+			{
+				await ((IAsyncDisposable)fileStream).DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+			}
+			if (num == 1)
+			{
+				return none;
+			}
+			Error result = default(Error);
+			return result;
 		}
 		catch (Exception exception)
 		{
@@ -1129,25 +1280,49 @@ public class BaseDataStorage : IModioDataStorage
 			return (error: new Error(ErrorCode.FILE_NOT_FOUND), result: output);
 		}
 		OngoingTaskCount++;
+		(Error, byte[]) result = default((Error, byte[]));
 		try
 		{
-			(Error error, byte[] result) result;
-			await using (FileStream fileStream = File.Open(path, FileMode.Open))
+			FileStream fileStream = File.Open(path, FileMode.Open);
+			object obj = null;
+			int num = 0;
+			(Error error, byte[] result) tuple = default((Error error, byte[] result));
+			try
 			{
 				output = new byte[fileStream.Length];
 				await fileStream.ReadAsync(output, 0, output.Length);
-				result = (error: Error.None, result: output);
+				tuple = (error: Error.None, result: output);
+				num = 1;
 			}
-			return result;
+			catch (object obj2)
+			{
+				obj = obj2;
+			}
+			if (fileStream != null)
+			{
+				await ((IAsyncDisposable)fileStream).DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+			}
+			if (num == 1)
+			{
+				result = tuple;
+				return result;
+			}
 		}
 		catch (Exception exception)
 		{
-			return (error: new ErrorException(exception), result: output);
+			result = (new ErrorException(exception), output);
+			return result;
 		}
 		finally
 		{
 			OngoingTaskCount--;
 		}
+		return result;
 	}
 
 	protected virtual async Task<Error> WriteTextFile(string path, string data)
@@ -1278,8 +1453,12 @@ public class BaseDataStorage : IModioDataStorage
 		}
 		Error returnError = Error.None;
 		filePath = Path.GetFullPath(filePath);
-		Error result;
-		await using (ZipOutputStream zipStream = new ZipOutputStream(outputTo))
+		ZipOutputStream zipStream = new ZipOutputStream(outputTo);
+		object obj = null;
+		int num = 0;
+		Error result = default(Error);
+		object obj4;
+		try
 		{
 			foreach (var (error, path) in IterateFilesInDirectory(filePath))
 			{
@@ -1287,17 +1466,53 @@ public class BaseDataStorage : IModioDataStorage
 				{
 					continue;
 				}
-				await using FileStream fileStream = File.Open(path, FileMode.Open);
-				string text = Path.GetFullPath(path).Substring(filePath.Length);
-				if (string.IsNullOrEmpty(text))
+				FileStream fileStream = File.Open(path, FileMode.Open);
+				object obj2 = null;
+				try
 				{
-					text = Path.GetFileName(filePath);
+					string text = Path.GetFullPath(path).Substring(filePath.Length);
+					if (string.IsNullOrEmpty(text))
+					{
+						text = Path.GetFileName(filePath);
+					}
+					await CompressStream(text, fileStream, zipStream);
 				}
-				await CompressStream(text, fileStream, zipStream);
+				catch (object obj3)
+				{
+					obj2 = obj3;
+				}
+				if (fileStream != null)
+				{
+					await ((IAsyncDisposable)fileStream).DisposeAsync();
+				}
+				obj4 = obj2;
+				if (obj4 != null)
+				{
+					ExceptionDispatchInfo.Capture((obj4 as Exception) ?? throw obj4).Throw();
+				}
 			}
 			result = returnError;
+			num = 1;
 		}
-		return result;
+		catch (object obj3)
+		{
+			obj = obj3;
+		}
+		if (zipStream != null)
+		{
+			await ((IAsyncDisposable)zipStream).DisposeAsync();
+		}
+		obj4 = obj;
+		if (obj4 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj4 as Exception) ?? throw obj4).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		Error result2 = default(Error);
+		return result2;
 	}
 
 	protected virtual async Task CompressStream(string entryName, Stream stream, ZipOutputStream zipStream)

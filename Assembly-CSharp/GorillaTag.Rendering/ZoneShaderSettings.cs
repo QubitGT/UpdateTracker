@@ -77,9 +77,6 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 	[OnEnterPlay_Set(EZoneLiquidType.None)]
 	private static EZoneLiquidType liquidType_previousValue = EZoneLiquidType.None;
 
-	[OnEnterPlay_Set(false)]
-	private static bool didEverSetLiquidShape;
-
 	[SerializeField]
 	private EOverrideMode liquidShape_overrideMode;
 
@@ -92,30 +89,31 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 	[SerializeField]
 	private EOverrideMode liquidShapeRadius_overrideMode;
 
-	[Tooltip("Fog params are: start, distance (end - start), unused, unused")]
+	[Tooltip("Radius of the liquid when the shape is a cylinder.")]
 	[SerializeField]
 	private float liquidShapeRadius = 1f;
 
 	[OnEnterPlay_Set(1f)]
-	private static float liquidShapeRadius_previousValue;
+	private static float liquidShapeRadius_previousValue = 1f;
 
 	private bool hasLiquidBottomTransform;
 
 	[SerializeField]
 	private EOverrideMode liquidBottomTransform_overrideMode;
 
-	[Tooltip("TODO: remove this when there is a way to precalculate the nearest triangle plane per vertex so it will work better for rivers.")]
+	[Tooltip("Only used when the liquid shape is Cylinder: this transform's Y is the bottom of the liquid cylinder. Surfaces below it are not treated as underwater.")]
 	[SerializeField]
 	private Transform liquidBottomTransform;
 
-	private float liquidBottomPosY_previousValue;
+	[OnEnterPlay_Set(0f)]
+	private static float liquidBottomPosY_previousValue;
 
 	private static readonly int shaderParam_GlobalZoneLiquidUVScale = Shader.PropertyToID("_GlobalZoneLiquidUVScale");
 
 	[SerializeField]
 	private EOverrideMode zoneLiquidUVScale_overrideMode;
 
-	[Tooltip("Fog params are: start, distance (end - start), unused, unused")]
+	[Tooltip("UV scale applied to the zone liquid surface textures.")]
 	[SerializeField]
 	private float zoneLiquidUVScale = 1f;
 
@@ -181,16 +179,20 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 	[Tooltip("This is used for things like the charred surface effect when lava burns static geo.")]
 	private Texture2D liquidResidueTex;
 
-	private readonly int shaderParam_GlobalMainWaterSurfacePlane = Shader.PropertyToID("_GlobalMainWaterSurfacePlane");
+	private static readonly int shaderParam_GlobalMainWaterSurfacePlane = Shader.PropertyToID("_GlobalMainWaterSurfacePlane");
 
 	private bool hasMainWaterSurfacePlane;
 
 	private bool hasDynamicWaterSurfacePlane;
 
+	private Transform resolvedWaterPlane;
+
+	private Transform resolvedLiquidBottom;
+
 	[SerializeField]
 	private EOverrideMode mainWaterSurfacePlane_overrideMode;
 
-	[Tooltip("TODO: remove this when there is a way to precalculate the nearest triangle plane per vertex so it will work better for rivers.")]
+	[Tooltip("Transform whose position and up axis define the water surface. Surfaces below this plane get the underwater fog, tint and caustics. For a cylinder liquid, its X/Z is also the cylinder's center.")]
 	[SerializeField]
 	private Transform mainWaterSurfacePlane;
 
@@ -199,7 +201,7 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 	[SerializeField]
 	private EOverrideMode zoneWeatherMapDissolveProgress_overrideMode;
 
-	[Tooltip("Fog params are: start, distance (end - start), unused, unused")]
+	[Tooltip("Dissolve progress of the zone weather map (0 to 1).")]
 	[Range(0f, 1f)]
 	[SerializeField]
 	private float zoneWeatherMapDissolveProgress = 1f;
@@ -226,78 +228,62 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 	[DebugReadout]
 	private float GroundFogHeightFade => 1f / Mathf.Max(1E-05f, _groundFogHeightFadeSize);
 
-	public static int shaderParam_ZoneLiquidPosRadiusSq { get; private set; } = Shader.PropertyToID("_ZoneLiquidPosRadiusSq");
+	public static int shaderParam_ZoneLiquidPosRadiusSq { get; } = Shader.PropertyToID("_ZoneLiquidPosRadiusSq");
 
 
 	bool ITickSystemPost.PostTickRunning { get; set; }
 
+	private static void SetGlobalKeyword(string keyword, bool enabled)
+	{
+		if (enabled)
+		{
+			Shader.EnableKeyword(keyword);
+		}
+		else
+		{
+			Shader.DisableKeyword(keyword);
+		}
+	}
+
 	public void SetZoneLiquidTypeKeywordEnum(EZoneLiquidType liquidType)
 	{
-		if (liquidType == EZoneLiquidType.None)
-		{
-			Shader.EnableKeyword("_GLOBAL_ZONE_LIQUID_TYPE__NONE");
-		}
-		else
-		{
-			Shader.DisableKeyword("_GLOBAL_ZONE_LIQUID_TYPE__NONE");
-		}
-		if (liquidType == EZoneLiquidType.Water)
-		{
-			Shader.EnableKeyword("_GLOBAL_ZONE_LIQUID_TYPE__WATER");
-		}
-		else
-		{
-			Shader.DisableKeyword("_GLOBAL_ZONE_LIQUID_TYPE__WATER");
-		}
-		if (liquidType == EZoneLiquidType.Lava)
-		{
-			Shader.EnableKeyword("_GLOBAL_ZONE_LIQUID_TYPE__LAVA");
-		}
-		else
-		{
-			Shader.DisableKeyword("_GLOBAL_ZONE_LIQUID_TYPE__LAVA");
-		}
+		SetGlobalKeyword("_GLOBAL_ZONE_LIQUID_TYPE__NONE", liquidType == EZoneLiquidType.None);
+		SetGlobalKeyword("_GLOBAL_ZONE_LIQUID_TYPE__WATER", liquidType == EZoneLiquidType.Water);
+		SetGlobalKeyword("_GLOBAL_ZONE_LIQUID_TYPE__LAVA", liquidType == EZoneLiquidType.Lava);
 	}
 
 	public void SetZoneLiquidShapeKeywordEnum(ELiquidShape shape)
 	{
-		if (shape == ELiquidShape.Plane)
-		{
-			Shader.EnableKeyword("_ZONE_LIQUID_SHAPE__PLANE");
-		}
-		else
-		{
-			Shader.DisableKeyword("_ZONE_LIQUID_SHAPE__PLANE");
-		}
-		if (shape == ELiquidShape.Cylinder)
-		{
-			Shader.EnableKeyword("_ZONE_LIQUID_SHAPE__CYLINDER");
-		}
-		else
-		{
-			Shader.DisableKeyword("_ZONE_LIQUID_SHAPE__CYLINDER");
-		}
+		SetGlobalKeyword("_ZONE_LIQUID_SHAPE__PLANE", shape == ELiquidShape.Plane);
+		SetGlobalKeyword("_ZONE_LIQUID_SHAPE__CYLINDER", shape == ELiquidShape.Cylinder);
+	}
+
+	private static void UpdateZoneLiquidCustomKeyword()
+	{
+		SetGlobalKeyword("_ZONE_LIQUID_CUSTOM", liquidType_previousValue == EZoneLiquidType.Lava || liquidShape_previousValue == ELiquidShape.Cylinder);
 	}
 
 	public static float GetWaterY()
 	{
-		return activeInstance.mainWaterSurfacePlane.position.y;
+		if (!hasActiveInstance || !(activeInstance.resolvedWaterPlane != null))
+		{
+			return float.NegativeInfinity;
+		}
+		return activeInstance.resolvedWaterPlane.position.y;
 	}
 
 	protected void Awake()
 	{
-		hasMainWaterSurfacePlane = mainWaterSurfacePlane != null && (mainWaterSurfacePlane_overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues);
-		hasDynamicWaterSurfacePlane = hasMainWaterSurfacePlane && !mainWaterSurfacePlane.gameObject.isStatic;
-		hasLiquidBottomTransform = liquidBottomTransform != null && (liquidBottomTransform_overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues);
-		if (CheckDefaultsInstance() && _activateOnAwake)
+		CacheTransformFlags();
+		if (CheckDefaultsInstance() && (_activateOnAwake || activeInstance == this))
 		{
-			BecomeActiveInstance();
+			BecomeActiveInstance(activeInstance == this);
 		}
 	}
 
 	protected void OnEnable()
 	{
-		if (hasDynamicWaterSurfacePlane)
+		if (activeInstance == this && hasDynamicWaterSurfacePlane)
 		{
 			TickSystem<object>.AddPostTickCallback(this);
 		}
@@ -321,6 +307,37 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 		TickSystem<object>.RemovePostTickCallback(this);
 	}
 
+	private void CacheTransformFlags()
+	{
+		hasMainWaterSurfacePlane = UsesOwnValue(mainWaterSurfacePlane_overrideMode) && mainWaterSurfacePlane != null;
+		hasLiquidBottomTransform = UsesOwnValue(liquidBottomTransform_overrideMode) && liquidBottomTransform != null;
+	}
+
+	private bool UsesOwnValue(EOverrideMode mode)
+	{
+		if (!isDefaultValues)
+		{
+			return mode == EOverrideMode.ApplyNewValue;
+		}
+		return true;
+	}
+
+	private bool TryResolve<T>(EOverrideMode mode, T value, T defaultValue, out T result)
+	{
+		if (UsesOwnValue(mode))
+		{
+			result = value;
+			return true;
+		}
+		if (mode == EOverrideMode.ApplyDefaultValue && hasDefaultsInstance)
+		{
+			result = defaultValue;
+			return true;
+		}
+		result = default(T);
+		return false;
+	}
+
 	void ITickSystemPost.PostTick()
 	{
 		if (activeInstance == this && Application.isPlaying && !ApplicationQuittingState.IsQuitting)
@@ -329,34 +346,34 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 		}
 	}
 
+	private void ResolveLiquidTransforms()
+	{
+		bool flag = hasDefaultsInstance && defaultsInstance != null;
+		TryResolve(mainWaterSurfacePlane_overrideMode, hasMainWaterSurfacePlane ? mainWaterSurfacePlane : null, (flag && defaultsInstance.hasMainWaterSurfacePlane) ? defaultsInstance.mainWaterSurfacePlane : null, out resolvedWaterPlane);
+		hasDynamicWaterSurfacePlane = resolvedWaterPlane != null && !resolvedWaterPlane.gameObject.isStatic;
+		TryResolve(liquidBottomTransform_overrideMode, hasLiquidBottomTransform ? liquidBottomTransform : null, (flag && defaultsInstance.hasLiquidBottomTransform) ? defaultsInstance.liquidBottomTransform : null, out resolvedLiquidBottom);
+		if (TryResolve(liquidShapeRadius_overrideMode, liquidShapeRadius, flag ? defaultsInstance.liquidShapeRadius : liquidShapeRadius, out var result))
+		{
+			liquidShapeRadius_previousValue = result;
+		}
+	}
+
 	private void UpdateMainPlaneShaderProperty()
 	{
-		Transform transform = null;
-		bool flag = false;
-		if (hasMainWaterSurfacePlane && (mainWaterSurfacePlane_overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues))
+		if (resolvedWaterPlane == null)
 		{
-			flag = true;
-			transform = mainWaterSurfacePlane;
+			return;
 		}
-		else if (mainWaterSurfacePlane_overrideMode == EOverrideMode.ApplyDefaultValue && hasDefaultsInstance && defaultsInstance.hasMainWaterSurfacePlane)
+		Vector3 position = resolvedWaterPlane.position;
+		Vector3 up = resolvedWaterPlane.up;
+		Shader.SetGlobalVector(shaderParam_GlobalMainWaterSurfacePlane, new Vector4(up.x, up.y, up.z, 0f - Vector3.Dot(up, position)));
+		if (liquidShape_previousValue == ELiquidShape.Cylinder)
 		{
-			flag = true;
-			transform = defaultsInstance.mainWaterSurfacePlane;
-		}
-		if (flag)
-		{
-			Vector3 position = transform.position;
-			Vector3 up = transform.up;
-			float w = 0f - Vector3.Dot(up, position);
-			Shader.SetGlobalVector(shaderParam_GlobalMainWaterSurfacePlane, new Vector4(up.x, up.y, up.z, w));
-			ELiquidShape eLiquidShape = (liquidShape_previousValue = ((liquidShape_overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues) ? liquidShape : ((liquidShape_overrideMode != EOverrideMode.ApplyDefaultValue || !hasDefaultsInstance) ? liquidShape_previousValue : defaultsInstance.liquidShape)));
-			float y = (((liquidBottomTransform_overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues) && hasLiquidBottomTransform) ? liquidBottomTransform.position.y : ((liquidBottomTransform_overrideMode != EOverrideMode.ApplyDefaultValue || !hasDefaultsInstance || !defaultsInstance.hasLiquidBottomTransform) ? liquidBottomPosY_previousValue : defaultsInstance.liquidBottomTransform.position.y));
-			float num = ((liquidShapeRadius_overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues) ? liquidShapeRadius : ((liquidShape_overrideMode != EOverrideMode.ApplyDefaultValue || !hasDefaultsInstance) ? liquidShapeRadius_previousValue : defaultsInstance.liquidShapeRadius));
-			if (eLiquidShape == ELiquidShape.Cylinder)
+			if (resolvedLiquidBottom != null)
 			{
-				Shader.SetGlobalVector(shaderParam_ZoneLiquidPosRadiusSq, new Vector4(position.x, y, position.z, num * num));
-				liquidShapeRadius_previousValue = num;
+				liquidBottomPosY_previousValue = resolvedLiquidBottom.position.y;
 			}
+			Shader.SetGlobalVector(shaderParam_ZoneLiquidPosRadiusSq, new Vector4(position.x, liquidBottomPosY_previousValue, position.z, liquidShapeRadius_previousValue * liquidShapeRadius_previousValue));
 		}
 	}
 
@@ -387,11 +404,11 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 			{
 				TickSystem<object>.RemovePostTickCallback(activeInstance);
 			}
+			ApplyValues();
 			if (hasDynamicWaterSurfacePlane)
 			{
 				TickSystem<object>.AddPostTickCallback(this);
 			}
-			ApplyValues();
 			activeInstance = this;
 			hasActiveInstance = true;
 		}
@@ -420,114 +437,68 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 
 	private void ApplyValues()
 	{
-		if (!hasDefaultsInstance || ApplicationQuittingState.IsQuitting)
+		if (hasDefaultsInstance && !(defaultsInstance == null) && !ApplicationQuittingState.IsQuitting)
 		{
-			return;
-		}
-		ApplyColor(groundFogColor_shaderProp, groundFogColor_overrideMode, groundFogColor, defaultsInstance.groundFogColor);
-		ApplyFloat(groundFogDepthFadeSq_shaderProp, groundFogDepthFade_overrideMode, GroundFogDepthFadeSq, defaultsInstance.GroundFogDepthFadeSq);
-		ApplyFloat(groundFogHeight_shaderProp, groundFogHeight_overrideMode, groundFogHeight, defaultsInstance.groundFogHeight);
-		ApplyFloat(groundFogHeightFade_shaderProp, groundFogHeightFade_overrideMode, GroundFogHeightFade, defaultsInstance.GroundFogHeightFade);
-		if (zoneLiquidType_overrideMode != 0)
-		{
-			EZoneLiquidType eZoneLiquidType = ((zoneLiquidType_overrideMode == EOverrideMode.ApplyNewValue) ? zoneLiquidType : defaultsInstance.zoneLiquidType);
-			if (eZoneLiquidType != liquidType_previousValue || !isInitialized)
+			ZoneShaderSettings zoneShaderSettings = defaultsInstance;
+			ApplyColor(groundFogColor_shaderProp, groundFogColor_overrideMode, groundFogColor, zoneShaderSettings.groundFogColor);
+			ApplyFloat(groundFogDepthFadeSq_shaderProp, groundFogDepthFade_overrideMode, GroundFogDepthFadeSq, zoneShaderSettings.GroundFogDepthFadeSq);
+			ApplyFloat(groundFogHeight_shaderProp, groundFogHeight_overrideMode, groundFogHeight, zoneShaderSettings.groundFogHeight);
+			ApplyFloat(groundFogHeightFade_shaderProp, groundFogHeightFade_overrideMode, GroundFogHeightFade, zoneShaderSettings.GroundFogHeightFade);
+			if (TryResolve(zoneLiquidType_overrideMode, zoneLiquidType, zoneShaderSettings.zoneLiquidType, out var result) && (result != liquidType_previousValue || !isInitialized))
 			{
-				SetZoneLiquidTypeKeywordEnum(eZoneLiquidType);
-				liquidType_previousValue = eZoneLiquidType;
+				SetZoneLiquidTypeKeywordEnum(result);
+				liquidType_previousValue = result;
 			}
-		}
-		if (liquidShape_overrideMode != 0)
-		{
-			ELiquidShape eLiquidShape = ((liquidShape_overrideMode == EOverrideMode.ApplyNewValue) ? liquidShape : defaultsInstance.liquidShape);
-			if (eLiquidShape != liquidShape_previousValue || !isInitialized)
+			if (TryResolve(liquidShape_overrideMode, liquidShape, zoneShaderSettings.liquidShape, out var result2) && (result2 != liquidShape_previousValue || !isInitialized))
 			{
-				SetZoneLiquidShapeKeywordEnum(eLiquidShape);
-				liquidShape_previousValue = eLiquidShape;
+				SetZoneLiquidShapeKeywordEnum(result2);
+				liquidShape_previousValue = result2;
 			}
+			UpdateZoneLiquidCustomKeyword();
+			ApplyFloat(shaderParam_GlobalZoneLiquidUVScale, zoneLiquidUVScale_overrideMode, zoneLiquidUVScale, zoneShaderSettings.zoneLiquidUVScale);
+			ApplyColor(shaderParam_GlobalWaterTintColor, underwaterTintColor_overrideMode, underwaterTintColor, zoneShaderSettings.underwaterTintColor);
+			ApplyColor(shaderParam_GlobalUnderwaterFogColor, underwaterFogColor_overrideMode, underwaterFogColor, zoneShaderSettings.underwaterFogColor);
+			ApplyVector(shaderParam_GlobalUnderwaterFogParams, underwaterFogParams_overrideMode, underwaterFogParams, zoneShaderSettings.underwaterFogParams);
+			ApplyVector(shaderParam_GlobalUnderwaterCausticsParams, underwaterCausticsParams_overrideMode, underwaterCausticsParams, zoneShaderSettings.underwaterCausticsParams);
+			ApplyTexture(shaderParam_GlobalUnderwaterCausticsTex, underwaterCausticsTexture_overrideMode, underwaterCausticsTexture, zoneShaderSettings.underwaterCausticsTexture);
+			ApplyVector(shaderParam_GlobalUnderwaterEffectsDistanceToSurfaceFade, underwaterEffectsDistanceToSurfaceFade_overrideMode, underwaterEffectsDistanceToSurfaceFade, zoneShaderSettings.underwaterEffectsDistanceToSurfaceFade);
+			ApplyTexture(shaderParam_GlobalLiquidResidueTex, liquidResidueTex_overrideMode, liquidResidueTex, zoneShaderSettings.liquidResidueTex);
+			ApplyFloat(shaderParam_ZoneWeatherMapDissolveProgress, zoneWeatherMapDissolveProgress_overrideMode, zoneWeatherMapDissolveProgress, zoneShaderSettings.zoneWeatherMapDissolveProgress);
+			ResolveLiquidTransforms();
+			UpdateMainPlaneShaderProperty();
+			isInitialized = true;
 		}
-		ApplyFloat(shaderParam_GlobalZoneLiquidUVScale, zoneLiquidUVScale_overrideMode, zoneLiquidUVScale, defaultsInstance.zoneLiquidUVScale);
-		ApplyColor(shaderParam_GlobalWaterTintColor, underwaterTintColor_overrideMode, underwaterTintColor, defaultsInstance.underwaterTintColor);
-		ApplyColor(shaderParam_GlobalUnderwaterFogColor, underwaterFogColor_overrideMode, underwaterFogColor, defaultsInstance.underwaterFogColor);
-		ApplyVector(shaderParam_GlobalUnderwaterFogParams, underwaterFogParams_overrideMode, underwaterFogParams, defaultsInstance.underwaterFogParams);
-		ApplyVector(shaderParam_GlobalUnderwaterCausticsParams, underwaterCausticsParams_overrideMode, underwaterCausticsParams, defaultsInstance.underwaterCausticsParams);
-		ApplyTexture(shaderParam_GlobalUnderwaterCausticsTex, underwaterCausticsTexture_overrideMode, underwaterCausticsTexture, defaultsInstance.underwaterCausticsTexture);
-		ApplyVector(shaderParam_GlobalUnderwaterEffectsDistanceToSurfaceFade, underwaterEffectsDistanceToSurfaceFade_overrideMode, underwaterEffectsDistanceToSurfaceFade, defaultsInstance.underwaterEffectsDistanceToSurfaceFade);
-		ApplyTexture(shaderParam_GlobalLiquidResidueTex, liquidResidueTex_overrideMode, liquidResidueTex, defaultsInstance.liquidResidueTex);
-		ApplyFloat(shaderParam_ZoneWeatherMapDissolveProgress, zoneWeatherMapDissolveProgress_overrideMode, zoneWeatherMapDissolveProgress, defaultsInstance.zoneWeatherMapDissolveProgress);
-		UpdateMainPlaneShaderProperty();
-		isInitialized = true;
 	}
 
 	private void ApplyColor(int shaderProp, EOverrideMode overrideMode, Color value, Color defaultValue)
 	{
-		if (overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues)
+		if (TryResolve(overrideMode, value, defaultValue, out var result))
 		{
-			Shader.SetGlobalColor(shaderProp, value.linear);
-		}
-		else if (overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			Shader.SetGlobalColor(shaderProp, defaultValue.linear);
+			Shader.SetGlobalColor(shaderProp, result.linear);
 		}
 	}
 
 	private void ApplyFloat(int shaderProp, EOverrideMode overrideMode, float value, float defaultValue)
 	{
-		if (overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues)
+		if (TryResolve(overrideMode, value, defaultValue, out var result))
 		{
-			Shader.SetGlobalFloat(shaderProp, value);
-		}
-		else if (overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			Shader.SetGlobalFloat(shaderProp, defaultValue);
-		}
-	}
-
-	private void ApplyVector(int shaderProp, EOverrideMode overrideMode, Vector2 value, Vector2 defaultValue)
-	{
-		if (overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues)
-		{
-			Shader.SetGlobalVector(shaderProp, value);
-		}
-		else if (overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			Shader.SetGlobalVector(shaderProp, defaultValue);
-		}
-	}
-
-	private void ApplyVector(int shaderProp, EOverrideMode overrideMode, Vector3 value, Vector3 defaultValue)
-	{
-		if (overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues)
-		{
-			Shader.SetGlobalVector(shaderProp, value);
-		}
-		else if (overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			Shader.SetGlobalVector(shaderProp, defaultValue);
+			Shader.SetGlobalFloat(shaderProp, result);
 		}
 	}
 
 	private void ApplyVector(int shaderProp, EOverrideMode overrideMode, Vector4 value, Vector4 defaultValue)
 	{
-		if (overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues)
+		if (TryResolve(overrideMode, value, defaultValue, out var result))
 		{
-			Shader.SetGlobalVector(shaderProp, value);
-		}
-		else if (overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			Shader.SetGlobalVector(shaderProp, defaultValue);
+			Shader.SetGlobalVector(shaderProp, result);
 		}
 	}
 
 	private void ApplyTexture(int shaderProp, EOverrideMode overrideMode, Texture2D value, Texture2D defaultValue)
 	{
-		if (overrideMode == EOverrideMode.ApplyNewValue || isDefaultValues)
+		if (TryResolve(overrideMode, value, defaultValue, out var result))
 		{
-			Shader.SetGlobalTexture(shaderProp, value);
-		}
-		else if (overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			Shader.SetGlobalTexture(shaderProp, defaultValue);
+			Shader.SetGlobalTexture(shaderProp, result);
 		}
 	}
 
@@ -556,6 +527,7 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 		{
 			groundFogColor_overrideMode = EOverrideMode.ApplyNewValue;
 			groundFogColor = new Color(0f, 0f, 0f, 0f);
+			groundFogHeight_overrideMode = EOverrideMode.ApplyNewValue;
 			groundFogHeight = -9999f;
 		}
 		if (cmsZoneShaderSettings.applyLiquidEffects)
@@ -661,93 +633,34 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 		}
 	}
 
+	private static void BakeDefault<T>(ref EOverrideMode mode, ref T value, T defaultValue)
+	{
+		if (mode == EOverrideMode.ApplyDefaultValue)
+		{
+			mode = EOverrideMode.ApplyNewValue;
+			value = defaultValue;
+		}
+	}
+
 	public void ReplaceDefaultValues(ZoneShaderSettings defaultZoneShaderSettings, bool rerunAwake = false)
 	{
-		if (groundFogColor_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			groundFogColor_overrideMode = EOverrideMode.ApplyNewValue;
-			groundFogColor = defaultZoneShaderSettings.groundFogColor;
-		}
-		if (groundFogHeight_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			groundFogHeight_overrideMode = EOverrideMode.ApplyNewValue;
-			groundFogHeight = defaultZoneShaderSettings.groundFogHeight;
-		}
-		if (groundFogHeightFade_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			groundFogHeightFade_overrideMode = EOverrideMode.ApplyNewValue;
-			_groundFogHeightFadeSize = defaultZoneShaderSettings._groundFogHeightFadeSize;
-		}
-		if (groundFogDepthFade_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			groundFogDepthFade_overrideMode = EOverrideMode.ApplyNewValue;
-			_groundFogDepthFadeSize = defaultZoneShaderSettings._groundFogDepthFadeSize;
-		}
-		if (zoneLiquidType_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			zoneLiquidType_overrideMode = EOverrideMode.ApplyNewValue;
-			zoneLiquidType = defaultZoneShaderSettings.zoneLiquidType;
-		}
-		if (liquidShape_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			liquidShape_overrideMode = EOverrideMode.ApplyNewValue;
-			liquidShape = defaultZoneShaderSettings.liquidShape;
-		}
-		if (liquidShapeRadius_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			liquidShapeRadius_overrideMode = EOverrideMode.ApplyNewValue;
-			liquidShapeRadius = defaultZoneShaderSettings.liquidShapeRadius;
-		}
-		if (liquidBottomTransform_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			liquidBottomTransform_overrideMode = EOverrideMode.ApplyNewValue;
-			liquidBottomTransform = defaultZoneShaderSettings.liquidBottomTransform;
-		}
-		if (zoneLiquidUVScale_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			zoneLiquidUVScale_overrideMode = EOverrideMode.ApplyNewValue;
-			zoneLiquidUVScale = defaultZoneShaderSettings.zoneLiquidUVScale;
-		}
-		if (underwaterTintColor_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterTintColor_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterTintColor = defaultZoneShaderSettings.underwaterTintColor;
-		}
-		if (underwaterFogColor_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterFogColor_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterFogColor = defaultZoneShaderSettings.underwaterFogColor;
-		}
-		if (underwaterFogParams_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterFogParams_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterFogParams = defaultZoneShaderSettings.underwaterFogParams;
-		}
-		if (underwaterCausticsParams_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterCausticsParams_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterCausticsParams = defaultZoneShaderSettings.underwaterCausticsParams;
-		}
-		if (underwaterCausticsTexture_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterCausticsTexture_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterCausticsTexture = defaultZoneShaderSettings.underwaterCausticsTexture;
-		}
-		if (underwaterEffectsDistanceToSurfaceFade_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterEffectsDistanceToSurfaceFade_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterEffectsDistanceToSurfaceFade = defaultZoneShaderSettings.underwaterEffectsDistanceToSurfaceFade;
-		}
-		if (liquidResidueTex_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			liquidResidueTex_overrideMode = EOverrideMode.ApplyNewValue;
-			liquidResidueTex = defaultZoneShaderSettings.liquidResidueTex;
-		}
-		if (mainWaterSurfacePlane_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			mainWaterSurfacePlane_overrideMode = EOverrideMode.ApplyNewValue;
-			mainWaterSurfacePlane = defaultZoneShaderSettings.mainWaterSurfacePlane;
-		}
+		BakeDefault(ref groundFogColor_overrideMode, ref groundFogColor, defaultZoneShaderSettings.groundFogColor);
+		BakeDefault(ref groundFogHeight_overrideMode, ref groundFogHeight, defaultZoneShaderSettings.groundFogHeight);
+		BakeDefault(ref groundFogHeightFade_overrideMode, ref _groundFogHeightFadeSize, defaultZoneShaderSettings._groundFogHeightFadeSize);
+		BakeDefault(ref groundFogDepthFade_overrideMode, ref _groundFogDepthFadeSize, defaultZoneShaderSettings._groundFogDepthFadeSize);
+		BakeDefault(ref zoneLiquidType_overrideMode, ref zoneLiquidType, defaultZoneShaderSettings.zoneLiquidType);
+		BakeDefault(ref liquidShape_overrideMode, ref liquidShape, defaultZoneShaderSettings.liquidShape);
+		BakeDefault(ref liquidShapeRadius_overrideMode, ref liquidShapeRadius, defaultZoneShaderSettings.liquidShapeRadius);
+		BakeDefault(ref liquidBottomTransform_overrideMode, ref liquidBottomTransform, defaultZoneShaderSettings.liquidBottomTransform);
+		BakeDefault(ref zoneLiquidUVScale_overrideMode, ref zoneLiquidUVScale, defaultZoneShaderSettings.zoneLiquidUVScale);
+		BakeDefault(ref underwaterTintColor_overrideMode, ref underwaterTintColor, defaultZoneShaderSettings.underwaterTintColor);
+		BakeDefault(ref underwaterFogColor_overrideMode, ref underwaterFogColor, defaultZoneShaderSettings.underwaterFogColor);
+		BakeDefault(ref underwaterFogParams_overrideMode, ref underwaterFogParams, defaultZoneShaderSettings.underwaterFogParams);
+		BakeDefault(ref underwaterCausticsParams_overrideMode, ref underwaterCausticsParams, defaultZoneShaderSettings.underwaterCausticsParams);
+		BakeDefault(ref underwaterCausticsTexture_overrideMode, ref underwaterCausticsTexture, defaultZoneShaderSettings.underwaterCausticsTexture);
+		BakeDefault(ref underwaterEffectsDistanceToSurfaceFade_overrideMode, ref underwaterEffectsDistanceToSurfaceFade, defaultZoneShaderSettings.underwaterEffectsDistanceToSurfaceFade);
+		BakeDefault(ref liquidResidueTex_overrideMode, ref liquidResidueTex, defaultZoneShaderSettings.liquidResidueTex);
+		BakeDefault(ref mainWaterSurfacePlane_overrideMode, ref mainWaterSurfacePlane, defaultZoneShaderSettings.mainWaterSurfacePlane);
 		if (rerunAwake)
 		{
 			Awake();
@@ -756,91 +669,24 @@ public class ZoneShaderSettings : MonoBehaviour, ITickSystemPost
 
 	public void ReplaceDefaultValues(CMSZoneShaderSettings.CMSZoneShaderProperties defaultZoneShaderProperties, bool rerunAwake = false)
 	{
-		if (groundFogColor_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			groundFogColor_overrideMode = EOverrideMode.ApplyNewValue;
-			groundFogColor = defaultZoneShaderProperties.groundFogColor;
-		}
-		if (groundFogHeight_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			groundFogHeight_overrideMode = EOverrideMode.ApplyNewValue;
-			groundFogHeight = defaultZoneShaderProperties.groundFogHeight;
-		}
-		if (groundFogHeightFade_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			groundFogHeightFade_overrideMode = EOverrideMode.ApplyNewValue;
-			_groundFogHeightFadeSize = defaultZoneShaderProperties.groundFogHeightFadeSize;
-		}
-		if (groundFogDepthFade_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			groundFogDepthFade_overrideMode = EOverrideMode.ApplyNewValue;
-			_groundFogDepthFadeSize = defaultZoneShaderProperties.groundFogDepthFadeSize;
-		}
-		if (zoneLiquidType_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			zoneLiquidType_overrideMode = EOverrideMode.ApplyNewValue;
-			zoneLiquidType = (EZoneLiquidType)defaultZoneShaderProperties.zoneLiquidType;
-		}
-		if (liquidShape_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			liquidShape_overrideMode = EOverrideMode.ApplyNewValue;
-			liquidShape = (ELiquidShape)defaultZoneShaderProperties.liquidShape;
-		}
-		if (liquidShapeRadius_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			liquidShapeRadius_overrideMode = EOverrideMode.ApplyNewValue;
-			liquidShapeRadius = defaultZoneShaderProperties.liquidShapeRadius;
-		}
-		if (liquidBottomTransform_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			liquidBottomTransform_overrideMode = EOverrideMode.ApplyNewValue;
-			liquidBottomTransform = defaultZoneShaderProperties.liquidBottomTransform;
-		}
-		if (zoneLiquidUVScale_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			zoneLiquidUVScale_overrideMode = EOverrideMode.ApplyNewValue;
-			zoneLiquidUVScale = defaultZoneShaderProperties.zoneLiquidUVScale;
-		}
-		if (underwaterTintColor_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterTintColor_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterTintColor = defaultZoneShaderProperties.underwaterTintColor;
-		}
-		if (underwaterFogColor_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterFogColor_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterFogColor = defaultZoneShaderProperties.underwaterFogColor;
-		}
-		if (underwaterFogParams_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterFogParams_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterFogParams = defaultZoneShaderProperties.underwaterFogParams;
-		}
-		if (underwaterCausticsParams_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterCausticsParams_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterCausticsParams = defaultZoneShaderProperties.underwaterCausticsParams;
-		}
-		if (underwaterCausticsTexture_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterCausticsTexture_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterCausticsTexture = defaultZoneShaderProperties.underwaterCausticsTexture;
-		}
-		if (underwaterEffectsDistanceToSurfaceFade_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			underwaterEffectsDistanceToSurfaceFade_overrideMode = EOverrideMode.ApplyNewValue;
-			underwaterEffectsDistanceToSurfaceFade = defaultZoneShaderProperties.underwaterEffectsDistanceToSurfaceFade;
-		}
-		if (liquidResidueTex_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			liquidResidueTex_overrideMode = EOverrideMode.ApplyNewValue;
-			liquidResidueTex = defaultZoneShaderProperties.liquidResidueTex;
-		}
-		if (mainWaterSurfacePlane_overrideMode == EOverrideMode.ApplyDefaultValue)
-		{
-			mainWaterSurfacePlane_overrideMode = EOverrideMode.ApplyNewValue;
-			mainWaterSurfacePlane = defaultZoneShaderProperties.mainWaterSurfacePlane;
-		}
+		CMSZoneShaderSettings.CMSZoneShaderProperties cMSZoneShaderProperties = defaultZoneShaderProperties;
+		BakeDefault(ref groundFogColor_overrideMode, ref groundFogColor, cMSZoneShaderProperties.groundFogColor);
+		BakeDefault(ref groundFogHeight_overrideMode, ref groundFogHeight, cMSZoneShaderProperties.groundFogHeight);
+		BakeDefault(ref groundFogHeightFade_overrideMode, ref _groundFogHeightFadeSize, cMSZoneShaderProperties.groundFogHeightFadeSize);
+		BakeDefault(ref groundFogDepthFade_overrideMode, ref _groundFogDepthFadeSize, cMSZoneShaderProperties.groundFogDepthFadeSize);
+		BakeDefault(ref zoneLiquidType_overrideMode, ref zoneLiquidType, (EZoneLiquidType)cMSZoneShaderProperties.zoneLiquidType);
+		BakeDefault(ref liquidShape_overrideMode, ref liquidShape, (ELiquidShape)cMSZoneShaderProperties.liquidShape);
+		BakeDefault(ref liquidShapeRadius_overrideMode, ref liquidShapeRadius, cMSZoneShaderProperties.liquidShapeRadius);
+		BakeDefault(ref liquidBottomTransform_overrideMode, ref liquidBottomTransform, cMSZoneShaderProperties.liquidBottomTransform);
+		BakeDefault(ref zoneLiquidUVScale_overrideMode, ref zoneLiquidUVScale, cMSZoneShaderProperties.zoneLiquidUVScale);
+		BakeDefault(ref underwaterTintColor_overrideMode, ref underwaterTintColor, cMSZoneShaderProperties.underwaterTintColor);
+		BakeDefault(ref underwaterFogColor_overrideMode, ref underwaterFogColor, cMSZoneShaderProperties.underwaterFogColor);
+		BakeDefault(ref underwaterFogParams_overrideMode, ref underwaterFogParams, cMSZoneShaderProperties.underwaterFogParams);
+		BakeDefault(ref underwaterCausticsParams_overrideMode, ref underwaterCausticsParams, cMSZoneShaderProperties.underwaterCausticsParams);
+		BakeDefault(ref underwaterCausticsTexture_overrideMode, ref underwaterCausticsTexture, cMSZoneShaderProperties.underwaterCausticsTexture);
+		BakeDefault(ref underwaterEffectsDistanceToSurfaceFade_overrideMode, ref underwaterEffectsDistanceToSurfaceFade, cMSZoneShaderProperties.underwaterEffectsDistanceToSurfaceFade);
+		BakeDefault(ref liquidResidueTex_overrideMode, ref liquidResidueTex, cMSZoneShaderProperties.liquidResidueTex);
+		BakeDefault(ref mainWaterSurfacePlane_overrideMode, ref mainWaterSurfacePlane, cMSZoneShaderProperties.mainWaterSurfacePlane);
 		if (rerunAwake)
 		{
 			Awake();

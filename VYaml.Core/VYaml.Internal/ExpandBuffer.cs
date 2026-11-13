@@ -31,7 +31,7 @@ internal class ExpandBuffer<T>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Span<T> AsSpan()
 	{
-		return buffer.AsSpan(0, Length);
+		return MemoryExtensions.AsSpan(buffer, 0, Length);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,7 +41,7 @@ internal class ExpandBuffer<T>
 		{
 			SetCapacity(buffer.Length * 2);
 		}
-		return buffer.AsSpan(0, length);
+		return MemoryExtensions.AsSpan(buffer, 0, length);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -94,7 +94,7 @@ internal class ExpandBuffer<T>
 		if (buffer.Length < newCapacity)
 		{
 			T[] array = new T[newCapacity];
-			buffer.AsSpan(0, Length).CopyTo(array);
+			MemoryExtensions.AsSpan(buffer, 0, Length).CopyTo(array);
 			buffer = array;
 		}
 	}

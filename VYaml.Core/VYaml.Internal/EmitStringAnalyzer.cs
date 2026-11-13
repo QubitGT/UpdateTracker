@@ -20,7 +20,7 @@ internal static class EmitStringAnalyzer
 
 	public static EmitStringInfo Analyze(string value)
 	{
-		ReadOnlySpan<char> readOnlySpan = value.AsSpan();
+		ReadOnlySpan<char> readOnlySpan = MemoryExtensions.AsSpan(value);
 		if (readOnlySpan.Length <= 0)
 		{
 			return new EmitStringInfo(0, needsQuotes: true, isReservedWord: false);
@@ -304,6 +304,6 @@ internal static class EmitStringAnalyzer
 		{
 			whiteSpaces = Enumerable.Repeat(' ', length * 2).ToArray();
 		}
-		stringBuilder.Append(whiteSpaces.AsSpan(0, length));
+		stringBuilder.Append(MemoryExtensions.AsSpan(whiteSpaces, 0, length));
 	}
 }

@@ -62,6 +62,9 @@ public class GRElevatorManager : NetworkComponent, ITickSystemTick
 
 	public Dictionary<ElevatorLocation, GRElevator> elevatorByLocation;
 
+	[SerializeField]
+	private List<ElevatorLocation> m_allowedLocations = new List<ElevatorLocation>(9);
+
 	public List<GRElevator> allElevators;
 
 	[SerializeField]
@@ -749,7 +752,7 @@ public class GRElevatorManager : NetworkComponent, ITickSystemTick
 	[PunRPC]
 	public void RemoteActivateTeleport(int elevatorStartLocation, int elevatorDestinationLocation, int lowestActorNumber, PhotonMessageInfo info)
 	{
-		if (info.Sender.IsMasterClient && !m_RpcSpamChecks.IsSpamming(RPC.RemoteActivateTeleport) && elevatorStartLocation >= 0 && elevatorStartLocation < 9 && elevatorDestinationLocation >= 0 && elevatorDestinationLocation < 9 && !waitingForRemoteTeleport)
+		if (info.Sender.IsMasterClient && !m_RpcSpamChecks.IsSpamming(RPC.RemoteActivateTeleport) && elevatorStartLocation >= 0 && elevatorStartLocation < 9 && elevatorDestinationLocation >= 0 && elevatorDestinationLocation < 9 && m_allowedLocations.Contains((ElevatorLocation)elevatorDestinationLocation) && !waitingForRemoteTeleport)
 		{
 			StartCoroutine(TeleportDelay((ElevatorLocation)elevatorStartLocation, (ElevatorLocation)elevatorDestinationLocation, lowestActorNumber, info.SentServerTime));
 		}

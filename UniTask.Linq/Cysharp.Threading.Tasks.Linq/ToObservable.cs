@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 
 namespace Cysharp.Threading.Tasks.Linq;
@@ -37,9 +38,11 @@ internal sealed class ToObservable<T> : IObservable<T>
 	private static async UniTaskVoid RunAsync(IUniTaskAsyncEnumerable<T> src, IObserver<T> observer, CancellationToken cancellationToken)
 	{
 		IUniTaskAsyncEnumerator<T> e = src.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
+		int num = 0;
 		try
 		{
-			do
+			while (true)
 			{
 				bool flag;
 				try
@@ -52,25 +55,39 @@ internal sealed class ToObservable<T> : IObservable<T>
 					{
 						observer.OnError(error);
 					}
-					return;
+					goto IL_00fd;
 				}
 				if (flag)
 				{
 					observer.OnNext(e.Current);
+					if (cancellationToken.IsCancellationRequested)
+					{
+						break;
+					}
 					continue;
 				}
 				observer.OnCompleted();
-				return;
+				goto IL_00fd;
+				IL_00fd:
+				num = 1;
+				break;
 			}
-			while (!cancellationToken.IsCancellationRequested);
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num != 1)
+		{
 		}
 	}
 }

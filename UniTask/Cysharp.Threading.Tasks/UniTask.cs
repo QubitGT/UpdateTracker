@@ -11102,13 +11102,20 @@ public readonly struct UniTask
 		cancellationToken.ThrowIfCancellationRequested();
 		if (configureAwait)
 		{
+			object obj = null;
 			try
 			{
 				action();
 			}
-			finally
+			catch (object obj2)
 			{
-				await Yield();
+				obj = obj2;
+			}
+			await Yield();
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 		}
 		else
@@ -11125,13 +11132,20 @@ public readonly struct UniTask
 		cancellationToken.ThrowIfCancellationRequested();
 		if (configureAwait)
 		{
+			object obj = null;
 			try
 			{
 				action(state);
 			}
-			finally
+			catch (object obj2)
 			{
-				await Yield();
+				obj = obj2;
+			}
+			await Yield();
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 		}
 		else
@@ -11152,13 +11166,20 @@ public readonly struct UniTask
 		}
 		else
 		{
+			object obj = null;
 			try
 			{
 				await action();
 			}
-			finally
+			catch (object obj2)
 			{
-				await Yield();
+				obj = obj2;
+			}
+			await Yield();
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 		}
 		cancellationToken.ThrowIfCancellationRequested();
@@ -11175,13 +11196,20 @@ public readonly struct UniTask
 		}
 		else
 		{
+			object obj = null;
 			try
 			{
 				await action(state);
 			}
-			finally
+			catch (object obj2)
 			{
-				await Yield();
+				obj = obj2;
+			}
+			await Yield();
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 		}
 		cancellationToken.ThrowIfCancellationRequested();
@@ -11194,17 +11222,31 @@ public readonly struct UniTask
 		cancellationToken.ThrowIfCancellationRequested();
 		if (configureAwait)
 		{
-			T result;
+			object obj = null;
+			int num = 0;
+			T result = default(T);
 			try
 			{
 				result = func();
+				num = 1;
 			}
-			finally
+			catch (object obj2)
 			{
-				await Yield();
-				cancellationToken.ThrowIfCancellationRequested();
+				obj = obj2;
 			}
-			return result;
+			await Yield();
+			cancellationToken.ThrowIfCancellationRequested();
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+			}
+			if (num == 1)
+			{
+				return result;
+			}
+			T result2 = default(T);
+			return result2;
 		}
 		return func();
 	}
@@ -11216,22 +11258,36 @@ public readonly struct UniTask
 		cancellationToken.ThrowIfCancellationRequested();
 		if (configureAwait)
 		{
-			T result;
+			object obj = null;
+			int num = 0;
+			T result = default(T);
 			try
 			{
 				result = await func();
+				num = 1;
 			}
-			finally
+			catch (object obj2)
 			{
-				cancellationToken.ThrowIfCancellationRequested();
-				await Yield();
-				cancellationToken.ThrowIfCancellationRequested();
+				obj = obj2;
 			}
-			return result;
+			cancellationToken.ThrowIfCancellationRequested();
+			await Yield();
+			cancellationToken.ThrowIfCancellationRequested();
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+			}
+			if (num == 1)
+			{
+				return result;
+			}
+			T result2 = default(T);
+			return result2;
 		}
-		T result2 = await func();
+		T result3 = await func();
 		cancellationToken.ThrowIfCancellationRequested();
-		return result2;
+		return result3;
 	}
 
 	public static async UniTask<T> RunOnThreadPool<T>(Func<object, T> func, object state, bool configureAwait = true, CancellationToken cancellationToken = default(CancellationToken))
@@ -11241,17 +11297,31 @@ public readonly struct UniTask
 		cancellationToken.ThrowIfCancellationRequested();
 		if (configureAwait)
 		{
-			T result;
+			object obj = null;
+			int num = 0;
+			T result = default(T);
 			try
 			{
 				result = func(state);
+				num = 1;
 			}
-			finally
+			catch (object obj2)
 			{
-				await Yield();
-				cancellationToken.ThrowIfCancellationRequested();
+				obj = obj2;
 			}
-			return result;
+			await Yield();
+			cancellationToken.ThrowIfCancellationRequested();
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+			}
+			if (num == 1)
+			{
+				return result;
+			}
+			T result2 = default(T);
+			return result2;
 		}
 		return func(state);
 	}
@@ -11263,22 +11333,36 @@ public readonly struct UniTask
 		cancellationToken.ThrowIfCancellationRequested();
 		if (configureAwait)
 		{
-			T result;
+			object obj = null;
+			int num = 0;
+			T result = default(T);
 			try
 			{
 				result = await func(state);
+				num = 1;
 			}
-			finally
+			catch (object obj2)
 			{
-				cancellationToken.ThrowIfCancellationRequested();
-				await Yield();
-				cancellationToken.ThrowIfCancellationRequested();
+				obj = obj2;
 			}
-			return result;
+			cancellationToken.ThrowIfCancellationRequested();
+			await Yield();
+			cancellationToken.ThrowIfCancellationRequested();
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+			}
+			if (num == 1)
+			{
+				return result;
+			}
+			T result2 = default(T);
+			return result2;
 		}
-		T result2 = await func(state);
+		T result3 = await func(state);
 		cancellationToken.ThrowIfCancellationRequested();
-		return result2;
+		return result3;
 	}
 
 	public static SwitchToMainThreadAwaitable SwitchToMainThread(CancellationToken cancellationToken = default(CancellationToken))

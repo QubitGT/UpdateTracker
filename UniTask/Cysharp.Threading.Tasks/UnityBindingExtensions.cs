@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,10 +21,12 @@ public static class UnityBindingExtensions
 	private static async UniTaskVoid BindToCore(IUniTaskAsyncEnumerable<string> source, Text text, CancellationToken cancellationToken, bool rebindOnError)
 	{
 		bool repeat = false;
+		object obj3;
 		while (true)
 		{
-			IL_0018:
 			IUniTaskAsyncEnumerator<string> e = source.GetAsyncEnumerator(cancellationToken);
+			object obj = null;
+			int num = 0;
 			try
 			{
 				while (true)
@@ -38,12 +41,12 @@ public static class UnityBindingExtensions
 					{
 						if (ex is OperationCanceledException)
 						{
-							break;
+							goto IL_00fc;
 						}
 						if (rebindOnError && !repeat)
 						{
 							repeat = true;
-							goto IL_0018;
+							goto IL_00f3;
 						}
 						throw;
 					}
@@ -52,23 +55,42 @@ public static class UnityBindingExtensions
 						text.text = e.Current;
 						continue;
 					}
+					goto IL_00fc;
+					IL_00f3:
+					num = 1;
+					break;
+					IL_00fc:
+					num = 2;
 					break;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
 			}
-			break;
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			obj3 = obj;
+			if (obj3 != null)
+			{
+				Exception obj4 = obj3 as Exception;
+				if (obj4 == null)
+				{
+					break;
+				}
+				ExceptionDispatchInfo.Capture(obj4).Throw();
+			}
+			switch (num)
+			{
+			case 1:
+				break;
+			default:
+				return;
+			}
 		}
-		int num;
-		if (num != 2)
-		{
-		}
+		throw obj3;
 	}
 
 	public static void BindTo<T>(this IUniTaskAsyncEnumerable<T> source, Text text, bool rebindOnError = true)
@@ -89,10 +111,12 @@ public static class UnityBindingExtensions
 	private static async UniTaskVoid BindToCore<T>(IUniTaskAsyncEnumerable<T> source, Text text, CancellationToken cancellationToken, bool rebindOnError)
 	{
 		bool repeat = false;
+		object obj3;
 		while (true)
 		{
-			IL_0018:
 			IUniTaskAsyncEnumerator<T> e = source.GetAsyncEnumerator(cancellationToken);
+			object obj = null;
+			int num = 0;
 			try
 			{
 				while (true)
@@ -107,12 +131,12 @@ public static class UnityBindingExtensions
 					{
 						if (ex is OperationCanceledException)
 						{
-							break;
+							goto IL_010b;
 						}
 						if (rebindOnError && !repeat)
 						{
 							repeat = true;
-							goto IL_0018;
+							goto IL_0102;
 						}
 						throw;
 					}
@@ -121,23 +145,42 @@ public static class UnityBindingExtensions
 						text.text = e.Current.ToString();
 						continue;
 					}
+					goto IL_010b;
+					IL_0102:
+					num = 1;
+					break;
+					IL_010b:
+					num = 2;
 					break;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
 			}
-			break;
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			obj3 = obj;
+			if (obj3 != null)
+			{
+				Exception obj4 = obj3 as Exception;
+				if (obj4 == null)
+				{
+					break;
+				}
+				ExceptionDispatchInfo.Capture(obj4).Throw();
+			}
+			switch (num)
+			{
+			case 1:
+				break;
+			default:
+				return;
+			}
 		}
-		int num;
-		if (num != 2)
-		{
-		}
+		throw obj3;
 	}
 
 	public static void BindTo(this IUniTaskAsyncEnumerable<bool> source, Selectable selectable, bool rebindOnError = true)
@@ -153,10 +196,12 @@ public static class UnityBindingExtensions
 	private static async UniTaskVoid BindToCore(IUniTaskAsyncEnumerable<bool> source, Selectable selectable, CancellationToken cancellationToken, bool rebindOnError)
 	{
 		bool repeat = false;
+		object obj3;
 		while (true)
 		{
-			IL_0018:
 			IUniTaskAsyncEnumerator<bool> e = source.GetAsyncEnumerator(cancellationToken);
+			object obj = null;
+			int num = 0;
 			try
 			{
 				while (true)
@@ -171,12 +216,12 @@ public static class UnityBindingExtensions
 					{
 						if (ex is OperationCanceledException)
 						{
-							break;
+							goto IL_00fc;
 						}
 						if (rebindOnError && !repeat)
 						{
 							repeat = true;
-							goto IL_0018;
+							goto IL_00f3;
 						}
 						throw;
 					}
@@ -185,23 +230,42 @@ public static class UnityBindingExtensions
 						selectable.interactable = e.Current;
 						continue;
 					}
+					goto IL_00fc;
+					IL_00f3:
+					num = 1;
+					break;
+					IL_00fc:
+					num = 2;
 					break;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
 			}
-			break;
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			obj3 = obj;
+			if (obj3 != null)
+			{
+				Exception obj4 = obj3 as Exception;
+				if (obj4 == null)
+				{
+					break;
+				}
+				ExceptionDispatchInfo.Capture(obj4).Throw();
+			}
+			switch (num)
+			{
+			case 1:
+				break;
+			default:
+				return;
+			}
 		}
-		int num;
-		if (num != 2)
-		{
-		}
+		throw obj3;
 	}
 
 	public static void BindTo<TSource, TObject>(this IUniTaskAsyncEnumerable<TSource> source, TObject monoBehaviour, Action<TObject, TSource> bindAction, bool rebindOnError = true) where TObject : MonoBehaviour
@@ -217,10 +281,12 @@ public static class UnityBindingExtensions
 	private static async UniTaskVoid BindToCore<TSource, TObject>(IUniTaskAsyncEnumerable<TSource> source, TObject bindTarget, Action<TObject, TSource> bindAction, CancellationToken cancellationToken, bool rebindOnError)
 	{
 		bool repeat = false;
+		object obj3;
 		while (true)
 		{
-			IL_0018:
 			IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+			object obj = null;
+			int num = 0;
 			try
 			{
 				while (true)
@@ -235,12 +301,12 @@ public static class UnityBindingExtensions
 					{
 						if (ex is OperationCanceledException)
 						{
-							break;
+							goto IL_0102;
 						}
 						if (rebindOnError && !repeat)
 						{
 							repeat = true;
-							goto IL_0018;
+							goto IL_00f9;
 						}
 						throw;
 					}
@@ -249,22 +315,41 @@ public static class UnityBindingExtensions
 						bindAction(bindTarget, e.Current);
 						continue;
 					}
+					goto IL_0102;
+					IL_00f9:
+					num = 1;
+					break;
+					IL_0102:
+					num = 2;
 					break;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
 			}
-			break;
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			obj3 = obj;
+			if (obj3 != null)
+			{
+				Exception obj4 = obj3 as Exception;
+				if (obj4 == null)
+				{
+					break;
+				}
+				ExceptionDispatchInfo.Capture(obj4).Throw();
+			}
+			switch (num)
+			{
+			case 1:
+				break;
+			default:
+				return;
+			}
 		}
-		int num;
-		if (num != 2)
-		{
-		}
+		throw obj3;
 	}
 }

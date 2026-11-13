@@ -122,6 +122,7 @@ public class FreeCosmeticKiosk : MonoBehaviourPun
 				GorillaTagger.Instance.offlineVRRig.AddCosmetic(cosmeticId);
 			}
 		}
+		CosmeticsController.instance.RefreshWardrobesAfterUnlockChange();
 		TriggerCelebration(player);
 		UpdateState(cosmeticGranted: true);
 	}

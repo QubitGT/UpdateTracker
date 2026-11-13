@@ -73,6 +73,12 @@ public class SpawnWorldEffects : MonoBehaviour
 		}
 		if (_prefabToSpawn != null && !_isPrefabInPool)
 		{
+			if (ObjectPools.instance == null)
+			{
+				Debug.LogError("SpawnWorldEffects: Disabling because ObjectPools not found! Hierarchy path: " + base.transform.GetPath(), this);
+				base.enabled = false;
+				return;
+			}
 			if (_prefabToSpawn.CompareTag("Untagged"))
 			{
 				Debug.LogError("SpawnWorldEffects: Disabling because Spawn Prefab has no tag! Hierarchy path: " + base.transform.GetPath(), this);
@@ -86,9 +92,18 @@ public class SpawnWorldEffects : MonoBehaviour
 				base.enabled = false;
 				return;
 			}
-			_pool = ObjectPools.instance.GetPoolByObjectType(_prefabToSpawn);
+			TryGetPool();
 		}
 		_hasPrefabToSpawn = _prefabToSpawn != null && _isPrefabInPool;
+	}
+
+	private bool TryGetPool()
+	{
+		if (_pool == null && ObjectPools.instance != null && ObjectPools.instance.initialized)
+		{
+			_pool = ObjectPools.instance.GetPoolByObjectType(_prefabToSpawn);
+		}
+		return _pool != null;
 	}
 
 	public void RequestSpawn(Vector3 worldPosition)
@@ -107,7 +122,7 @@ public class SpawnWorldEffects : MonoBehaviour
 		{
 			return;
 		}
-		if (_hasPrefabToSpawn && _isPrefabInPool && _pool.GetInactiveCount() > 0)
+		if (_hasPrefabToSpawn && TryGetPool() && _pool.GetInactiveCount() > 0)
 		{
 			Vector3 vector = normal;
 			if (_requireSurfaceLayer || _useNormalOrientation)

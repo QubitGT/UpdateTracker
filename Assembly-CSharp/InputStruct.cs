@@ -46,6 +46,8 @@ public struct InputStruct
 
 	public short hoverboardColor;
 
+	public int hoverboardSkinActorNumber;
+
 	public long propHuntPosRot;
 
 	public double serverTimeStamp;

@@ -101,7 +101,7 @@ public class EvolvingCosmetic : MonoBehaviour, ITickSystemTick, PrefabNameSerial
 
 		public float DeltaTime(float deltaTime)
 		{
-			return (HasTime ? deltaTime : 0f) + (HasTemperature ? (deltaTime * celsiusSpeedupMult.Evaluate(thermalReceiver.celsius)) : 0f);
+			return (HasTime ? deltaTime : 0f) + ((HasTemperature && thermalReceiver != null) ? (deltaTime * celsiusSpeedupMult.Evaluate(thermalReceiver.celsius)) : 0f);
 		}
 
 		public EventAtTime GetEventOrNull(int index)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 
 namespace Cysharp.Threading.Tasks.Linq;
@@ -10,6 +11,7 @@ internal static class ToDictionary
 	{
 		Dictionary<TKey, TSource> dict = new Dictionary<TKey, TSource>(comparer);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -19,13 +21,18 @@ internal static class ToDictionary
 				dict.Add(key, current);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return dict;
 	}
@@ -34,6 +41,7 @@ internal static class ToDictionary
 	{
 		Dictionary<TKey, TElement> dict = new Dictionary<TKey, TElement>(comparer);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -44,13 +52,18 @@ internal static class ToDictionary
 				dict.Add(key, value);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return dict;
 	}
@@ -59,6 +72,7 @@ internal static class ToDictionary
 	{
 		Dictionary<TKey, TSource> dict = new Dictionary<TKey, TSource>(comparer);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -67,13 +81,18 @@ internal static class ToDictionary
 				dict.Add(await keySelector(v), v);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return dict;
 	}
@@ -82,6 +101,7 @@ internal static class ToDictionary
 	{
 		Dictionary<TKey, TElement> dict = new Dictionary<TKey, TElement>(comparer);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -90,13 +110,18 @@ internal static class ToDictionary
 				dict.Add(await keySelector(v), await elementSelector(v));
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return dict;
 	}
@@ -105,6 +130,7 @@ internal static class ToDictionary
 	{
 		Dictionary<TKey, TSource> dict = new Dictionary<TKey, TSource>(comparer);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -113,13 +139,18 @@ internal static class ToDictionary
 				dict.Add(await keySelector(v, cancellationToken), v);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return dict;
 	}
@@ -128,6 +159,7 @@ internal static class ToDictionary
 	{
 		Dictionary<TKey, TElement> dict = new Dictionary<TKey, TElement>(comparer);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -136,13 +168,18 @@ internal static class ToDictionary
 				dict.Add(await keySelector(v, cancellationToken), await elementSelector(v, cancellationToken));
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return dict;
 	}

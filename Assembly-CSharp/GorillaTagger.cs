@@ -967,7 +967,7 @@ public class GorillaTagger : MonoBehaviour, IGuidedRefReceiverMono, IGuidedRefMo
 				}
 			}
 		}
-		else if (GorillaComputer.instance.voiceChatOn == "FALSE")
+		else if (GorillaComputer.instance.voiceChatOn == "FALSE" || GorillaComputer.instance.voiceChatOn == "OFF")
 		{
 			myRecorder = NetworkSystem.Instance.LocalRecorder;
 			if (!offlineVRRig.remoteUseReplacementVoice)

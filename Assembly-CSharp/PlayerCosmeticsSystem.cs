@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using GorillaNetworking;
 using GorillaTagScripts;
 using Newtonsoft.Json;
@@ -408,7 +409,7 @@ internal class PlayerCosmeticsSystem : MonoBehaviour, ITickSystemPre
 				CosmeticsController.instance.AddTempUnlockToWardrobe(cosmeticId);
 			}
 		}
-		CosmeticsController.instance.OnCosmeticsUpdated?.Invoke();
+		CosmeticsController.instance.RefreshWardrobesAfterUnlockChange();
 		if (rig.isOfflineVRRig)
 		{
 			CosmeticsController.instance.UpdateWornCosmetics(sync: true);
@@ -439,7 +440,7 @@ internal class PlayerCosmeticsSystem : MonoBehaviour, ITickSystemPre
 				CosmeticsController.instance.RemoveTempUnlockFromWardrobe(cosmeticId);
 			}
 		}
-		CosmeticsController.instance.OnCosmeticsUpdated?.Invoke();
+		CosmeticsController.instance.RefreshWardrobesAfterUnlockChange();
 		if (rig.isOfflineVRRig)
 		{
 			CosmeticsController.instance.UpdateWornCosmetics(sync: true);
@@ -477,6 +478,11 @@ internal class PlayerCosmeticsSystem : MonoBehaviour, ITickSystemPre
 		{
 			LockTemporaryCosmeticGlobal(cosmeticIds[i]);
 		}
+	}
+
+	internal static void LockTemporaryCosmeticsGlobal(CosmeticsController.CosmeticSet set)
+	{
+		LockTemporaryCosmeticsGlobal(set.items.Select((CosmeticsController.CosmeticItem item) => item.itemName).ToList());
 	}
 
 	internal static void LockTemporaryCosmeticGlobal(string cosmeticId)

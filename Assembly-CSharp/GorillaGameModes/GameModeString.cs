@@ -64,6 +64,6 @@ public class GameModeString
 		{
 			return null;
 		}
-		return propertyString.AsSpan(num, num2 - num);
+		return MemoryExtensions.AsSpan(propertyString, num, num2 - num);
 	}
 }

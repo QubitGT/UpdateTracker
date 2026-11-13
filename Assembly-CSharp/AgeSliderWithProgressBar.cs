@@ -48,6 +48,29 @@ public class AgeSliderWithProgressBar : MonoBehaviourTick
 	[SerializeField]
 	private KIDUIButton _confirmButton;
 
+	[Header("Thumbstick")]
+	[Tooltip("Stick X deflection needed to register a left/right press.")]
+	[SerializeField]
+	[Range(0.1f, 1f)]
+	private float _stickPressThreshold = 0.6f;
+
+	[Tooltip("Stick X deflection below which a held press is released (hysteresis, keep below the press threshold).")]
+	[SerializeField]
+	[Range(0f, 1f)]
+	private float _stickReleaseThreshold = 0.35f;
+
+	[Tooltip("Seconds a direction must be held before the age starts repeating.")]
+	[SerializeField]
+	private float _stickRepeatDelay = 0.4f;
+
+	[Tooltip("Seconds between repeats while the stick stays held.")]
+	[SerializeField]
+	private float _stickRepeatInterval = 0.12f;
+
+	private int _heldStickDirection;
+
+	private float _nextStickRepeatTime;
+
 	private bool _ageSlidable = true;
 
 	private bool _incrementButtonsLockingSlider;
@@ -139,7 +162,14 @@ public class AgeSliderWithProgressBar : MonoBehaviourTick
 
 	public override void Tick()
 	{
-		if (!_progressBarContainer || !ControllerActive)
+		if (!ControllerActive)
+		{
+			_heldStickDirection = 0;
+			return;
+		}
+		HandleStickInput();
+		RefreshAgeDisplay();
+		if (!_progressBarContainer)
 		{
 			return;
 		}
@@ -180,28 +210,69 @@ public class AgeSliderWithProgressBar : MonoBehaviourTick
 
 	private void PostUpdate()
 	{
-		if (ControllerActive && (bool)_ageValueTxt && _ageSlidable && !_incrementButtonsLockingSlider)
+		RefreshAgeDisplay();
+	}
+
+	private void HandleStickInput()
+	{
+		if (!_ageValueTxt || !_ageSlidable || _incrementButtonsLockingSlider || !ControllerBehaviour.Instance)
 		{
-			if (ControllerBehaviour.Instance.IsLeftStick)
+			_heldStickDirection = 0;
+			return;
+		}
+		float dominantStickX = ControllerBehaviour.Instance.DominantStickX;
+		int num = _heldStickDirection;
+		if (num == 0)
+		{
+			if (dominantStickX <= 0f - _stickPressThreshold)
 			{
-				_currentAge = Mathf.Clamp(_currentAge - 1, 0, _maxAge);
-				if (_currentAge > 0 && _currentAge < _maxAge)
-				{
-					HandRayController.Instance.PulseActiveHandray(_stickVibrationStrength, _stickVibrationDuration);
-				}
+				num = -1;
 			}
-			if (ControllerBehaviour.Instance.IsRightStick)
+			else if (dominantStickX >= _stickPressThreshold)
 			{
-				_currentAge = Mathf.Clamp(_currentAge + 1, 0, _maxAge);
-				if (_currentAge > 0 && _currentAge < _maxAge)
-				{
-					HandRayController.Instance.PulseActiveHandray(_stickVibrationStrength, _stickVibrationDuration);
-				}
+				num = 1;
 			}
 		}
+		else if (Mathf.Abs(dominantStickX) < _stickReleaseThreshold || (int)Mathf.Sign(dominantStickX) != num)
+		{
+			num = 0;
+		}
+		if (num == 0)
+		{
+			_heldStickDirection = 0;
+		}
+		else if (num != _heldStickDirection)
+		{
+			_heldStickDirection = num;
+			StepAge(num);
+			_nextStickRepeatTime = Time.time + _stickRepeatDelay;
+		}
+		else if (Time.time >= _nextStickRepeatTime)
+		{
+			StepAge(num);
+			_nextStickRepeatTime = Time.time + _stickRepeatInterval;
+		}
+	}
+
+	private void StepAge(int direction)
+	{
+		int currentAge = _currentAge;
+		_currentAge = Mathf.Clamp(_currentAge + direction, 0, _maxAge);
+		if (_currentAge != currentAge && _currentAge > 0 && _currentAge < _maxAge)
+		{
+			HandRayController.Instance?.PulseActiveHandray(_stickVibrationStrength, _stickVibrationDuration);
+		}
+	}
+
+	private void RefreshAgeDisplay()
+	{
 		if ((bool)_ageValueTxt)
 		{
-			_ageValueTxt.text = GetAgeString();
+			string ageString = GetAgeString();
+			if (_ageValueTxt.text != ageString)
+			{
+				_ageValueTxt.text = ageString;
+			}
 			if (_progressBarContainer != null)
 			{
 				_progressBarContainer.SetActive(_currentAge > 0);

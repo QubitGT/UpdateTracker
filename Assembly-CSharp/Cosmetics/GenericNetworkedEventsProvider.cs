@@ -170,13 +170,16 @@ public class GenericNetworkedEventsProvider : MonoBehaviour, PrefabNameSerialize
 
 	private void Raise(object[] args)
 	{
-		if (PhotonNetwork.InRoom && _events?.Activate != null)
+		if (!PhotonNetwork.InRoom || !(myRig != null) || myRig.creator == null || myRig.creator.IsLocal)
 		{
-			_events.Activate.RaiseAll(args);
-		}
-		else
-		{
-			InvokeSharedEvents(args);
+			if (PhotonNetwork.InRoom && _events?.Activate != null)
+			{
+				_events.Activate.RaiseAll(args);
+			}
+			else
+			{
+				InvokeSharedEvents(args);
+			}
 		}
 	}
 

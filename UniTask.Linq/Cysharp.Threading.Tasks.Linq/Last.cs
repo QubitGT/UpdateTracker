@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Cysharp.Threading.Tasks.Internal;
 
@@ -9,7 +10,9 @@ internal static class Last
 	public static async UniTask<TSource> LastAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source, CancellationToken cancellationToken, bool defaultIfEmpty)
 	{
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
-		TSource result;
+		object obj = null;
+		int num = 0;
+		TSource result = default(TSource);
 		try
 		{
 			TSource value = default(TSource);
@@ -30,22 +33,35 @@ internal static class Last
 				}
 				result = value;
 			}
+			num = 1;
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
 		}
-		return result;
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		TSource result2 = default(TSource);
+		return result2;
 	}
 
 	public static async UniTask<TSource> LastAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source, Func<TSource, bool> predicate, CancellationToken cancellationToken, bool defaultIfEmpty)
 	{
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
-		TSource result;
+		object obj = null;
+		int num = 0;
+		TSource result = default(TSource);
 		try
 		{
 			TSource value = default(TSource);
@@ -71,22 +87,35 @@ internal static class Last
 				}
 				result = value;
 			}
+			num = 1;
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
 		}
-		return result;
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		TSource result2 = default(TSource);
+		return result2;
 	}
 
 	public static async UniTask<TSource> LastAwaitAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source, Func<TSource, UniTask<bool>> predicate, CancellationToken cancellationToken, bool defaultIfEmpty)
 	{
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
-		TSource result;
+		object obj = null;
+		int num = 0;
+		TSource result = default(TSource);
 		try
 		{
 			TSource value = default(TSource);
@@ -112,22 +141,35 @@ internal static class Last
 				}
 				result = value;
 			}
+			num = 1;
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
 		}
-		return result;
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		TSource result2 = default(TSource);
+		return result2;
 	}
 
 	public static async UniTask<TSource> LastAwaitWithCancellationAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source, Func<TSource, CancellationToken, UniTask<bool>> predicate, CancellationToken cancellationToken, bool defaultIfEmpty)
 	{
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
-		TSource result;
+		object obj = null;
+		int num = 0;
+		TSource result = default(TSource);
 		try
 		{
 			TSource value = default(TSource);
@@ -153,15 +195,26 @@ internal static class Last
 				}
 				result = value;
 			}
+			num = 1;
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
 		}
-		return result;
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		TSource result2 = default(TSource);
+		return result2;
 	}
 }

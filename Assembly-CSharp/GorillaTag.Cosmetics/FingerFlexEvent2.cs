@@ -98,6 +98,15 @@ public class FingerFlexEvent2 : MonoBehaviour, ITickSystemTick
 			}
 		}
 
+		public bool IsStick
+		{
+			get
+			{
+				FingerType fingerType = this.fingerType;
+				return fingerType == FingerType.StickLeft || fingerType == FingerType.StickRight || fingerType == FingerType.StickUp || fingerType == FingerType.StickDown;
+			}
+		}
+
 		public bool HasValidLink => linkIndex >= 0;
 
 		public bool IsLinked
@@ -169,11 +178,37 @@ public class FingerFlexEvent2 : MonoBehaviour, ITickSystemTick
 
 	public FlexEvent[] list;
 
+	[Tooltip("Stick input isn't synced by the rig, so stick events normally only run for the local player. When checked, the holding hand's stick is sent to other players through the TransferrableObject's item state (bits 0-5), so stick events run on everyone's copy. Only use this when nothing else uses the item state (Networked State Events off, and no subclass writing it).")]
+	[SerializeField]
+	private bool syncStickInput;
+
+	private const int STICK_X_SHIFT = 0;
+
+	private const int STICK_Y_SHIFT = 3;
+
+	private const int STICK_AXIS_MASK = 7;
+
+	private const int STICK_BITS_MASK = 63;
+
+	private const float STICK_STEPS = 3f;
+
 	private VRRig myRig;
 
 	private TransferrableObject myTransferrable;
 
 	private IHeldItem myHeldItem;
+
+	private bool CanSyncSticks
+	{
+		get
+		{
+			if (syncStickInput)
+			{
+				return !myTransferrable.IsNull();
+			}
+			return false;
+		}
+	}
 
 	public bool TickRunning { get; set; }
 
@@ -220,50 +255,52 @@ public class FingerFlexEvent2 : MonoBehaviour, ITickSystemTick
 
 	private void CalcFlex(bool disable)
 	{
+		bool flag = myRig != null && myRig.isOfflineVRRig;
+		bool? flag2 = null;
 		float num2 = default(float);
 		for (int i = 0; i < list.Length; i++)
 		{
 			FlexEvent flexEvent = list[i];
-			if ((!flexEvent.networked && !myRig.isOfflineVRRig) || (flexEvent.RequiresHeldItem && myTransferrable.IsNull() && myHeldItem == null) || (flexEvent.handType == FlexEvent.HandType.EquippedSide && myTransferrable.IsNull()))
+			if ((!flexEvent.networked && !flag) || (flexEvent.IsStick && !flag && (myRig == null || !CanSyncSticks)) || myRig == null || (flexEvent.RequiresHeldItem && myTransferrable.IsNull() && myHeldItem == null) || (flexEvent.handType == FlexEvent.HandType.EquippedSide && myTransferrable.IsNull()))
 			{
 				continue;
 			}
-			bool flag = false;
-			bool flag2 = false;
 			bool flag3 = false;
+			bool flag4 = false;
+			bool flag5 = false;
 			switch (flexEvent.handType)
 			{
 			case FlexEvent.HandType.LeftHand:
-				flag = true;
+				flag3 = true;
 				break;
 			case FlexEvent.HandType.RightHand:
-				flag2 = true;
+				flag4 = true;
 				break;
 			case FlexEvent.HandType.HeldItemHand:
 				if (!myTransferrable.IsNull())
 				{
-					flag = myTransferrable.currentState == TransferrableObject.PositionState.InLeftHand;
-					flag2 = myTransferrable.currentState == TransferrableObject.PositionState.InRightHand;
-					flag3 = flag || flag2;
+					flag3 = myTransferrable.currentState == TransferrableObject.PositionState.InLeftHand;
+					flag4 = myTransferrable.currentState == TransferrableObject.PositionState.InRightHand;
+					flag5 = flag3 || flag4;
 				}
 				else if (myHeldItem != null)
 				{
-					flag = myHeldItem.InLeftHand();
-					flag2 = !flag && myHeldItem.InHand();
-					flag3 = flag || flag2;
+					flag3 = myHeldItem.InLeftHand();
+					flag4 = !flag3 && myHeldItem.InHand();
+					flag5 = flag3 || flag4;
 				}
 				break;
 			case FlexEvent.HandType.EquippedSide:
-				flag = (myTransferrable.storedZone & (BodyDockPositions.DropPositions.LeftArm | BodyDockPositions.DropPositions.LeftBack)) != 0;
-				flag2 = (myTransferrable.storedZone & (BodyDockPositions.DropPositions.RightArm | BodyDockPositions.DropPositions.RightBack)) != 0;
+				flag3 = (myTransferrable.storedZone & (BodyDockPositions.DropPositions.LeftArm | BodyDockPositions.DropPositions.LeftBack)) != 0;
+				flag4 = (myTransferrable.storedZone & (BodyDockPositions.DropPositions.RightArm | BodyDockPositions.DropPositions.RightBack)) != 0;
 				break;
 			}
-			if ((flag && flag2) || (!flag && !flag2 && !flexEvent.wasHeld))
+			if ((flag3 && flag4) || (!flag3 && !flag4 && !flexEvent.wasHeld))
 			{
 				continue;
 			}
 			float num;
-			if (disable || (flexEvent.wasHeld && !flag3))
+			if (disable || (flexEvent.wasHeld && !flag5))
 			{
 				num = 0f;
 			}
@@ -273,31 +310,31 @@ public class FingerFlexEvent2 : MonoBehaviour, ITickSystemTick
 				switch (fingerType)
 				{
 				case FlexEvent.FingerType.Thumb:
-					num2 = (flag ? myRig.leftThumb.calcT : myRig.rightThumb.calcT);
+					num2 = (flag3 ? myRig.leftThumb.calcT : myRig.rightThumb.calcT);
 					break;
 				case FlexEvent.FingerType.Index:
-					num2 = (flag ? myRig.leftIndex.calcT : myRig.rightIndex.calcT);
+					num2 = (flag3 ? myRig.leftIndex.calcT : myRig.rightIndex.calcT);
 					break;
 				case FlexEvent.FingerType.Middle:
-					num2 = (flag ? myRig.leftMiddle.calcT : myRig.rightMiddle.calcT);
+					num2 = (flag3 ? myRig.leftMiddle.calcT : myRig.rightMiddle.calcT);
 					break;
 				case FlexEvent.FingerType.IndexAndMiddle:
-					num2 = (flag ? Mathf.Min(myRig.leftIndex.calcT, myRig.leftMiddle.calcT) : Mathf.Min(myRig.rightIndex.calcT, myRig.rightMiddle.calcT));
+					num2 = (flag3 ? Mathf.Min(myRig.leftIndex.calcT, myRig.leftMiddle.calcT) : Mathf.Min(myRig.rightIndex.calcT, myRig.rightMiddle.calcT));
 					break;
 				case FlexEvent.FingerType.IndexOrMiddle:
-					num2 = (flag ? Mathf.Max(myRig.leftIndex.calcT, myRig.leftMiddle.calcT) : Mathf.Max(myRig.rightIndex.calcT, myRig.rightMiddle.calcT));
+					num2 = (flag3 ? Mathf.Max(myRig.leftIndex.calcT, myRig.leftMiddle.calcT) : Mathf.Max(myRig.rightIndex.calcT, myRig.rightMiddle.calcT));
 					break;
 				case FlexEvent.FingerType.StickLeft:
-					num2 = Mathf.Max(0f, 0f - ControllerInputPoller.Primary2DAxis(flag ? XRNode.LeftHand : XRNode.RightHand).x);
+					num2 = Mathf.Max(0f, 0f - ReadStick(flag3, flag).x);
 					break;
 				case FlexEvent.FingerType.StickRight:
-					num2 = Mathf.Max(0f, ControllerInputPoller.Primary2DAxis(flag ? XRNode.LeftHand : XRNode.RightHand).x);
+					num2 = Mathf.Max(0f, ReadStick(flag3, flag).x);
 					break;
 				case FlexEvent.FingerType.StickUp:
-					num2 = Mathf.Max(0f, ControllerInputPoller.Primary2DAxis(flag ? XRNode.LeftHand : XRNode.RightHand).y);
+					num2 = Mathf.Max(0f, ReadStick(flag3, flag).y);
 					break;
 				case FlexEvent.FingerType.StickDown:
-					num2 = Mathf.Max(0f, 0f - ControllerInputPoller.Primary2DAxis(flag ? XRNode.LeftHand : XRNode.RightHand).y);
+					num2 = Mathf.Max(0f, 0f - ReadStick(flag3, flag).y);
 					break;
 				default:
 					global::_003CPrivateImplementationDetails_003E.ThrowSwitchExpressionException(fingerType);
@@ -306,20 +343,69 @@ public class FingerFlexEvent2 : MonoBehaviour, ITickSystemTick
 				num = num2;
 			}
 			float flexValue = num;
-			flexEvent.ProcessState(flag, flexValue);
-			flexEvent.wasHeld = flag3 && !disable;
+			if (flexEvent.IsStick && flag && !disable && (flag3 || flag4))
+			{
+				flag2 = flag3;
+			}
+			flexEvent.ProcessState(flag3, flexValue);
+			flexEvent.wasHeld = flag5 && !disable;
 			if (flexEvent.IsLinked)
 			{
 				FlexEvent obj = list[i + 1];
-				obj.ProcessState(flag, flexValue);
-				obj.wasHeld = flag3;
+				obj.ProcessState(flag3, flexValue);
+				obj.wasHeld = flag5;
 				i++;
 			}
 		}
+		if (flag && CanSyncSticks)
+		{
+			Vector2 stick = (flag2.HasValue ? ControllerInputPoller.Primary2DAxis(flag2.Value ? XRNode.LeftHand : XRNode.RightHand) : Vector2.zero);
+			int num3 = (int)(myTransferrable.itemState & (TransferrableObject.ItemStates)(-64));
+			myTransferrable.itemState = (TransferrableObject.ItemStates)(num3 | EncodeStick(stick));
+		}
+	}
+
+	private Vector2 ReadStick(bool leftHand, bool isLocalRig)
+	{
+		if (isLocalRig)
+		{
+			return ControllerInputPoller.Primary2DAxis(leftHand ? XRNode.LeftHand : XRNode.RightHand);
+		}
+		return DecodeStick((int)myTransferrable.itemState);
+	}
+
+	private static int EncodeStick(Vector2 stick)
+	{
+		return EncodeStickAxis(stick.x) | (EncodeStickAxis(stick.y) << 3);
+	}
+
+	private static Vector2 DecodeStick(int bits)
+	{
+		return new Vector2(DecodeStickAxis(bits), DecodeStickAxis(bits >> 3));
+	}
+
+	private static int EncodeStickAxis(float value)
+	{
+		return (Mathf.Clamp(Mathf.RoundToInt(Mathf.Abs(value) * 3f), 0, 3) << 1) | ((value < 0f) ? 1 : 0);
+	}
+
+	private static float DecodeStickAxis(int bits)
+	{
+		bits &= 7;
+		float num = (float)(bits >> 1) / 3f;
+		if ((bits & 1) == 0)
+		{
+			return num;
+		}
+		return 0f - num;
 	}
 
 	public void OnEnable()
 	{
+		if (myRig == null)
+		{
+			myRig = GetComponentInParent<VRRig>();
+		}
 		TickSystem<object>.AddTickCallback(this);
 	}
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 
 namespace Cysharp.Threading.Tasks.Linq;
@@ -9,7 +10,9 @@ internal static class Contains
 	internal static async UniTask<bool> ContainsAsync<TSource>(IUniTaskAsyncEnumerable<TSource> source, TSource value, IEqualityComparer<TSource> comparer, CancellationToken cancellationToken)
 	{
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
-		bool result;
+		object obj = null;
+		int num = 0;
+		bool result = default(bool);
 		try
 		{
 			while (true)
@@ -26,15 +29,26 @@ internal static class Contains
 				result = false;
 				break;
 			}
+			num = 1;
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
 		}
-		return result;
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		bool result2 = default(bool);
+		return result2;
 	}
 }

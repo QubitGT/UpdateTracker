@@ -40,11 +40,11 @@ public class CustomMapsScreenButton : CustomMapsScreenTouchPoint
 		touchPointRenderer.color = (isActive ? buttonColorSettings.PressedColor : buttonColorSettings.UnpressedColor);
 	}
 
-	public override void PressButtonColourUpdate()
+	public override void PressButtonColorUpdate()
 	{
 		if (!isToggle)
 		{
-			base.PressButtonColourUpdate();
+			base.PressButtonColorUpdate();
 		}
 	}
 

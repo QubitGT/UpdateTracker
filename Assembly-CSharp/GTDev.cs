@@ -69,6 +69,18 @@ public static class GTDev
 	}
 
 	[HideInCallstack]
+	public static void LogNoStackTrace<T>(T msg, UnityEngine.Object context = null)
+	{
+		UnityEngine.Debug.LogFormat(LogType.Log, LogOption.NoStacktrace, context, "{0}", msg);
+	}
+
+	[HideInCallstack]
+	public static void LogWarningNoStackTrace<T>(T msg, UnityEngine.Object context = null)
+	{
+		UnityEngine.Debug.LogFormat(LogType.Warning, LogOption.NoStacktrace, context, "{0}", msg);
+	}
+
+	[HideInCallstack]
 	[Conditional("UNITY_EDITOR")]
 	public static void LogEditorOnly<T>(T msg, string channel = null)
 	{

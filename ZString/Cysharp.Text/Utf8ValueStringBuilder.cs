@@ -42,7 +42,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 			{
 				return false;
 			}
-			written = UTF8NoBom.GetBytes(text.AsSpan(), dest);
+			written = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(text), dest);
 			return true;
 		}
 	}
@@ -76,7 +76,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	public void AppendJoin<T>(char separator, params T[] values)
 	{
 		ReadOnlySpan<char> separator2 = stackalloc char[1] { separator };
-		AppendJoinInternal<T>(separator2, values.AsSpan());
+		AppendJoinInternal<T>(separator2, MemoryExtensions.AsSpan(values));
 	}
 
 	public void AppendJoin<T>(char separator, List<T> values)
@@ -123,42 +123,42 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 
 	public void AppendJoin<T>(string separator, params T[] values)
 	{
-		AppendJoinInternal<T>(separator.AsSpan(), values.AsSpan());
+		AppendJoinInternal<T>(MemoryExtensions.AsSpan(separator), MemoryExtensions.AsSpan(values));
 	}
 
 	public void AppendJoin<T>(string separator, List<T> values)
 	{
-		AppendJoinInternal(separator.AsSpan(), (IReadOnlyList<T>)values);
+		AppendJoinInternal(MemoryExtensions.AsSpan(separator), (IReadOnlyList<T>)values);
 	}
 
 	public void AppendJoin<T>(string separator, ReadOnlySpan<T> values)
 	{
-		AppendJoinInternal(separator.AsSpan(), values);
+		AppendJoinInternal(MemoryExtensions.AsSpan(separator), values);
 	}
 
 	public void AppendJoin<T>(string separator, IEnumerable<T> values)
 	{
-		AppendJoinInternal(separator.AsSpan(), values);
+		AppendJoinInternal(MemoryExtensions.AsSpan(separator), values);
 	}
 
 	public void AppendJoin<T>(string separator, ICollection<T> values)
 	{
-		AppendJoinInternal(separator.AsSpan(), values.AsEnumerable());
+		AppendJoinInternal(MemoryExtensions.AsSpan(separator), values.AsEnumerable());
 	}
 
 	public void AppendJoin<T>(string separator, IList<T> values)
 	{
-		AppendJoinInternal(separator.AsSpan(), values);
+		AppendJoinInternal(MemoryExtensions.AsSpan(separator), values);
 	}
 
 	public void AppendJoin<T>(string separator, IReadOnlyList<T> values)
 	{
-		AppendJoinInternal(separator.AsSpan(), values);
+		AppendJoinInternal(MemoryExtensions.AsSpan(separator), values);
 	}
 
 	public void AppendJoin<T>(string separator, IReadOnlyCollection<T> values)
 	{
-		AppendJoinInternal(separator.AsSpan(), values.AsEnumerable());
+		AppendJoinInternal(MemoryExtensions.AsSpan(separator), values.AsEnumerable());
 	}
 
 	internal void AppendJoinInternal<T>(ReadOnlySpan<char> separator, IList<T> values)
@@ -271,7 +271,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -334,7 +334,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -401,7 +401,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -471,7 +471,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -544,7 +544,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -620,7 +620,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -699,7 +699,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -781,7 +781,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -866,7 +866,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -954,7 +954,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -1045,7 +1045,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -1139,7 +1139,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -1236,7 +1236,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -1336,7 +1336,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -1439,7 +1439,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -1545,7 +1545,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 					break;
 				}
 				int length = i - num;
-				Append(format.AsSpan(num, length));
+				Append(MemoryExtensions.AsSpan(format, num, length));
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
 				i = parseResult.LastIndex - 1;
@@ -1826,10 +1826,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(byte value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -1840,10 +1840,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(byte value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -1868,10 +1868,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(DateTime value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -1882,10 +1882,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(DateTime value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -1910,10 +1910,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(DateTimeOffset value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -1924,10 +1924,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(DateTimeOffset value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -1952,10 +1952,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(decimal value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -1966,10 +1966,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(decimal value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -1994,10 +1994,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(double value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2008,10 +2008,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(double value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2036,10 +2036,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(short value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2050,10 +2050,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(short value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2078,10 +2078,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(int value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2092,10 +2092,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(int value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2120,10 +2120,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(long value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2134,10 +2134,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(long value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2162,10 +2162,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(sbyte value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2176,10 +2176,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(sbyte value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2204,10 +2204,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(float value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2218,10 +2218,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(float value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2246,10 +2246,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(TimeSpan value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2260,10 +2260,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(TimeSpan value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2288,10 +2288,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(ushort value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2302,10 +2302,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(ushort value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2330,10 +2330,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(uint value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2344,10 +2344,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(uint value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2372,10 +2372,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(ulong value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2386,10 +2386,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(ulong value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2414,10 +2414,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(Guid value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2428,10 +2428,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(Guid value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2456,10 +2456,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(bool value)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2470,10 +2470,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(bool value, StandardFormat format)
 	{
-		if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out var bytesWritten, format))
+		if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out var bytesWritten, format))
 		{
 			Grow(bytesWritten);
-			if (!Utf8Formatter.TryFormat(value, buffer.AsSpan(index), out bytesWritten, format))
+			if (!Utf8Formatter.TryFormat(value, MemoryExtensions.AsSpan(buffer, index), out bytesWritten, format))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2514,12 +2514,12 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 
 	public ReadOnlySpan<byte> AsSpan()
 	{
-		return buffer.AsSpan(0, index);
+		return MemoryExtensions.AsSpan(buffer, 0, index);
 	}
 
 	public ReadOnlyMemory<byte> AsMemory()
 	{
-		return buffer.AsMemory(0, index);
+		return MemoryExtensions.AsMemory(buffer, 0, index);
 	}
 
 	public ArraySegment<byte> AsArraySegment()
@@ -2681,14 +2681,14 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 		}
 		else
 		{
-			Append(value.AsSpan(startIndex, count));
+			Append(MemoryExtensions.AsSpan(value, startIndex, count));
 		}
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Append(string value)
 	{
-		Append(value.AsSpan());
+		Append(MemoryExtensions.AsSpan(value));
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2706,7 +2706,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 		{
 			Grow(maxByteCount);
 		}
-		index += UTF8NoBom.GetBytes(value, buffer.AsSpan(index));
+		index += UTF8NoBom.GetBytes(value, MemoryExtensions.AsSpan(buffer, index));
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2722,16 +2722,16 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 		{
 			Grow(value.Length);
 		}
-		value.CopyTo(buffer.AsSpan(index));
+		value.CopyTo(MemoryExtensions.AsSpan(buffer, index));
 		index += value.Length;
 	}
 
 	public void Append<T>(T value)
 	{
-		if (!FormatterCache<T>.TryFormatDelegate(value, buffer.AsSpan(index), out var written, default(StandardFormat)))
+		if (!FormatterCache<T>.TryFormatDelegate(value, MemoryExtensions.AsSpan(buffer, index), out var written, default(StandardFormat)))
 		{
 			Grow(written);
-			if (!FormatterCache<T>.TryFormatDelegate(value, buffer.AsSpan(index), out written, default(StandardFormat)))
+			if (!FormatterCache<T>.TryFormatDelegate(value, MemoryExtensions.AsSpan(buffer, index), out written, default(StandardFormat)))
 			{
 				ThrowArgumentException("value");
 			}
@@ -2760,7 +2760,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 			return false;
 		}
 		bytesWritten = index;
-		buffer.AsSpan(0, index).CopyTo(destination);
+		MemoryExtensions.AsSpan(buffer, 0, index).CopyTo(destination);
 		return true;
 	}
 
@@ -2789,7 +2789,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 		{
 			Grow(sizeHint);
 		}
-		return buffer.AsMemory(index);
+		return MemoryExtensions.AsMemory(buffer, index);
 	}
 
 	public Span<byte> GetSpan(int sizeHint)
@@ -2798,7 +2798,7 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 		{
 			Grow(sizeHint);
 		}
-		return buffer.AsSpan(index);
+		return MemoryExtensions.AsSpan(buffer, index);
 	}
 
 	public void Advance(int count)
@@ -2831,10 +2831,10 @@ public struct Utf8ValueStringBuilder : IDisposable, IBufferWriter<byte>, IResett
 		if (width <= 0)
 		{
 			width *= -1;
-			if (!FormatterCache<T>.TryFormatDelegate(arg, buffer.AsSpan(index), out var written, format))
+			if (!FormatterCache<T>.TryFormatDelegate(arg, MemoryExtensions.AsSpan(buffer, index), out var written, format))
 			{
 				Grow(written);
-				if (!FormatterCache<T>.TryFormatDelegate(arg, buffer.AsSpan(index), out written, format))
+				if (!FormatterCache<T>.TryFormatDelegate(arg, MemoryExtensions.AsSpan(buffer, index), out written, format))
 				{
 					ThrowArgumentException(argName);
 				}

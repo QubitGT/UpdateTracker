@@ -41,7 +41,7 @@ internal static class EnumUtil<T>
 			value2 = value.ToString();
 		}
 		written = value2.Length;
-		return value2.AsSpan().TryCopyTo(dest);
+		return MemoryExtensions.AsSpan(value2).TryCopyTo(dest);
 	}
 
 	public static bool TryFormatUtf8(T value, Span<byte> dest, out int written, StandardFormat _)
@@ -51,6 +51,6 @@ internal static class EnumUtil<T>
 			value2 = Encoding.UTF8.GetBytes(value.ToString());
 		}
 		written = value2.Length;
-		return value2.AsSpan().TryCopyTo(dest);
+		return MemoryExtensions.AsSpan(value2).TryCopyTo(dest);
 	}
 }

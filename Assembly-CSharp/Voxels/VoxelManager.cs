@@ -227,9 +227,9 @@ public class VoxelManager : NetworkComponent
 
 	private static float _nextLocalOpTime;
 
-	private const float LOW_MEMORY_COLLECT_COOLDOWN = 60f;
+	private const float LOW_MEMORY_LOG_COOLDOWN = 60f;
 
-	private static float _nextLowMemoryCollectTime;
+	private static float _nextLowMemoryLogTime;
 
 	private static VoxelMineOperation[] _mineOpArray;
 
@@ -325,14 +325,11 @@ public class VoxelManager : NetworkComponent
 	private void OnLowMemory()
 	{
 		float realtimeSinceStartup = Time.realtimeSinceStartup;
-		if (!(realtimeSinceStartup < _nextLowMemoryCollectTime))
+		if (!(realtimeSinceStartup < _nextLowMemoryLogTime))
 		{
-			_nextLowMemoryCollectTime = realtimeSinceStartup + 60f;
+			_nextLowMemoryLogTime = realtimeSinceStartup + 60f;
 			long num = 1048576L;
-			long num2 = Profiler.GetMonoUsedSizeLong() / num;
-			GC.Collect();
-			long num3 = Profiler.GetMonoUsedSizeLong() / num;
-			PersistLog.Log($"Performing Memory Cleanup.  Used Memory: {num2}M->{num3}M ({num3 - num2}M)");
+			PersistLog.Log($"Low memory warning.  Used Memory: {Profiler.GetMonoUsedSizeLong() / num}M managed, {Profiler.GetTotalAllocatedMemoryLong() / num}M total");
 		}
 	}
 
@@ -685,7 +682,7 @@ public class VoxelManager : NetworkComponent
 			_mineOpArray = new VoxelMineOperation[count * 2];
 		}
 		ops.CopyTo(start, _mineOpArray, 0, count);
-		return _mineOpArray.AsSpan(start, count);
+		return MemoryExtensions.AsSpan(_mineOpArray, start, count);
 	}
 
 	private static void SendNextPacketForChunk(ChunkInitState chunkState, NetPlayer player)
@@ -710,30 +707,24 @@ public class VoxelManager : NetworkComponent
 		{
 			_localInitQueue.chunks.RemoveAt(chunkIndex);
 		}
-		Chunk chunk;
-		if (!_worlds.TryGetValue(worldId, out var value))
+		if (_worlds.TryGetValue(worldId, out var value) && value.TryGetChunk(chunkId, out var _))
 		{
-			Debug.LogError($"Failed to find world {worldId}");
-		}
-		else if (!value.TryGetChunk(chunkId, out chunk))
-		{
-			Debug.LogError($"Tried to receive a non-loaded chunk {chunkId}");
-		}
-		else if (size > 0)
-		{
-			ChunkInitState item = new ChunkInitState
+			if (size > 0)
 			{
-				worldId = worldId,
-				hash = hash,
-				serializedChunkState = new byte[size],
-				numSerializedBytes = 0,
-				totalSerializedBytes = size
-			};
-			_localInitQueue.chunks.Add(item);
-		}
-		else
-		{
-			value.ResetChunk(chunkId);
+				ChunkInitState item = new ChunkInitState
+				{
+					worldId = worldId,
+					hash = hash,
+					serializedChunkState = new byte[size],
+					numSerializedBytes = 0,
+					totalSerializedBytes = size
+				};
+				_localInitQueue.chunks.Add(item);
+			}
+			else
+			{
+				value.ResetChunk(chunkId);
+			}
 		}
 	}
 
@@ -741,43 +732,28 @@ public class VoxelManager : NetworkComponent
 	{
 		if (size > data.Length)
 		{
-			Debug.LogError("Size value is is larger than data");
 			return;
 		}
 		int chunkIndex = _localInitQueue.GetChunkIndex(hash);
 		if (chunkIndex < 0)
 		{
-			Debug.LogError($"Couldn't fetch chunk state with hash {hash}");
 			return;
 		}
 		ChunkInitState chunkInitState = _localInitQueue.chunks[chunkIndex];
 		if (chunkInitState.numSerializedBytes + size > chunkInitState.totalSerializedBytes)
 		{
-			Debug.LogError($"Received data larger than {chunkInitState.totalSerializedBytes} bytes for chunk {hash}");
 			return;
 		}
 		Array.Copy(data, 0, chunkInitState.serializedChunkState, chunkInitState.numSerializedBytes, size);
 		chunkInitState.numSerializedBytes += size;
-		if (chunkInitState.numSerializedBytes != chunkInitState.totalSerializedBytes)
+		if (chunkInitState.numSerializedBytes == chunkInitState.totalSerializedBytes)
 		{
-			return;
-		}
-		if (ChunkIO.TryDeserializeChunk(in chunkInitState.serializedChunkState, out var dto))
-		{
-			if (_worlds.TryGetValue(dto.WorldId, out var value))
+			if (ChunkIO.TryDeserializeChunk(in chunkInitState.serializedChunkState, out var dto) && _worlds.TryGetValue(dto.WorldId, out var value))
 			{
 				value.UpdateChunkFrom(dto);
 			}
-			else
-			{
-				Debug.LogError($"Deserialized chunk for nonexistent world {dto.WorldId}");
-			}
+			_localInitQueue.chunks.RemoveAt(chunkIndex);
 		}
-		else
-		{
-			Debug.LogError($"Unable to deserialize chunk with hash {chunkInitState.hash}");
-		}
-		_localInitQueue.chunks.RemoveAt(chunkIndex);
 	}
 
 	private static void SendDensity(VoxelWorld world, UnityEngine.BoundsInt bounds)
@@ -829,19 +805,17 @@ public class VoxelManager : NetworkComponent
 
 	private static void OnOperationRequestReceived(int worldId, Vector3 localPosition, VoxelAction action, PhotonMessageInfoWrapped info)
 	{
-		if (!_worlds.TryGetValue(worldId, out var value))
+		if (_worlds.TryGetValue(worldId, out var value))
 		{
-			Debug.LogError($"Couldn't find voxel world {worldId}");
-			return;
-		}
-		UnityEngine.BoundsInt bounds = value.GetBounds(localPosition, action.radius);
-		if (bounds.GetVoxelCount() > 1000)
-		{
-			GTDev.LogError($"Received voxel operation request was too large [{bounds} = {bounds.GetVoxelCount()} voxels]");
-		}
-		else
-		{
-			OperateAuthority(value, localPosition, action);
+			UnityEngine.BoundsInt bounds = value.GetBounds(localPosition, action.radius);
+			if (bounds.GetVoxelCount() > 1000)
+			{
+				GTDev.LogError($"Received voxel operation request was too large [{bounds} = {bounds.GetVoxelCount()} voxels]");
+			}
+			else
+			{
+				OperateAuthority(value, localPosition, action);
+			}
 		}
 	}
 
@@ -897,11 +871,7 @@ public class VoxelManager : NetworkComponent
 
 	private static void OnMineRequestReceived(VoxelMineOperation op, PhotonMessageInfoWrapped info)
 	{
-		if (!_worlds.TryGetValue(op.worldId, out var value))
-		{
-			Debug.LogError($"Couldn't find voxel world {op.worldId}");
-		}
-		else
+		if (_worlds.TryGetValue(op.worldId, out var value))
 		{
 			MineAuthority(value, op, info.Sender);
 		}
@@ -943,18 +913,9 @@ public class VoxelManager : NetworkComponent
 
 	private static void OnSetDensityReceived(int worldId, UnityEngine.BoundsInt bounds, byte[] data)
 	{
-		if (!_worlds.TryGetValue(worldId, out var value))
+		if (_worlds.TryGetValue(worldId, out var value) && Utils.LZ4TryUnpickle(data, 2000, -1, out var result) && bounds.GetVoxelCount() == result.Length)
 		{
-			throw new InvalidOperationException($"Couldn't find voxel world {worldId}");
-		}
-		byte[] array = LZ4Pickler.Unpickle(data);
-		if (bounds.GetVoxelCount() != array.Length)
-		{
-			Debug.LogError($"Voxel count mismatch: {bounds.GetVoxelCount()} vs {array.Length}");
-		}
-		else
-		{
-			value.SetVoxelDensity(bounds, array, immediate: false);
+			value.SetVoxelDensity(bounds, result, immediate: false);
 		}
 	}
 
@@ -1121,7 +1082,7 @@ public class VoxelManager : NetworkComponent
 	private static void DeserializeSetDensity(object[] eventData, PhotonMessageInfoWrapped info)
 	{
 		MonkeAgent.IncrementRPCCall(info, "DeserializeSetDensity");
-		if (IsValidClientRPC(info, RPC.SetDensity) && eventData.TryDeserializeTo<int, UnityEngine.BoundsInt, byte[]>(out var v, out var v2, out var v3) && v3.Length <= 1000)
+		if (IsValidClientRPC(info, RPC.SetDensity) && eventData.TryDeserializeTo<int, UnityEngine.BoundsInt, byte[]>(out var v, out var v2, out var v3) && !v2.BoundsMinMaxHasMaxValues() && v3.Length <= 1000)
 		{
 			OnSetDensityReceived(v, v2, v3);
 		}

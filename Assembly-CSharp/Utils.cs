@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using GorillaTag;
+using Ionic.Zlib;
+using K4os.Compression.LZ4;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
@@ -12,6 +15,9 @@ public static class Utils
 	private static ObjectPool<PooledList<IPreDisable>> g_listPool = new ObjectPool<PooledList<IPreDisable>>(2, 10);
 
 	private static StringBuilder reusableSB = new StringBuilder();
+
+	[ThreadStatic]
+	private static byte[] s_buffer;
 
 	public static void Disable(this GameObject target)
 	{
@@ -130,6 +136,60 @@ public static class Utils
 			return false;
 		}
 		return true;
+	}
+
+	public static bool GZipTryUncompressBuffer(byte[] compressed, int maxBytes, out byte[] result)
+	{
+		result = null;
+		if (compressed == null || compressed.Length == 0 || maxBytes < 0)
+		{
+			return false;
+		}
+		try
+		{
+			using MemoryStream stream = new MemoryStream(compressed);
+			GZipStream gZipStream = new GZipStream(stream, CompressionMode.Decompress);
+			using MemoryStream memoryStream = new MemoryStream();
+			byte[] array = s_buffer ?? (s_buffer = new byte[4096]);
+			int num;
+			while ((num = gZipStream.Read(array, 0, array.Length)) > 0)
+			{
+				if (memoryStream.Length + num > maxBytes)
+				{
+					return false;
+				}
+				memoryStream.Write(array, 0, num);
+			}
+			result = memoryStream.ToArray();
+			return true;
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
+	public static bool LZ4TryUnpickle(byte[] data, int maxUnpickledSize, int expectedSize, out byte[] result)
+	{
+		result = null;
+		if (data == null || data.Length == 0 || maxUnpickledSize < 0 || expectedSize > maxUnpickledSize)
+		{
+			return false;
+		}
+		try
+		{
+			int num = LZ4Pickler.UnpickledSize(data);
+			if (num < 0 || num > maxUnpickledSize || (expectedSize > -1 && num != expectedSize))
+			{
+				return false;
+			}
+			result = LZ4Pickler.Unpickle(data);
+			return true;
+		}
+		catch
+		{
+			return false;
+		}
 	}
 
 	public static void Log(object message)

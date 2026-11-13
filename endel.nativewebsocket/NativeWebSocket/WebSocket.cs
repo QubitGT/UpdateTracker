@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -260,6 +261,7 @@ public class WebSocket : IWebSocket
 		WebSocketCloseCode closeCode = WebSocketCloseCode.Abnormal;
 		await new WaitForBackgroundThread();
 		ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[8192]);
+		object obj = null;
 		try
 		{
 			int num;
@@ -306,10 +308,16 @@ public class WebSocket : IWebSocket
 				m_TokenSource.Cancel();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			await new WaitForUpdate();
-			this.OnClose?.Invoke(closeCode);
+			obj = obj2;
+		}
+		await new WaitForUpdate();
+		this.OnClose?.Invoke(closeCode);
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 	}
 

@@ -56,7 +56,7 @@ public class CustomMapsTerminalControlButton : CustomMapsScreenTouchPoint
 		if (!IsLocked)
 		{
 			IsLocked = true;
-			PressButtonColourUpdate();
+			PressButtonColorUpdate();
 		}
 	}
 
@@ -65,11 +65,11 @@ public class CustomMapsTerminalControlButton : CustomMapsScreenTouchPoint
 		if (IsLocked)
 		{
 			IsLocked = false;
-			PressButtonColourUpdate();
+			PressButtonColorUpdate();
 		}
 	}
 
-	public override void PressButtonColourUpdate()
+	public override void PressButtonColorUpdate()
 	{
 		bttnText.fontSize = (isLocked ? lockedFontSize : unlockedFontSize);
 		bttnText.text = (isLocked ? lockedText : unlockedText);

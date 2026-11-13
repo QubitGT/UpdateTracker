@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -296,28 +297,50 @@ public class ModioAPIHttpClient : IModioAPIInterface, IDisposable
 				return (error: Error.None, (T)(object)default(Response204));
 			}
 			ModioLog.Verbose?.Log(await response.Content.ReadAsStringAsync());
-			(Error, T) result2;
-			await using (Stream stream = await response.Content.ReadAsStreamAsync())
+			Stream stream = await response.Content.ReadAsStreamAsync();
+			object obj = null;
+			int num = 0;
+			(Error, T) result2 = default((Error, T));
+			try
 			{
-				using StreamReader streamReader = new StreamReader(stream);
-				if (response.StatusCode < HttpStatusCode.OK || response.StatusCode >= HttpStatusCode.MultipleChoices)
+				using (StreamReader streamReader = new StreamReader(stream))
 				{
-					Error item = await GetErrorAndLogBadResponse(streamReader);
-					cachedShutdownToken.ThrowIfCancellationRequested();
-					result2 = ((response.StatusCode != HttpStatusCode.TooManyRequests || !response.Headers.TryGetValues("retry-after", out var values) || !int.TryParse(values.First(), out var result)) ? (item, default(T)) : (new RateLimitError(RateLimitErrorCode.RATELIMITED, result), default(T)));
-				}
-				else
-				{
-					if (ModioAPI.IsOffline)
+					if (response.StatusCode < HttpStatusCode.OK || response.StatusCode >= HttpStatusCode.MultipleChoices)
 					{
-						ModioAPI.SetOfflineStatus(isOffline: false);
+						Error item = await GetErrorAndLogBadResponse(streamReader);
+						cachedShutdownToken.ThrowIfCancellationRequested();
+						result2 = ((response.StatusCode != HttpStatusCode.TooManyRequests || !response.Headers.TryGetValues("retry-after", out var values) || !int.TryParse(values.First(), out var result)) ? (item, default(T)) : (new RateLimitError(RateLimitErrorCode.RATELIMITED, result), default(T)));
 					}
-					using JsonTextReader jsonTextReader = new JsonTextReader(streamReader);
-					T item2 = await reader(jsonTextReader);
-					result2 = (Error.None, item2);
+					else
+					{
+						if (ModioAPI.IsOffline)
+						{
+							ModioAPI.SetOfflineStatus(isOffline: false);
+						}
+						using JsonTextReader jsonTextReader = new JsonTextReader(streamReader);
+						T item2 = await reader(jsonTextReader);
+						result2 = (Error.None, item2);
+					}
 				}
+				num = 1;
 			}
-			return result2;
+			catch (object obj2)
+			{
+				obj = obj2;
+			}
+			if (stream != null)
+			{
+				await ((IAsyncDisposable)stream).DisposeAsync();
+			}
+			object obj3 = obj;
+			if (obj3 != null)
+			{
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+			}
+			if (num == 1)
+			{
+				return result2;
+			}
 		}
 		catch (HttpRequestException arg)
 		{
@@ -343,6 +366,8 @@ public class ModioAPIHttpClient : IModioAPIInterface, IDisposable
 			ModioLog.Error?.Log($"Exception in {target}: {ex3}");
 			return (error: new ErrorException(ex3), default(T));
 		}
+		(Error, T) result3 = default((Error, T));
+		return result3;
 	}
 
 	private static async Task<Error> GetErrorAndLogBadResponse(StreamReader streamReader)

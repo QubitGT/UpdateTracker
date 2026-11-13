@@ -74,7 +74,7 @@ public class SimpleCountdown : ObservableBehavior
 			{
 				await Task.Yield();
 			}
-			PlayFabTitleDataCache.Instance.GetTitleData(titleDataKey, onTD, onTDError);
+			PlayFabTitleDataCache.Instance.GetTitleData(titleDataKey, OnTD, OnTDError);
 			return;
 		case Mode.FixedDate:
 			ParseDateTime();
@@ -96,10 +96,10 @@ public class SimpleCountdown : ObservableBehavior
 		{
 			await Task.Yield();
 		}
-		PlayFabTitleDataCache.Instance.GetTitleData(titleDataKey, onEventTD, onEventTDError);
+		PlayFabTitleDataCache.Instance.GetTitleData(titleDataKey, OnEventTD, OnEventTDError);
 	}
 
-	private void onEventTD(string s)
+	private void OnEventTD(string s)
 	{
 		TitleDataActivation.TitleDataActivationData titleDataActivationData;
 		try
@@ -123,7 +123,7 @@ public class SimpleCountdown : ObservableBehavior
 		}
 	}
 
-	private void onEventTDError(PlayFabError error)
+	private void OnEventTDError(PlayFabError error)
 	{
 		Debug.LogError("SimpleCountdown component on " + base.name + " failed to get '" + titleDataKey + "' from title data :: " + error.ErrorMessage);
 	}
@@ -166,13 +166,13 @@ public class SimpleCountdown : ObservableBehavior
 		}
 	}
 
-	private void onTD(string s)
+	private void OnTD(string s)
 	{
 		date = s;
 		ParseDateTime();
 	}
 
-	private void onTDError(PlayFabError error)
+	private void OnTDError(PlayFabError error)
 	{
 		Debug.Log("SimpleCountdown component on " + base.name + " failed to get '" + titleDataKey + "' from title data. Using Fallback: '" + date + "'");
 		ParseDateTime();

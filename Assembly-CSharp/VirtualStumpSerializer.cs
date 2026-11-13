@@ -128,10 +128,10 @@ internal class VirtualStumpSerializer : GorillaSerializer
 		Debug.Log("[VStumpSerializer.InitializeRPC] Room initialization finished.");
 	}
 
-	public void LoadMapSynced(long modId, GTMapLoadSource loadSource = GTMapLoadSource.none)
+	public void LoadMapSynced(long modId, GTMapLoadSource loadSource = GTMapLoadSource.none, GTMapLoadOrigin loadOrigin = default(GTMapLoadOrigin))
 	{
 		CustomMapManager.SetRoomMap(modId);
-		CustomMapManager.LoadMap(new ModId(modId), loadSource);
+		CustomMapManager.LoadMap(new ModId(modId), loadSource, loadOrigin);
 		if (NetworkSystem.Instance.InRoom && NetworkSystem.Instance.SessionIsPrivate)
 		{
 			SendRPC("SetRoomMap_RPC", true, modId);
@@ -164,6 +164,28 @@ internal class VirtualStumpSerializer : GorillaSerializer
 		if (info.Sender.ActorNumber == CustomMapsTerminal.GetDriverID() && CustomMapManager.AreAllPlayersAtMapTerminal())
 		{
 			CustomMapManager.UnloadMap();
+		}
+	}
+
+	public void SendRoomMapUpdated(long modId, long modfileId, bool returnToPosition)
+	{
+		if (NetworkSystem.Instance.InRoom && NetworkSystem.Instance.SessionIsPrivate)
+		{
+			SendRPC("RoomMapUpdated_RPC", true, modId, modfileId, returnToPosition);
+		}
+	}
+
+	[PunRPC]
+	private void RoomMapUpdated_RPC(long modId, long modfileId, bool returnToPosition, PhotonMessageInfo info)
+	{
+		MonkeAgent.IncrementRPCCall(info, "RoomMapUpdated_RPC");
+		if (NetworkSystem.Instance.SessionIsPrivate && modId > 0 && modfileId > 0 && info.Sender.ActorNumber == CustomMapsTerminal.GetDriverID() && CustomMapManager.IsRemotePlayerAtMapTerminal(info.Sender.UserId) && modId == CustomMapManager.GetRoomMapId()._id)
+		{
+			NetPlayer player = NetworkSystem.Instance.GetPlayer(info.Sender);
+			if (VRRigCache.Instance.TryGetVrrig(player, out var playerRig) && playerRig.Rig.fxSettings.callSettings[27].CallLimitSettings.CheckCallTime(Time.unscaledTime))
+			{
+				CustomMapUpdateWatcher.OnRoomMapUpdated(new ModId(modId), modfileId, returnToPosition);
+			}
 		}
 	}
 

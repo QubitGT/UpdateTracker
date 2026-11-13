@@ -54,6 +54,9 @@ public class GameEntity : MonoBehaviour
 
 	public float throwSoundVolume = 0.5f;
 
+	[Tooltip("Multiplies the hand velocity when a player throws this entity. The player's body velocity is added on top, unscaled.")]
+	public float throwVelocity = 1f;
+
 	public AudioClip snapSound;
 
 	public float snapSoundVolume = 0.5f;

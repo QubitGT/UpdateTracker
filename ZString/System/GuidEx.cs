@@ -28,10 +28,10 @@ internal struct GuidEx
 
 	private unsafe static int HexsToChars(char* guidChars, int a, int b)
 	{
-		*guidChars = HexConverter.ToCharLower(a >> 4);
-		guidChars[1] = HexConverter.ToCharLower(a);
-		guidChars[2] = HexConverter.ToCharLower(b >> 4);
-		guidChars[3] = HexConverter.ToCharLower(b);
+		*guidChars = System.HexConverter.ToCharLower(a >> 4);
+		guidChars[1] = System.HexConverter.ToCharLower(a);
+		guidChars[2] = System.HexConverter.ToCharLower(b >> 4);
+		guidChars[3] = System.HexConverter.ToCharLower(b);
 		return 4;
 	}
 
@@ -39,13 +39,13 @@ internal struct GuidEx
 	{
 		*guidChars = '0';
 		guidChars[1] = 'x';
-		guidChars[2] = HexConverter.ToCharLower(a >> 4);
-		guidChars[3] = HexConverter.ToCharLower(a);
+		guidChars[2] = System.HexConverter.ToCharLower(a >> 4);
+		guidChars[3] = System.HexConverter.ToCharLower(a);
 		guidChars[4] = ',';
 		guidChars[5] = '0';
 		guidChars[6] = 'x';
-		guidChars[7] = HexConverter.ToCharLower(b >> 4);
-		guidChars[8] = HexConverter.ToCharLower(b);
+		guidChars[7] = System.HexConverter.ToCharLower(b >> 4);
+		guidChars[8] = System.HexConverter.ToCharLower(b);
 		return 9;
 	}
 
@@ -53,7 +53,7 @@ internal struct GuidEx
 	{
 		if (format.Length == 0)
 		{
-			format = "D".AsSpan();
+			format = MemoryExtensions.AsSpan("D");
 		}
 		if (format.Length != 1)
 		{

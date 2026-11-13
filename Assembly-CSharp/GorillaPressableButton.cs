@@ -2,6 +2,7 @@ using System;
 using GorillaExtensions;
 using GorillaNetworking;
 using GorillaTagScripts;
+using JetBrains.Annotations;
 using Photon.Pun;
 using TMPro;
 using UnityEngine;
@@ -242,16 +243,31 @@ public class GorillaPressableButton : MonoBehaviour, IClickable
 		}
 	}
 
-	protected void OnTriggerEnter(Collider collider)
+	protected virtual void OnTriggerEnter(Collider collider)
 	{
-		if (base.enabled && touchTime + debounceTime < Time.time)
+		if (OnTriggerEnterChecks(collider, out var indicator) && !(indicator == null))
 		{
-			GorillaTriggerColliderHandIndicator component = collider.gameObject.GetComponent<GorillaTriggerColliderHandIndicator>();
-			if ((bool)component)
-			{
-				PressButton(component.isLeftHand);
-			}
+			PressButton(indicator.isLeftHand);
 		}
+	}
+
+	protected bool OnTriggerEnterChecks(Collider collider, [CanBeNull] out GorillaTriggerColliderHandIndicator indicator)
+	{
+		indicator = null;
+		if (!base.enabled)
+		{
+			return false;
+		}
+		if (!(touchTime + debounceTime < Time.time))
+		{
+			return false;
+		}
+		indicator = collider.gameObject.GetComponent<GorillaTriggerColliderHandIndicator>();
+		if (!indicator)
+		{
+			return false;
+		}
+		return true;
 	}
 
 	private void PressButton(bool isLeftHand)

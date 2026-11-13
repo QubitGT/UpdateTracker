@@ -230,11 +230,15 @@ public class NetworkedWearable : MonoBehaviour, ISpawnable, ITickSystemTick
 		if (isLocal && !listenForChangesLocal)
 		{
 			SetWearableStateBool(newState: false);
+			return;
 		}
-		else if (TickRunning)
+		if (TickRunning)
 		{
 			TickSystem<object>.RemoveTickCallback(this);
 		}
+		value = false;
+		leftHandValue = false;
+		rightHandValue = false;
 	}
 
 	private void OnWearableStateChanged()

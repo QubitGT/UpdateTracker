@@ -1,9 +1,4 @@
-using GorillaNetworking;
-using GorillaTag;
-using GorillaTag.CosmeticSystem;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class FreeHoverboardInstance : MonoBehaviour
 {
@@ -38,17 +33,7 @@ public class FreeHoverboardInstance : MonoBehaviour
 	[SerializeField]
 	private GameObject defaultVisualPrefab;
 
-	private Material colorMaterial;
-
-	private GameObject defaultVisualInstance;
-
-	private GameObject activeSkinInstance;
-
-	private HoverboardCosmetic activeCosmetic;
-
-	private AsyncOperationHandle<GameObject> skinLoadHandle;
-
-	private int skinLoadVersion;
+	private BoardSkinVisual skinVisual;
 
 	private bool hasHoverPoint;
 
@@ -64,126 +49,48 @@ public class FreeHoverboardInstance : MonoBehaviour
 
 	private float AdjustedHoverCastDistance => hoverCastDistance * base.transform.lossyScale.y;
 
-	public Color boardColor { get; private set; }
+	public Color boardColor => GetOrCreateSkinVisual().Color;
+
+	public int skinActorNumber { get; private set; }
+
+	public BoardSkinVisual GetOrCreateSkinVisual()
+	{
+		if (skinVisual == null)
+		{
+			skinVisual = new BoardSkinVisual(base.gameObject, visualSlot, defaultVisualPrefab);
+		}
+		return skinVisual;
+	}
 
 	private void Awake()
 	{
 		Rigidbody = GetComponent<Rigidbody>();
 		Rigidbody.useGravity = false;
-		SpawnDefaultVisual();
-	}
-
-	private void SpawnDefaultVisual()
-	{
-		if (!(defaultVisualInstance != null) && !(defaultVisualPrefab == null))
-		{
-			defaultVisualInstance = Object.Instantiate(defaultVisualPrefab, visualSlot);
-			defaultVisualInstance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-			MeshRenderer componentInChildren = defaultVisualInstance.GetComponentInChildren<MeshRenderer>();
-			if (componentInChildren != null)
-			{
-				Material[] sharedMaterials = componentInChildren.sharedMaterials;
-				colorMaterial = new Material(sharedMaterials[1]);
-				sharedMaterials[1] = colorMaterial;
-				componentInChildren.sharedMaterials = sharedMaterials;
-				colorMaterial.color = boardColor;
-			}
-		}
+		GetOrCreateSkinVisual();
 	}
 
 	public void SetColor(Color col)
 	{
-		if (colorMaterial != null)
-		{
-			colorMaterial.color = col;
-		}
-		boardColor = col;
-		activeCosmetic?.ApplyColor(col);
+		GetOrCreateSkinVisual().SetColor(col);
 	}
 
-	public void ApplySkin(string displayName)
+	public void SetSkinActorNumber(int actorNumber)
 	{
-		skinLoadVersion++;
-		int requestedVersion = skinLoadVersion;
-		if (skinLoadHandle.IsValid())
-		{
-			Addressables.Release(skinLoadHandle);
-			skinLoadHandle = default(AsyncOperationHandle<GameObject>);
-		}
-		if (activeSkinInstance != null)
-		{
-			Object.Destroy(activeSkinInstance);
-			activeSkinInstance = null;
-			activeCosmetic = null;
-		}
-		defaultVisualInstance?.SetActive(value: true);
-		if (colorMaterial != null)
-		{
-			colorMaterial.color = boardColor;
-		}
-		if (string.IsNullOrEmpty(displayName) || displayName == "NOTHING")
-		{
-			return;
-		}
-		CosmeticSO cosmeticSO = CosmeticsController.instance?.GetCosmeticSOFromDisplayName(displayName);
-		if (!(cosmeticSO == null) && cosmeticSO.info.functionalParts != null && cosmeticSO.info.functionalParts.Length != 0)
-		{
-			GTAssetRef<GameObject> prefabAssetRef = cosmeticSO.info.functionalParts[0].prefabAssetRef;
-			skinLoadHandle = Addressables.LoadAssetAsync<GameObject>(prefabAssetRef);
-			skinLoadHandle.Completed += delegate(AsyncOperationHandle<GameObject> handle)
-			{
-				OnSkinPrefabLoaded(handle, requestedVersion);
-			};
-		}
+		skinActorNumber = actorNumber;
+		GetOrCreateSkinVisual().ApplySkin(FreeHoverboardManager.GetSkinDisplayName(actorNumber));
 	}
 
-	private void OnSkinPrefabLoaded(AsyncOperationHandle<GameObject> handle, int requestedVersion)
+	public void RevertSkinIfOwnedBy(int actorNumber)
 	{
-		if (requestedVersion != skinLoadVersion || !base.gameObject.activeInHierarchy)
+		if (skinActorNumber == actorNumber)
 		{
-			if (handle.IsValid())
-			{
-				Addressables.Release(handle);
-			}
+			SetSkinActorNumber(0);
 		}
-		else if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
-		{
-			if (handle.IsValid())
-			{
-				Addressables.Release(handle);
-			}
-			skinLoadHandle = default(AsyncOperationHandle<GameObject>);
-		}
-		else
-		{
-			defaultVisualInstance?.SetActive(value: false);
-			activeSkinInstance = Object.Instantiate(handle.Result, visualSlot);
-			activeSkinInstance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-			activeCosmetic = activeSkinInstance.GetComponent<HoverboardCosmetic>();
-			activeCosmetic?.Apply(boardColor);
-		}
-	}
-
-	private void ClearSkin()
-	{
-		if (skinLoadHandle.IsValid())
-		{
-			Addressables.Release(skinLoadHandle);
-			skinLoadHandle = default(AsyncOperationHandle<GameObject>);
-		}
-		if (activeSkinInstance != null)
-		{
-			Object.Destroy(activeSkinInstance);
-			activeSkinInstance = null;
-			activeCosmetic = null;
-		}
-		defaultVisualInstance?.SetActive(value: true);
 	}
 
 	private void OnDisable()
 	{
-		skinLoadVersion++;
-		ClearSkin();
+		skinVisual?.Clear();
 	}
 
 	private void Update()

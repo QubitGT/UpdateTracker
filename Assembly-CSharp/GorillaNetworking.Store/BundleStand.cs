@@ -9,7 +9,6 @@ public class BundleStand : MonoBehaviour, IBuildValidation
 {
 	public BundlePurchaseButton _bundlePurchaseButton;
 
-	[SerializeField]
 	public StoreBundleData _bundleDataReference;
 
 	[SerializeField]
@@ -27,14 +26,26 @@ public class BundleStand : MonoBehaviour, IBuildValidation
 
 	public string playfabBundleID => _bundleDataReference.playfabBundleID;
 
-	[field: SerializeField]
-	public GtfcPriceLabel GtfcPriceLabel { get; private set; }
+	public GtfcPriceLabel GtfcPriceLabel { get; }
 
-	[field: SerializeField]
-	public GameObject[] GtfcObjects { get; private set; }
+	public GameObject[] GtfcObjects { get; }
+
+	private bool RequiresCreatorCodeProvider()
+	{
+		EndCapSpawnPoint componentInParent = GetComponentInParent<EndCapSpawnPoint>(includeInactive: true);
+		if (!(componentInParent == null))
+		{
+			return componentInParent.UsesCreatorCodeTerminal;
+		}
+		return true;
+	}
 
 	bool IBuildValidation.BuildValidationCheck()
 	{
+		if (!RequiresCreatorCodeProvider())
+		{
+			return true;
+		}
 		if (creatorCodeProvider == null || !creatorCodeProvider.TryGetComponent<ICreatorCodeProvider>(out var _))
 		{
 			Debug.LogError(base.name + " has no Creator Code Provider. This will break bundle purchasing.");
@@ -50,7 +61,7 @@ public class BundleStand : MonoBehaviour, IBuildValidation
 		{
 			_bundleIcon.sprite = _bundleDataReference.bundleImage;
 		}
-		_bundlePurchaseButton.codeProvider = creatorCodeProvider.GetComponent<ICreatorCodeProvider>();
+		_bundlePurchaseButton.codeProvider = ((RequiresCreatorCodeProvider() && creatorCodeProvider != null) ? creatorCodeProvider.GetComponent<ICreatorCodeProvider>() : null);
 	}
 
 	public void InitializeEventListeners()

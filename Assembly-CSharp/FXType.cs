@@ -27,5 +27,6 @@ public enum FXType
 	EnvironmentProximityReactor,
 	BroadcastCosmeticSignal,
 	RedeemCelebration,
+	CustomMapUpdated,
 	Length
 }

@@ -13,7 +13,7 @@ public class KIDUIScrollRectangle : ScrollRect, IPointerEnterHandler, IEventSyst
 
 	private PointerEventData _currentPointerData;
 
-	private Vector2 m_PointerStartLocalCursor = Vector2.zero;
+	private Vector2 _pointerStartLocalCursor = Vector2.zero;
 
 	private Camera thirdPersonCamera;
 
@@ -71,13 +71,13 @@ public class KIDUIScrollRectangle : ScrollRect, IPointerEnterHandler, IEventSyst
 			if (!_isHolding && _isPointerInside && ControllerBehaviour.Instance.TriggerDown)
 			{
 				_isHolding = true;
-				m_PointerStartLocalCursor = localPoint;
+				_pointerStartLocalCursor = localPoint;
 				m_ContentStartPosition = base.content.anchoredPosition;
 			}
 			if (_isHolding)
 			{
 				UpdateBounds();
-				Vector2 vector = localPoint - m_PointerStartLocalCursor;
+				Vector2 vector = localPoint - _pointerStartLocalCursor;
 				Vector2 contentAnchoredPosition = m_ContentStartPosition + vector;
 				SetContentAnchoredPosition(contentAnchoredPosition);
 			}

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 
 namespace Cysharp.Threading.Tasks.Linq;
@@ -9,6 +10,7 @@ internal static class Sum
 	{
 		int sum = 0;
 		IUniTaskAsyncEnumerator<int> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -16,13 +18,18 @@ internal static class Sum
 				sum += e.Current;
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -31,6 +38,7 @@ internal static class Sum
 	{
 		int sum = 0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -38,13 +46,18 @@ internal static class Sum
 				sum += selector(e.Current);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -53,6 +66,7 @@ internal static class Sum
 	{
 		int sum = 0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -61,13 +75,18 @@ internal static class Sum
 				sum = num + await selector(e.Current);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -76,6 +95,7 @@ internal static class Sum
 	{
 		int sum = 0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -84,13 +104,18 @@ internal static class Sum
 				sum = num + await selector(e.Current, cancellationToken);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -99,6 +124,7 @@ internal static class Sum
 	{
 		long sum = 0L;
 		IUniTaskAsyncEnumerator<long> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -106,13 +132,18 @@ internal static class Sum
 				sum += e.Current;
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -121,6 +152,7 @@ internal static class Sum
 	{
 		long sum = 0L;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -128,13 +160,18 @@ internal static class Sum
 				sum += selector(e.Current);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -143,6 +180,7 @@ internal static class Sum
 	{
 		long sum = 0L;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -151,13 +189,18 @@ internal static class Sum
 				sum = num + await selector(e.Current);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -166,6 +209,7 @@ internal static class Sum
 	{
 		long sum = 0L;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -174,13 +218,18 @@ internal static class Sum
 				sum = num + await selector(e.Current, cancellationToken);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -189,6 +238,7 @@ internal static class Sum
 	{
 		float sum = 0f;
 		IUniTaskAsyncEnumerator<float> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -196,13 +246,18 @@ internal static class Sum
 				sum += e.Current;
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -211,6 +266,7 @@ internal static class Sum
 	{
 		float sum = 0f;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -218,13 +274,18 @@ internal static class Sum
 				sum += selector(e.Current);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -233,6 +294,7 @@ internal static class Sum
 	{
 		float sum = 0f;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -241,13 +303,18 @@ internal static class Sum
 				sum = num + await selector(e.Current);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -256,6 +323,7 @@ internal static class Sum
 	{
 		float sum = 0f;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -264,13 +332,18 @@ internal static class Sum
 				sum = num + await selector(e.Current, cancellationToken);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -279,6 +352,7 @@ internal static class Sum
 	{
 		double sum = 0.0;
 		IUniTaskAsyncEnumerator<double> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -286,13 +360,18 @@ internal static class Sum
 				sum += e.Current;
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -301,6 +380,7 @@ internal static class Sum
 	{
 		double sum = 0.0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -308,13 +388,18 @@ internal static class Sum
 				sum += selector(e.Current);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -323,6 +408,7 @@ internal static class Sum
 	{
 		double sum = 0.0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -331,13 +417,18 @@ internal static class Sum
 				sum = num + await selector(e.Current);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -346,6 +437,7 @@ internal static class Sum
 	{
 		double sum = 0.0;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -354,13 +446,18 @@ internal static class Sum
 				sum = num + await selector(e.Current, cancellationToken);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -369,6 +466,7 @@ internal static class Sum
 	{
 		decimal sum = default(decimal);
 		IUniTaskAsyncEnumerator<decimal> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -376,13 +474,18 @@ internal static class Sum
 				sum += e.Current;
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -391,6 +494,7 @@ internal static class Sum
 	{
 		decimal sum = default(decimal);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -398,13 +502,18 @@ internal static class Sum
 				sum += selector(e.Current);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -413,6 +522,7 @@ internal static class Sum
 	{
 		decimal sum = default(decimal);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -421,13 +531,18 @@ internal static class Sum
 				sum = num + await selector(e.Current);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -436,6 +551,7 @@ internal static class Sum
 	{
 		decimal sum = default(decimal);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -444,13 +560,18 @@ internal static class Sum
 				sum = num + await selector(e.Current, cancellationToken);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -459,6 +580,7 @@ internal static class Sum
 	{
 		int? sum = null;
 		IUniTaskAsyncEnumerator<int?> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -466,13 +588,18 @@ internal static class Sum
 				sum += e.Current.GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -481,6 +608,7 @@ internal static class Sum
 	{
 		int? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -488,13 +616,18 @@ internal static class Sum
 				sum += selector(e.Current).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -503,6 +636,7 @@ internal static class Sum
 	{
 		int? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -510,13 +644,18 @@ internal static class Sum
 				sum += (await selector(e.Current)).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -525,6 +664,7 @@ internal static class Sum
 	{
 		int? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -532,13 +672,18 @@ internal static class Sum
 				sum += (await selector(e.Current, cancellationToken)).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -547,6 +692,7 @@ internal static class Sum
 	{
 		long? sum = null;
 		IUniTaskAsyncEnumerator<long?> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -554,13 +700,18 @@ internal static class Sum
 				sum += e.Current.GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -569,6 +720,7 @@ internal static class Sum
 	{
 		long? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -576,13 +728,18 @@ internal static class Sum
 				sum += selector(e.Current).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -591,6 +748,7 @@ internal static class Sum
 	{
 		long? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -598,13 +756,18 @@ internal static class Sum
 				sum += (await selector(e.Current)).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -613,6 +776,7 @@ internal static class Sum
 	{
 		long? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -620,13 +784,18 @@ internal static class Sum
 				sum += (await selector(e.Current, cancellationToken)).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -635,6 +804,7 @@ internal static class Sum
 	{
 		float? sum = null;
 		IUniTaskAsyncEnumerator<float?> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -642,13 +812,18 @@ internal static class Sum
 				sum += e.Current.GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -657,6 +832,7 @@ internal static class Sum
 	{
 		float? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -664,13 +840,18 @@ internal static class Sum
 				sum += selector(e.Current).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -679,6 +860,7 @@ internal static class Sum
 	{
 		float? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -686,13 +868,18 @@ internal static class Sum
 				sum += (await selector(e.Current)).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -701,6 +888,7 @@ internal static class Sum
 	{
 		float? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -708,13 +896,18 @@ internal static class Sum
 				sum += (await selector(e.Current, cancellationToken)).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -723,6 +916,7 @@ internal static class Sum
 	{
 		double? sum = null;
 		IUniTaskAsyncEnumerator<double?> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -730,13 +924,18 @@ internal static class Sum
 				sum += e.Current.GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -745,6 +944,7 @@ internal static class Sum
 	{
 		double? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -752,13 +952,18 @@ internal static class Sum
 				sum += selector(e.Current).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -767,6 +972,7 @@ internal static class Sum
 	{
 		double? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -774,13 +980,18 @@ internal static class Sum
 				sum += (await selector(e.Current)).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -789,6 +1000,7 @@ internal static class Sum
 	{
 		double? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -796,13 +1008,18 @@ internal static class Sum
 				sum += (await selector(e.Current, cancellationToken)).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -811,6 +1028,7 @@ internal static class Sum
 	{
 		decimal? sum = null;
 		IUniTaskAsyncEnumerator<decimal?> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -818,13 +1036,18 @@ internal static class Sum
 				sum += (decimal?)e.Current.GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -833,6 +1056,7 @@ internal static class Sum
 	{
 		decimal? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -840,13 +1064,18 @@ internal static class Sum
 				sum += (decimal?)selector(e.Current).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -855,6 +1084,7 @@ internal static class Sum
 	{
 		decimal? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -862,13 +1092,18 @@ internal static class Sum
 				sum += (decimal?)(await selector(e.Current)).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}
@@ -877,6 +1112,7 @@ internal static class Sum
 	{
 		decimal? sum = null;
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
+		object obj = null;
 		try
 		{
 			while (await e.MoveNextAsync())
@@ -884,13 +1120,18 @@ internal static class Sum
 				sum += (decimal?)(await selector(e.Current, cancellationToken)).GetValueOrDefault();
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-			if (asyncDisposable != null)
-			{
-				await asyncDisposable.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return sum;
 	}

@@ -31,7 +31,7 @@ internal static class HexConverter
 	public static string ToString(ReadOnlySpan<byte> bytes, Casing casing = Casing.Upper)
 	{
 		Span<char> span = default(Span<char>);
-		span = ((bytes.Length <= 16) ? stackalloc char[bytes.Length * 2] : new char[bytes.Length * 2].AsSpan());
+		span = ((bytes.Length <= 16) ? stackalloc char[bytes.Length * 2] : MemoryExtensions.AsSpan(new char[bytes.Length * 2]));
 		int num = 0;
 		ReadOnlySpan<byte> readOnlySpan = bytes;
 		for (int i = 0; i < readOnlySpan.Length; i++)

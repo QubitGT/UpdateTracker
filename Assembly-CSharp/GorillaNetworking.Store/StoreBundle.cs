@@ -174,6 +174,10 @@ public class StoreBundle : IDisposable
 		bool hasGTFCPrice = HasGTFCPrice;
 		foreach (BundleStand bundleStand in bundleStands)
 		{
+			if (bundleStand == null || bundleStand.GtfcObjects == null)
+			{
+				continue;
+			}
 			GameObject[] gtfcObjects = bundleStand.GtfcObjects;
 			foreach (GameObject gameObject in gtfcObjects)
 			{
@@ -209,10 +213,13 @@ public class StoreBundle : IDisposable
 		}
 		foreach (BundleStand bundleStand in bundleStands)
 		{
-			bundleStand.UpdatePurchaseButtonText(text);
-			if ((bool)bundleStand.GtfcPriceLabel && HasGTFCPrice)
+			if (!(bundleStand == null))
 			{
-				bundleStand.GtfcPriceLabel.SetText(text2);
+				bundleStand.UpdatePurchaseButtonText(text);
+				if ((bool)bundleStand.GtfcPriceLabel && HasGTFCPrice)
+				{
+					bundleStand.GtfcPriceLabel.SetText(text2);
+				}
 			}
 		}
 	}

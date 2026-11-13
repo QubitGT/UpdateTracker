@@ -24,6 +24,10 @@ public class BundlePurchaseButton : GorillaPressableButton, IGorillaSliceableSim
 
 	public ICreatorCodeProvider codeProvider;
 
+	private bool _purchaseLocked;
+
+	public bool PurchaseLocked => _purchaseLocked;
+
 	protected override void OnEnable()
 	{
 		base.OnEnable();
@@ -49,7 +53,7 @@ public class BundlePurchaseButton : GorillaPressableButton, IGorillaSliceableSim
 
 	public override void ButtonActivation()
 	{
-		if (!bError)
+		if (!bError && !_purchaseLocked)
 		{
 			base.ButtonActivation();
 			BundleManager.instance.BundlePurchaseButtonPressed(playfabID, codeProvider);
@@ -79,6 +83,25 @@ public class BundlePurchaseButton : GorillaPressableButton, IGorillaSliceableSim
 			buttonRenderer.material = unpressedMaterial;
 			SetOffText(setMyText: true);
 			isOn = false;
+			ApplyPurchaseLock();
+		}
+	}
+
+	public void SetPurchaseLocked(bool locked)
+	{
+		if (_purchaseLocked != locked)
+		{
+			_purchaseLocked = locked;
+			ApplyPurchaseLock();
+		}
+	}
+
+	private void ApplyPurchaseLock()
+	{
+		if (!bError && !isOn)
+		{
+			GetComponent<BoxCollider>().enabled = !_purchaseLocked;
+			buttonRenderer.material = (_purchaseLocked ? pressedMaterial : unpressedMaterial);
 		}
 	}
 
@@ -108,6 +131,7 @@ public class BundlePurchaseButton : GorillaPressableButton, IGorillaSliceableSim
 			buttonRenderer.material = unpressedMaterial;
 			base.enabled = true;
 			isOn = false;
+			ApplyPurchaseLock();
 		}
 	}
 

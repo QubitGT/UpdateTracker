@@ -160,6 +160,16 @@ public class CosmeticItemInstance
 		ApplyClippingOffsets(itemEnabled: true);
 	}
 
+	public void ClearForRelease()
+	{
+		leftObjects.Clear();
+		rightObjects.Clear();
+		objects.Clear();
+		holdableObjects.Clear();
+		allRenderers.Clear();
+		allParticles.Clear();
+	}
+
 	public void ToggleRenderers(bool enabled)
 	{
 		for (int i = 0; i < allRenderers.Count; i++)

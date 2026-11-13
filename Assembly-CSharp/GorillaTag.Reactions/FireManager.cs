@@ -26,8 +26,6 @@ public class FireManager : ITickSystemPost
 	[OnEnterPlay_Set(0)]
 	private static int _activeAudioSources;
 
-	private static readonly int shaderProp_EmissionColor = ShaderProps._EmissionColor;
-
 	[field: OnEnterPlay_SetNull]
 	internal static FireManager instance { get; private set; }
 
@@ -47,65 +45,52 @@ public class FireManager : ITickSystemPost
 		}
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static void Register(FireInstance f)
 	{
 		if (ApplicationQuittingState.IsQuitting)
 		{
 			return;
 		}
-		int instanceID = f.gameObject.GetInstanceID();
-		if (!_kGObjInstId_to_fire.TryAdd(instanceID, f))
+		if (f == null)
 		{
-			if (f == null)
+			Debug.LogError("FireManager: You tried to register null!");
+		}
+		else if (f.GetComponentAndSetFieldIfNullElseLogAndDisable(ref f._thermalVolume, "_thermalVolume", "ThermalSourceVolume", "Disabling.", "Register") & f.GetComponentAndSetFieldIfNullElseLogAndDisable(ref f._loopingAudioSource, "_loopingAudioSource", "AudioSource", "Disabling.", "Register") & f.DisableIfNull(f._extinguishSound.obj, "_extinguishSound", "AudioClip", "Register") & f.DisableIfNull(f._igniteSound.obj, "_igniteSound", "AudioClip", "Register"))
+		{
+			int instanceID = f.gameObject.GetInstanceID();
+			if (!_kGObjInstId_to_fire.TryAdd(instanceID, f))
 			{
-				Debug.LogError("FireManager: You tried to register null!", f);
+				Debug.LogError("FireManager: \"" + f.name + "\" was attempted to be registered more than once!", f);
 				return;
 			}
-			Debug.LogError("FireManager: \"" + f.name + "\" was attempted to be registered more than once!", f);
-		}
-		f.GetComponentAndSetFieldIfNullElseLogAndDisable(ref f._collider, "_collider", "Collider", "Disabling.", "Register");
-		f.GetComponentAndSetFieldIfNullElseLogAndDisable(ref f._thermalVolume, "_thermalVolume", "ThermalSourceVolume", "Disabling.", "Register");
-		f.GetComponentAndSetFieldIfNullElseLogAndDisable(ref f._particleSystem, "_particleSystem", "ParticleSystem", "Disabling.", "Register");
-		f.GetComponentAndSetFieldIfNullElseLogAndDisable(ref f._loopingAudioSource, "_loopingAudioSource", "AudioSource", "Disabling.", "Register");
-		f.DisableIfNull(f._extinguishSound.obj, "_extinguishSound", "AudioClip", "Register");
-		f.DisableIfNull(f._igniteSound.obj, "_igniteSound", "AudioClip", "Register");
-		f._defaultTemperature = f._thermalVolume.celsius;
-		f._timeSinceExtinguished = 0f - f._stayExtinguishedDuration;
-		f._psEmissionModule = f._particleSystem.emission;
-		f._psDefaultEmissionRate = f._psEmissionModule.rateOverTime.constant;
-		f._deathStateDuration = 0f;
-		if (f._emissiveRenderers != null)
-		{
-			f._emiRenderers_matPropBlocks = new MaterialPropertyBlock[f._emissiveRenderers.Length];
-			f._emiRenderers_defaultColors = new Color[f._emissiveRenderers.Length];
-			for (int i = 0; i < f._emissiveRenderers.Length; i++)
-			{
-				f._emiRenderers_matPropBlocks[i] = new MaterialPropertyBlock();
-				f._emissiveRenderers[i].GetPropertyBlock(f._emiRenderers_matPropBlocks[i]);
-				f._emiRenderers_defaultColors[i] = f._emiRenderers_matPropBlocks[i].GetColor(shaderProp_EmissionColor);
-			}
+			f._isRegistered = true;
+			f._transform = f.transform;
+			f._gameObjectId = instanceID;
+			f._defaultTemperature = f._thermalVolume.celsius;
+			f._timeSinceExtinguished = f._stayExtinguishedDuration;
+			f._deathStateDuration = 0f;
 		}
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static void Unregister(FireInstance reactable)
+	internal static void Unregister(FireInstance f)
 	{
-		if (!ApplicationQuittingState.IsQuitting)
+		if (!ApplicationQuittingState.IsQuitting && f._isRegistered)
 		{
-			int instanceID = reactable.gameObject.GetInstanceID();
-			_kGObjInstId_to_fire.Remove(instanceID);
+			f._isRegistered = false;
+			int instanceID = f.gameObject.GetInstanceID();
+			if (_kGObjInstId_to_fire.TryGetValue(instanceID, out var value) && value == f)
+			{
+				_kGObjInstId_to_fire.Remove(instanceID);
+			}
 		}
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Vector3Int GetSpatialGridPos(Vector3 pos)
 	{
-		Vector3 vector = pos / 0.2f;
-		return new Vector3Int((int)vector.x, (int)vector.y, (int)vector.z);
+		return Vector3Int.FloorToInt(pos / 0.2f);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void ResetFireValues(FireInstance f)
 	{
 		f._timeSinceExtinguished = Mathf.Min(f._timeSinceExtinguished, f._stayExtinguishedDuration);
@@ -115,71 +100,124 @@ public class FireManager : ITickSystemPost
 		f._thermalVolume.celsius = f._defaultTemperature;
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static void SpawnFire(SinglePool pool, Vector3 pos, Vector3 normal, float scale)
 	{
 		SpawnFire(pool, pos, normal, scale, null);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static void SpawnFire(SinglePool pool, Vector3 pos, Vector3 normal, float scale, Quaternion? rotationOverride)
 	{
-		if (_fireSpatialGrid.TryGetValue(GetSpatialGridPos(pos), out var value))
+		if (_fireSpatialGrid.TryGetValue(GetSpatialGridPos(pos), out var value) && _kGObjInstId_to_fire.TryGetValue(value, out var value2))
 		{
-			ResetFireValues(_kGObjInstId_to_fire[value]);
+			ResetFireValues(value2);
 			return;
 		}
 		GameObject gameObject = pool.Instantiate(setActive: false);
-		gameObject.transform.position = pos;
+		Transform transform = gameObject.transform;
+		transform.position = pos;
 		if (rotationOverride.HasValue)
 		{
-			gameObject.transform.rotation = rotationOverride.Value;
+			transform.rotation = rotationOverride.Value;
 		}
 		else
 		{
-			gameObject.transform.up = normal;
+			transform.up = normal;
 		}
-		gameObject.transform.localScale = Vector3.one * scale;
+		transform.localScale = Vector3.one * scale;
 		gameObject.SetActive(value: true);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static void OnEnable(FireInstance f)
 	{
-		if (!ApplicationQuittingState.IsQuitting && !(ObjectPools.instance == null) && ObjectPools.instance.initialized)
+		if (!ApplicationQuittingState.IsQuitting && f._isRegistered && (!f._despawnOnExtinguish || (!(ObjectPools.instance == null) && ObjectPools.instance.initialized)))
 		{
 			ResetFireValues(f);
-			f._spatialGridPosition = GetSpatialGridPos(f.transform.position);
-			_fireSpatialGrid.Add(f._spatialGridPosition, f.gameObject.GetInstanceID());
+			Vector3 position = f._transform.position;
+			UpdateSpatialGrid(f, position);
+			f._enabledIndex = _kEnabledReactions.Count;
 			_kEnabledReactions.Add(f);
 			if (GTAudioOneShot.isInitialized && Time.realtimeSinceStartup > 10f)
 			{
-				GTAudioOneShot.Play(f._igniteSound, f.transform.position, f._igniteSoundVolume);
+				GTAudioOneShot.Play(f._igniteSound, position, f._igniteSoundVolume);
 			}
-			if (8 > _activeAudioSources)
+			f._hasAudioSlot = HasLoopingClip(f) && _activeAudioSources < 8;
+			if (f._hasAudioSlot)
 			{
 				_activeAudioSources++;
-				f._loopingAudioSource.enabled = true;
 			}
-			else
-			{
-				f._loopingAudioSource.enabled = false;
-			}
+			f._loopingAudioSource.enabled = f._hasAudioSlot;
 		}
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static void OnDisable(FireInstance f)
 	{
 		if (!ApplicationQuittingState.IsQuitting)
 		{
-			_kEnabledReactions.Remove(f);
-			_fireSpatialGrid.Remove(f._spatialGridPosition);
-			_activeAudioSources = Mathf.Min(_activeAudioSources - (f._loopingAudioSource.enabled ? 1 : 0), 0);
+			int enabledIndex = f._enabledIndex;
+			if (enabledIndex >= 0)
+			{
+				int index = _kEnabledReactions.Count - 1;
+				FireInstance fireInstance = _kEnabledReactions[index];
+				_kEnabledReactions[enabledIndex] = fireInstance;
+				fireInstance._enabledIndex = enabledIndex;
+				_kEnabledReactions.RemoveAt(index);
+				f._enabledIndex = -1;
+			}
+			if (f._isInSpatialGrid)
+			{
+				_fireSpatialGrid.Remove(f._spatialGridPosition);
+				f._isInSpatialGrid = false;
+			}
+			if (f._hasAudioSlot)
+			{
+				_activeAudioSources = Mathf.Max(_activeAudioSources - 1, 0);
+				f._hasAudioSlot = false;
+				GiveFreeAudioSlotToSilentFire();
+			}
 		}
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static bool HasLoopingClip(FireInstance f)
+	{
+		return f._loopingAudioSource.clip != null;
+	}
+
+	private static void GiveFreeAudioSlotToSilentFire()
+	{
+		if (_activeAudioSources >= 8)
+		{
+			return;
+		}
+		for (int i = 0; i < _kEnabledReactions.Count; i++)
+		{
+			FireInstance fireInstance = _kEnabledReactions[i];
+			if (!fireInstance._hasAudioSlot && !fireInstance._isDespawning && HasLoopingClip(fireInstance))
+			{
+				fireInstance._hasAudioSlot = true;
+				_activeAudioSources++;
+				fireInstance._loopingAudioSource.enabled = true;
+				break;
+			}
+		}
+	}
+
+	private static void UpdateSpatialGrid(FireInstance f, Vector3 pos)
+	{
+		Vector3Int spatialGridPos = GetSpatialGridPos(pos);
+		if (f._isInSpatialGrid)
+		{
+			if (spatialGridPos == f._spatialGridPosition)
+			{
+				return;
+			}
+			_fireSpatialGrid.Remove(f._spatialGridPosition);
+			f._isInSpatialGrid = false;
+		}
+		f._spatialGridPosition = spatialGridPos;
+		f._isInSpatialGrid = _fireSpatialGrid.TryAdd(spatialGridPos, f._gameObjectId);
+	}
+
 	internal static void OnTriggerEnter(FireInstance f, Collider other)
 	{
 		if (!f._isDespawning && !ApplicationQuittingState.IsQuitting && other.gameObject.layer == 4)
@@ -188,25 +226,51 @@ public class FireManager : ITickSystemPost
 		}
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static void Extinguish(GameObject gObj, float extinguishAmount)
+	internal static bool Extinguish(GameObject gObj, float extinguishAmount)
 	{
-		if (ApplicationQuittingState.IsQuitting || !_kGObjInstId_to_fire.TryGetValue(gObj.GetInstanceID(), out var value))
+		if (ApplicationQuittingState.IsQuitting || extinguishAmount <= 0f)
 		{
-			return;
+			return false;
 		}
-		float num = value._thermalVolume.celsius - extinguishAmount;
-		if (num <= 0f && value._thermalVolume.celsius > 0.001f)
+		if (!_kGObjInstId_to_fire.TryGetValue(gObj.GetInstanceID(), out var value))
 		{
-			value._thermalVolume.celsius = Mathf.Max(num, 0f);
+			return false;
+		}
+		if (value._enabledIndex < 0 || value._isDespawning)
+		{
+			return false;
+		}
+		if (value._defaultTemperature <= 0f)
+		{
+			return false;
+		}
+		float celsius = value._thermalVolume.celsius;
+		if (celsius <= 0f)
+		{
 			value._timeSinceExtinguished = 0f;
-			GTAudioOneShot.Play(value._extinguishSound, value.transform.position, value._extinguishSoundVolume);
-			if (value._despawnOnExtinguish)
-			{
-				value._isDespawning = true;
-				value._timeSinceDyingStart = 0f;
-			}
+			return true;
 		}
+		float num = celsius - extinguishAmount;
+		if (num > 0f)
+		{
+			value._thermalVolume.celsius = num;
+			return true;
+		}
+		value._thermalVolume.celsius = 0f;
+		value._timeSinceExtinguished = 0f;
+		GTAudioOneShot.Play(value._extinguishSound, value._transform.position, value._extinguishSoundVolume);
+		if (value._despawnOnExtinguish)
+		{
+			StartDying(value);
+		}
+		return true;
+	}
+
+	private static void StartDying(FireInstance f)
+	{
+		f._isDespawning = true;
+		f._timeSinceDyingStart = 0f;
+		f._dyingStartTemperature = f._thermalVolume.celsius;
 	}
 
 	void ITickSystemPost.PostTick()
@@ -215,60 +279,58 @@ public class FireManager : ITickSystemPost
 		{
 			return;
 		}
-		foreach (FireInstance kEnabledReaction in _kEnabledReactions)
+		float unscaledDeltaTime = Time.unscaledDeltaTime;
+		for (int i = 0; i < _kEnabledReactions.Count; i++)
 		{
-			kEnabledReaction._timeAlive += Time.unscaledDeltaTime;
-			bool flag = kEnabledReaction._timeSinceExtinguished < kEnabledReaction._stayExtinguishedDuration;
-			kEnabledReaction._timeSinceExtinguished += Time.unscaledDeltaTime;
-			bool flag2 = kEnabledReaction._timeSinceExtinguished < kEnabledReaction._stayExtinguishedDuration;
-			if (kEnabledReaction._isDespawning)
+			TickFire(_kEnabledReactions[i], unscaledDeltaTime);
+		}
+		if (_kFiresToDespawn.Count != 0)
+		{
+			for (int j = 0; j < _kFiresToDespawn.Count; j++)
 			{
-				kEnabledReaction._timeSinceDyingStart += Time.unscaledDeltaTime;
-				if (kEnabledReaction._timeSinceDyingStart >= kEnabledReaction._deathStateDuration || kEnabledReaction._thermalVolume.celsius < -9999f)
-				{
-					_kFiresToDespawn.Add(kEnabledReaction);
-				}
+				ObjectPools.instance.Destroy(_kFiresToDespawn[j].gameObject);
 			}
-			if (!kEnabledReaction._isDespawning && kEnabledReaction._despawnOnExtinguish && kEnabledReaction._timeAlive > kEnabledReaction._maxLifetime)
+			_kFiresToDespawn.Clear();
+		}
+	}
+
+	private static void TickFire(FireInstance f, float deltaTime)
+	{
+		UpdateSpatialGrid(f, f._transform.position);
+		f._timeAlive += deltaTime;
+		bool isExtinguished = f.isExtinguished;
+		f._timeSinceExtinguished += deltaTime;
+		bool isExtinguished2 = f.isExtinguished;
+		if (f._isDespawning)
+		{
+			f._timeSinceDyingStart += deltaTime;
+			if (f._timeSinceDyingStart >= f._deathStateDuration)
 			{
-				kEnabledReaction._isDespawning = true;
-				kEnabledReaction._timeSinceDyingStart = 0f;
-				GTAudioOneShot.Play(kEnabledReaction._extinguishSound, kEnabledReaction.transform.position, kEnabledReaction._extinguishSoundVolume);
-			}
-			if (!kEnabledReaction._isDespawning && flag != flag2)
-			{
-				if (flag2)
-				{
-					if (kEnabledReaction._despawnOnExtinguish)
-					{
-						kEnabledReaction._isDespawning = true;
-						kEnabledReaction._timeSinceDyingStart = 0f;
-					}
-					GTAudioOneShot.Play(kEnabledReaction._extinguishSound, kEnabledReaction.transform.position, kEnabledReaction._extinguishSoundVolume);
-				}
-				else
-				{
-					GTAudioOneShot.Play(kEnabledReaction._igniteSound, kEnabledReaction.transform.position, kEnabledReaction._igniteSoundVolume);
-				}
-			}
-			float num = kEnabledReaction._thermalVolume.celsius + kEnabledReaction._reheatSpeed * Time.unscaledDeltaTime;
-			if (kEnabledReaction._isDespawning)
-			{
-				num = ((!(kEnabledReaction._deathStateDuration <= 0f)) ? Mathf.Lerp(kEnabledReaction._thermalVolume.celsius, 0f, kEnabledReaction._timeSinceDyingStart / kEnabledReaction._deathStateDuration) : 0f);
-			}
-			num = ((num > kEnabledReaction._defaultTemperature) ? kEnabledReaction._defaultTemperature : num);
-			kEnabledReaction._thermalVolume.celsius = num;
-			float num2 = num / kEnabledReaction._defaultTemperature;
-			kEnabledReaction._loopingAudioSource.volume = num2;
-			for (int i = 0; i < kEnabledReaction._emissiveRenderers.Length; i++)
-			{
-				kEnabledReaction._emiRenderers_matPropBlocks[i].SetColor(shaderProp_EmissionColor, kEnabledReaction._emiRenderers_defaultColors[i] * num2);
+				_kFiresToDespawn.Add(f);
 			}
 		}
-		foreach (FireInstance item in _kFiresToDespawn)
+		else if (f._despawnOnExtinguish && f._timeAlive > f._maxLifetime)
 		{
-			ObjectPools.instance.Destroy(item.gameObject);
+			StartDying(f);
+			GTAudioOneShot.Play(f._extinguishSound, f._transform.position, f._extinguishSoundVolume);
 		}
-		_kFiresToDespawn.Clear();
+		else if (isExtinguished && !isExtinguished2)
+		{
+			GTAudioOneShot.Play(f._igniteSound, f._transform.position, f._igniteSoundVolume);
+		}
+		float num = f._thermalVolume.celsius;
+		if (f._isDespawning)
+		{
+			num = ((f._deathStateDuration > 0f) ? Mathf.Lerp(f._dyingStartTemperature, 0f, f._timeSinceDyingStart / f._deathStateDuration) : 0f);
+		}
+		else if (!isExtinguished2 && num < f._defaultTemperature)
+		{
+			num = Mathf.Min(num + f._reheatSpeed * deltaTime, f._defaultTemperature);
+		}
+		f._thermalVolume.celsius = num;
+		if (f._hasAudioSlot)
+		{
+			f._loopingAudioSource.volume = ((f._defaultTemperature > 0f) ? (num / f._defaultTemperature) : 1f);
+		}
 	}
 }

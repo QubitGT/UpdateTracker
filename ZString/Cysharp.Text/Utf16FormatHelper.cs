@@ -50,7 +50,7 @@ internal static class Utf16FormatHelper
 				sb.Advance(num);
 			}
 			Span<char> span = sb.GetSpan(text.Length);
-			text.AsSpan().CopyTo(span);
+			MemoryExtensions.AsSpan(text).CopyTo(span);
 			sb.Advance(text.Length);
 			return;
 		}

@@ -1,6 +1,5 @@
 using GorillaExtensions;
 using GorillaLocomotion;
-using GorillaNetworking;
 using UnityEngine;
 
 public class HoverboardHandle : HoldableObject
@@ -42,20 +41,21 @@ public class HoverboardHandle : HoldableObject
 			Transform transform = (flag ? VRRig.LocalRig.leftHand.rigTarget : VRRig.LocalRig.rightHand.rigTarget);
 			Quaternion localRotation;
 			Vector3 localPosition;
+			int skinActorNumber;
 			if (!parentVisual.IsHeld)
 			{
 				localRotation = (flag ? defaultHoldAngleLeft : defaultHoldAngleRight);
 				localPosition = (flag ? defaultHoldPosLeft : defaultHoldPosRight);
+				skinActorNumber = NetworkSystem.Instance.LocalPlayer.ActorNumber;
 			}
 			else
 			{
 				localRotation = transform.InverseTransformRotation(parentVisual.transform.rotation);
 				localPosition = transform.InverseTransformPoint(parentVisual.transform.position);
+				skinActorNumber = parentVisual.boardSkinActorNumber;
 			}
-			parentVisual.SetIsHeld(flag, localPosition, localRotation, parentVisual.boardColor);
+			parentVisual.SetIsHeld(flag, localPosition, localRotation, parentVisual.boardColor, skinActorNumber);
 			EquipmentInteractor.instance.UpdateHandEquipment(this, flag);
-			string skinDisplayName = ((CosmeticsController.instance != null) ? CosmeticsController.instance.currentWornSet.items[32].displayName : null);
-			FreeHoverboardManager.instance.SendHeldBoardSkinRPC(skinDisplayName);
 		}
 	}
 

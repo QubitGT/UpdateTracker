@@ -22,6 +22,24 @@ public class CosmeticRefRegistry : MonoBehaviour
 		partsTable[(int)partID] = part;
 	}
 
+	public void Unregister(CosmeticRefID partID, GameObject part)
+	{
+		if (partsTable[(int)partID] != part)
+		{
+			return;
+		}
+		partsTable[(int)partID] = null;
+		CosmeticRefTarget[] array = builtInRefTargets;
+		foreach (CosmeticRefTarget cosmeticRefTarget in array)
+		{
+			if (cosmeticRefTarget != null && cosmeticRefTarget.id == partID)
+			{
+				partsTable[(int)partID] = cosmeticRefTarget.gameObject;
+				break;
+			}
+		}
+	}
+
 	public GameObject Get(CosmeticRefID partID)
 	{
 		return partsTable[(int)partID];

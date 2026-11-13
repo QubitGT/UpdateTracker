@@ -48,6 +48,8 @@ public class GorillaSpeakerLoudness : MonoBehaviour, IGorillaSliceableSimple, ID
 
 	private AudioClip offlineMic;
 
+	private string offlineMicDevice;
+
 	private float[] voiceSampleBuffer = new float[128];
 
 	public bool IsSpeaking => isSpeaking;
@@ -136,15 +138,22 @@ public class GorillaSpeakerLoudness : MonoBehaviour, IGorillaSliceableSimple, ID
 		}
 		if (recorder != null && offlineMic != null)
 		{
-			Microphone.End(UnityMicrophone.devices[0]);
+			Microphone.End(offlineMicDevice);
 			UnityEngine.Object.Destroy(offlineMic);
 			offlineMic = null;
 			recorder.RestartRecording(force: true);
 		}
 		VRRig rig = rigContainer.Rig;
-		if (rig.isOfflineVRRig && recorder == null && isMicEnabled && !Microphone.IsRecording(UnityMicrophone.devices[0]))
+		if (rig.isOfflineVRRig && recorder == null && isMicEnabled)
 		{
-			offlineMic = Microphone.Start(UnityMicrophone.devices[0], loop: true, 1, 16000);
+			if (offlineMicDevice == null)
+			{
+				offlineMicDevice = GTRecorder.GetPreferredUnityMicDevice(UnityMicrophone.devices[0]);
+			}
+			if (!Microphone.IsRecording(offlineMicDevice))
+			{
+				offlineMic = Microphone.Start(offlineMicDevice, loop: true, 1, 16000);
+			}
 		}
 		if ((rig.remoteUseReplacementVoice || rig.localUseReplacementVoice || GorillaComputer.instance.voiceChatOn == "FALSE") && rig.SpeakingLoudness > 0f && !rigContainer.IsMutedFor(~RigContainer.MuteReason.Auto))
 		{
@@ -190,7 +199,7 @@ public class GorillaSpeakerLoudness : MonoBehaviour, IGorillaSliceableSimple, ID
 				loudness = 0f;
 			}
 		}
-		else if (offlineMic != null && recorder == null && isMicEnabled && Microphone.IsRecording(UnityMicrophone.devices[0]))
+		else if (offlineMic != null && recorder == null && isMicEnabled && Microphone.IsRecording(offlineMicDevice))
 		{
 			isSpeaking = true;
 			int num = Mathf.Min(Mathf.CeilToInt(deltaTime * 16000f), 16000);

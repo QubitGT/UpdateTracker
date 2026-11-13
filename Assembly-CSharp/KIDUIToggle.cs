@@ -48,10 +48,6 @@ public class KIDUIToggle : Slider
 	[SerializeField]
 	private RectTransform _borderImgRef;
 
-	[Header("Steam Settings")]
-	[SerializeField]
-	private UXSettings _cbUXSettings;
-
 	[Header("Animation")]
 	[SerializeField]
 	private float _animationDuration = 0.15f;
@@ -103,14 +99,6 @@ public class KIDUIToggle : Slider
 
 	private Coroutine _animationCoroutine;
 
-	private ControllerBehaviour controllerBehaviour;
-
-	private bool inside;
-
-	private static bool _triggeredThisFrame = false;
-
-	private static bool _canTrigger = true;
-
 	public bool CurrentValue { get; private set; }
 
 	public bool IsOn => CurrentValue;
@@ -119,19 +107,6 @@ public class KIDUIToggle : Slider
 	{
 		base.Awake();
 		SetupToggleComponent();
-		controllerBehaviour = GetComponentInChildren<ControllerBehaviour>();
-		if (controllerBehaviour == null)
-		{
-			Debug.LogError("[KID::UI_BUTTON] Could not find [ControllerBehaviour] in children, trying to create a new one.");
-			if (_cbUXSettings == null)
-			{
-				Debug.LogError("[KID::UI_BUTTON] [_cbUXSettings] has not been set but trying to create a new [ControllerBehaviour] reference.");
-			}
-			else
-			{
-				controllerBehaviour = ControllerBehaviour.CreateNewControllerBehaviour(base.gameObject, _cbUXSettings);
-			}
-		}
 	}
 
 	protected override void Start()
@@ -144,10 +119,6 @@ public class KIDUIToggle : Slider
 	{
 		base.OnEnable();
 		base.interactable = false;
-		if ((bool)controllerBehaviour)
-		{
-			ControllerBehaviour.Instance.OnAction += PostUpdate;
-		}
 	}
 
 	public override void OnPointerDown(PointerEventData eventData)
@@ -159,13 +130,11 @@ public class KIDUIToggle : Slider
 	public override void OnPointerEnter(PointerEventData pointerEventData)
 	{
 		SetHighlighted();
-		inside = true;
 	}
 
 	public override void OnPointerExit(PointerEventData pointerEventData)
 	{
 		SetNormal();
-		inside = false;
 	}
 
 	protected virtual void SetupToggleComponent()
@@ -306,44 +275,6 @@ public class KIDUIToggle : Slider
 			yield return null;
 		}
 		value = endValue;
-	}
-
-	private void PostUpdate()
-	{
-		if (inside && (bool)ControllerBehaviour.Instance)
-		{
-			if (ControllerBehaviour.Instance.TriggerDown && _canTrigger)
-			{
-				string text = "[" + base.transform.parent.parent.parent.name + "." + base.transform.parent.parent.name + "." + base.transform.parent.name + "." + base.transform.name + "]";
-				Debug.Log("[KID::UIBUTTON::DEBUG] " + text + " - STEAM - OnClick is pressed. Time: [" + Time.time + "]", this);
-				Toggle();
-				_triggeredThisFrame = true;
-				_canTrigger = false;
-			}
-			else if (!ControllerBehaviour.Instance.TriggerDown)
-			{
-				_canTrigger = true;
-			}
-		}
-	}
-
-	private void LateUpdate()
-	{
-		if (_triggeredThisFrame)
-		{
-			string text = "[" + base.transform.parent.parent.parent.name + "." + base.transform.parent.parent.name + "." + base.transform.parent.name + "." + base.transform.name + "]";
-			Debug.Log("[KID::UIBUTTON::DEBUG] " + text + " - STEAM - OnLateUpdate triggered and Triggered Frame Reset. Time: [" + Time.time + "]", this);
-		}
-		_triggeredThisFrame = false;
-	}
-
-	protected new void OnDisable()
-	{
-		if ((bool)controllerBehaviour)
-		{
-			ControllerBehaviour.Instance.OnAction -= PostUpdate;
-		}
-		inside = false;
 	}
 
 	private void SetDisabled(bool isLockedButEnabled)

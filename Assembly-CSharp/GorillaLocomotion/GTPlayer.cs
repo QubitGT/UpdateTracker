@@ -8,7 +8,6 @@ using GorillaExtensions;
 using GorillaLocomotion.Climbing;
 using GorillaLocomotion.Gameplay;
 using GorillaLocomotion.Swimming;
-using GorillaNetworking;
 using GorillaTag;
 using GorillaTagScripts;
 using Photon.Pun;
@@ -671,6 +670,8 @@ public class GTPlayer : MonoBehaviour
 
 	private Vector3? lastButtDebouncePosition;
 
+	private const float buttDebounceMinSpeed = 0.09f;
+
 	private const float CameraFarClipDefault = 500f;
 
 	private const float CameraNearClipDefault = 0.01f;
@@ -877,11 +878,17 @@ public class GTPlayer : MonoBehaviour
 
 	private readonly Dictionary<UnityEngine.Object, Action<GTPlayer>> gravityOverrides = new Dictionary<UnityEngine.Object, Action<GTPlayer>>();
 
-	private readonly List<HoverboardAreaTrigger> inHoverAreas = new List<HoverboardAreaTrigger>(2);
+	private bool inHoverboardAllowedZone;
+
+	private readonly List<HoverboardAreaTrigger> inCustomMapHoverAreas = new List<HoverboardAreaTrigger>(2);
 
 	private readonly List<ForceDisableHoverboardTrigger> inHoverDisablers = new List<ForceDisableHoverboardTrigger>(1);
 
 	[Header("Hoverboard")]
+	[Tooltip("Group zones where the hoverboard is allowed. Custom maps use HoverboardAreaTrigger instead.")]
+	[SerializeField]
+	private GroupJoinZoneAB hoverboardAllowedZones;
+
 	[SerializeField]
 	private float hoverIdealHeight = 0.5f;
 
@@ -940,6 +947,8 @@ public class GTPlayer : MonoBehaviour
 
 	private float boostEnabledUntilTimestamp;
 
+	private HoverboardGrindRail currentGrindRail;
+
 	private HoverBoardCast[] hoverboardCasts = new HoverBoardCast[3]
 	{
 		new HoverBoardCast
@@ -975,6 +984,14 @@ public class GTPlayer : MonoBehaviour
 	private Quaternion hoverboardPlayerLocalRot;
 
 	private bool didHoverLastFrame;
+
+	private Collider[] playerPhysicsColliders;
+
+	private float[] playerPhysicsColliderContactOffsetDefaults;
+
+	private float playerRigidbodySleepThresholdDefault;
+
+	private float appliedPhysicsToleranceScale = 1f;
 
 	private bool hasLeftHandTentacleMove;
 
@@ -1179,6 +1196,12 @@ public class GTPlayer : MonoBehaviour
 	public bool isHoverAllowed { get; private set; }
 
 	public bool enableHoverMode { get; private set; }
+
+	public double DebugHandPrecisionErrorLeft { get; private set; } = -1.0;
+
+
+	public double DebugHandPrecisionErrorRight { get; private set; } = -1.0;
+
 
 	public RigidbodyInterpolation RigidbodyInterpolation
 	{
@@ -1667,6 +1690,7 @@ public class GTPlayer : MonoBehaviour
 	{
 		AntiTeleportTechnology();
 		IsFrozen = GorillaTagger.Instance.offlineVRRig.IsFrozen || debugFreezeTag;
+		UpdateHoverboardAllowedZone();
 		bool isDefaultScale = IsDefaultScale;
 		playerRigidBody.useGravity = false;
 		if (gravityOverrides.Count > 0)
@@ -1910,7 +1934,7 @@ public class GTPlayer : MonoBehaviour
 			audioSetToUnderwater = false;
 			audioManager.UnsetMixerSnapshot();
 		}
-		handleClimbing(Time.fixedDeltaTime);
+		HandleClimbing(Time.fixedDeltaTime);
 		StuckHandsCheckFixedUpdate();
 		FixedUpdate_HandHolds(Time.fixedDeltaTime);
 	}
@@ -1924,6 +1948,7 @@ public class GTPlayer : MonoBehaviour
 	private void HoverboardLateUpdate()
 	{
 		bool flag = false;
+		currentGrindRail = null;
 		for (int i = 0; i < hoverboardCasts.Length; i++)
 		{
 			HoverBoardCast hoverBoardCast = hoverboardCasts[i];
@@ -1938,6 +1963,10 @@ public class GTPlayer : MonoBehaviour
 				{
 					hoverBoardCast.pointHit = hitInfo.point;
 					hoverBoardCast.normalHit = hitInfo.normal;
+					if (i == 0 && hitInfo.collider.TryGetComponent<HoverboardGrindRail>(out var component2))
+					{
+						currentGrindRail = component2;
+					}
 				}
 			}
 			hoverboardCasts[i] = hoverBoardCast;
@@ -1947,7 +1976,8 @@ public class GTPlayer : MonoBehaviour
 			}
 		}
 		hasHoverPoint = flag;
-		bodyCollider.enabled = true;
+		Vector3 vector = hoverboardVisual.transform.position + GTPlayerTransform.Up * (hoverBodyCollisionRadiusUpOffset * scale);
+		bodyCollider.enabled = (bodyCollider.transform.position - vector).IsLongerThan(hoverBodyHasCollisionsOutsideRadius * scale);
 	}
 
 	private Vector3 HoverboardFixedUpdate(Vector3 velocity)
@@ -2037,6 +2067,10 @@ public class GTPlayer : MonoBehaviour
 			{
 				velocity = vector8.normalized * num5 + vector9;
 			}
+			if (flag && currentGrindRail != null)
+			{
+				velocity = currentGrindRail.ApplyRailConstraint(velocity, vector2, scale, Time.fixedDeltaTime);
+			}
 			float magnitude = (velocity - vector7).magnitude;
 			float num7 = 1f / scale;
 			hoverboardAudio.UpdateAudioLoop(velocity.magnitude * num7, bodyVelocityTracker.GetAverageVelocity(worldSpace: true).magnitude * num7, magnitude * num7, flag2 ? (num6 * num7) : 0f);
@@ -2052,17 +2086,25 @@ public class GTPlayer : MonoBehaviour
 		return velocity;
 	}
 
-	public void GrabPersonalHoverboard(bool isLeftHand, Vector3 pos, Quaternion rot, Color col)
+	public void GrabPersonalHoverboard(bool isLeftHand, Vector3 pos, Quaternion rot, Color col, int skinActorNumber)
 	{
 		if (hoverboardVisual.IsHeld)
 		{
 			hoverboardVisual.DropFreeBoard();
 		}
-		hoverboardVisual.SetIsHeld(isLeftHand, pos, rot, col);
+		hoverboardVisual.SetIsHeld(isLeftHand, pos, rot, col, skinActorNumber);
 		hoverboardVisual.ProxyGrabHandle(isLeftHand);
 		FreeHoverboardManager.instance.PreserveMaxHoverboardsConstraint(NetworkSystem.Instance.LocalPlayer.ActorNumber);
-		string skinDisplayName = ((CosmeticsController.instance != null) ? CosmeticsController.instance.currentWornSet.items[32].displayName : null);
-		FreeHoverboardManager.instance.SendHeldBoardSkinRPC(skinDisplayName);
+	}
+
+	private void UpdateHoverboardAllowedZone()
+	{
+		bool flag = VRRig.LocalRig.zoneEntity.GroupZone.HasAnyFlag(hoverboardAllowedZones);
+		if (flag != inHoverboardAllowedZone)
+		{
+			inHoverboardAllowedZone = flag;
+			RefreshHoverAllowed();
+		}
 	}
 
 	public void AddHoverArea(HoverboardAreaTrigger area)
@@ -2071,14 +2113,14 @@ public class GTPlayer : MonoBehaviour
 		{
 			return;
 		}
-		for (int i = 0; i < inHoverAreas.Count; i++)
+		for (int i = 0; i < inCustomMapHoverAreas.Count; i++)
 		{
-			if (inHoverAreas[i] == area)
+			if (inCustomMapHoverAreas[i] == area)
 			{
 				return;
 			}
 		}
-		inHoverAreas.Add(area);
+		inCustomMapHoverAreas.Add(area);
 		RefreshHoverAllowed();
 	}
 
@@ -2088,11 +2130,11 @@ public class GTPlayer : MonoBehaviour
 		{
 			return;
 		}
-		for (int num = inHoverAreas.Count - 1; num >= 0; num--)
+		for (int num = inCustomMapHoverAreas.Count - 1; num >= 0; num--)
 		{
-			if (inHoverAreas[num] == area)
+			if (inCustomMapHoverAreas[num] == area)
 			{
-				inHoverAreas.RemoveAt(num);
+				inCustomMapHoverAreas.RemoveAt(num);
 				RefreshHoverAllowed();
 				break;
 			}
@@ -2135,9 +2177,10 @@ public class GTPlayer : MonoBehaviour
 
 	public void ForceHoverDisallowed()
 	{
-		if (inHoverAreas.Count != 0 || inHoverDisablers.Count != 0)
+		if (inHoverboardAllowedZone || inCustomMapHoverAreas.Count != 0 || inHoverDisablers.Count != 0)
 		{
-			inHoverAreas.Clear();
+			inHoverboardAllowedZone = false;
+			inCustomMapHoverAreas.Clear();
 			inHoverDisablers.Clear();
 			RefreshHoverAllowed();
 		}
@@ -2145,10 +2188,10 @@ public class GTPlayer : MonoBehaviour
 
 	private void RefreshHoverAllowed()
 	{
-		bool flag = inHoverAreas.Count > 0 && inHoverDisablers.Count == 0;
+		bool flag = (inHoverboardAllowedZone || inCustomMapHoverAreas.Count > 0) && inHoverDisablers.Count == 0;
 		if (flag != isHoverAllowed)
 		{
-			Debug.Log($"HoverAllowed {flag} because {inHoverAreas.Count} > 0 && {inHoverDisablers.Count} == 0");
+			Debug.Log($"HoverAllowed {flag} because (zone {inHoverboardAllowedZone} || {inCustomMapHoverAreas.Count} custom areas) && {inHoverDisablers.Count} disablers");
 			isHoverAllowed = flag;
 			if (!flag && enableHoverMode)
 			{
@@ -2179,6 +2222,7 @@ public class GTPlayer : MonoBehaviour
 			bodyCollider.enabled = true;
 			hasHoverPoint = false;
 			didHoverLastFrame = false;
+			currentGrindRail = null;
 			for (int i = 0; i < hoverboardCasts.Length; i++)
 			{
 				hoverboardCasts[i].didHit = false;
@@ -2223,6 +2267,40 @@ public class GTPlayer : MonoBehaviour
 	private Vector3 PositionWithOffset(Transform transformToModify, Vector3 offsetVector)
 	{
 		return transformToModify.position + transformToModify.rotation * offsetVector * scale;
+	}
+
+	private Vector3 CameraRelativePositionWithOffset(Transform transformToModify, Vector3 offsetVector)
+	{
+		Transform transform = headCollider.transform;
+		Transform parent = transform.parent;
+		if (parent == null || transformToModify.parent != parent)
+		{
+			return PositionWithOffset(transformToModify, offsetVector);
+		}
+		Vector3 vector = parent.TransformVector(transformToModify.localPosition - transform.localPosition);
+		return transform.position + (vector + transformToModify.rotation * offsetVector * scale);
+	}
+
+	private double MeasureHandPrecisionError(in HandState hand)
+	{
+		Transform transform = headCollider.transform;
+		Transform parent = transform.parent;
+		Transform controllerTransform = hand.controllerTransform;
+		if (inOverlay || hand.isColliding || Time.time < hand.tempFreezeUntilTimestamp || parent == null || controllerTransform.parent != parent)
+		{
+			return -1.0;
+		}
+		Vector3 v = parent.TransformVector(controllerTransform.localPosition - transform.localPosition) + controllerTransform.rotation * hand.handOffset * scale;
+		if (!v.IsShorterThan(maxArmLength * scale))
+		{
+			return -1.0;
+		}
+		Vector3 position = hand.handFollower.position;
+		Vector3 position2 = transform.position;
+		double num = (double)position.x - (double)position2.x - (double)v.x;
+		double num2 = (double)position.y - (double)position2.y - (double)v.y;
+		double num3 = (double)position.z - (double)position2.z - (double)v.z;
+		return Math.Sqrt(num * num + num2 * num2 + num3 * num3);
 	}
 
 	public void ScaleAwayFromPoint(float oldScale, float newScale, Vector3 scaleCenter)
@@ -2290,7 +2368,10 @@ public class GTPlayer : MonoBehaviour
 			{
 				mainCamera = Camera.main;
 			}
-			mainCamera.nearClipPlane = ((scale > 0.5f) ? 0.01f : 0.002f);
+			if (mainCamera != null)
+			{
+				mainCamera.nearClipPlane = ((scale > 0.5f) ? 0.01f : 0.002f);
+			}
 		}
 		lastScale = scale;
 		debugLastRightHandPosition = rightHand.lastPosition;
@@ -2420,11 +2501,12 @@ public class GTPlayer : MonoBehaviour
 			TakeMyHand_ProcessMovement();
 		}
 		HandleTentacleMovement();
+		float num3 = 0.09f * scale * Time.deltaTime;
 		Vector3? vector3 = lastButtDebouncePosition;
 		if (vector3.HasValue)
 		{
 			Vector3 valueOrDefault2 = vector3.GetValueOrDefault();
-			if (IsGroundedButt && lastMovingSurfaceContact == MovingSurfaceContactPoint.NONE && Vector3.Distance(valueOrDefault2, base.transform.position) < 0.001f * base.transform.lossyScale.x)
+			if (IsGroundedButt && lastMovingSurfaceContact == MovingSurfaceContactPoint.NONE && (valueOrDefault2 - base.transform.position).sqrMagnitude < num3 * num3)
 			{
 				base.transform.position = valueOrDefault2;
 			}
@@ -2499,21 +2581,21 @@ public class GTPlayer : MonoBehaviour
 		else if (anyHandIsSliding)
 		{
 			slideAverageNormal = Vector3.zero;
-			int num3 = 0;
+			int num4 = 0;
 			averageSlipPercentage = 0f;
 			bool flag3 = false;
 			if (leftHand.isSliding)
 			{
 				slideAverageNormal += leftHand.slideNormal.normalized;
 				averageSlipPercentage += leftHand.slipPercentage;
-				num3++;
+				num4++;
 			}
 			if (rightHand.isSliding)
 			{
 				flag3 = true;
 				slideAverageNormal += rightHand.slideNormal.normalized;
 				averageSlipPercentage += rightHand.slipPercentage;
-				num3++;
+				num4++;
 			}
 			for (int k = 0; k < stiltStates.Length; k++)
 			{
@@ -2525,12 +2607,12 @@ public class GTPlayer : MonoBehaviour
 					}
 					slideAverageNormal += stiltStates[k].slideNormal.normalized;
 					averageSlipPercentage += stiltStates[k].slipPercentage;
-					num3++;
+					num4++;
 				}
 			}
 			slideAverageNormal = slideAverageNormal.normalized;
-			averageSlipPercentage /= num3;
-			if (num3 == 1)
+			averageSlipPercentage /= num4;
+			if (num4 == 1)
 			{
 				surfaceDirection = (flag3 ? Vector3.ProjectOnPlane(rightHand.handFollower.forward, rightHand.slideNormal) : Vector3.ProjectOnPlane(leftHand.handFollower.forward, leftHand.slideNormal));
 				if (Vector3.Dot(slideVelocity, surfaceDirection) > 0f)
@@ -2582,9 +2664,9 @@ public class GTPlayer : MonoBehaviour
 					}
 					anyHandIsSliding = false;
 					didAJump = true;
-					float num4 = ApplyNativeScaleAdjustment(Mathf.Min(maxJumpSpeed * ExtraVelMaxMultiplier(), jumpMultiplier * ExtraVelMultiplier() * Vector3.Project(averagedVelocity, slideAverageNormal).magnitude));
-					playerRigidBody.linearVelocity = num4 * siJumpMultiplier * slideAverageNormal.normalized + Vector3.ProjectOnPlane(slideVelocity, slideAverageNormal);
-					if (num4 > slideVelocityLimit * scale * exitMovingSurfaceThreshold)
+					float num5 = ApplyNativeScaleAdjustment(Mathf.Min(maxJumpSpeed * ExtraVelMaxMultiplier(), jumpMultiplier * ExtraVelMultiplier() * Vector3.Project(averagedVelocity, slideAverageNormal).magnitude));
+					playerRigidBody.linearVelocity = num5 * siJumpMultiplier * slideAverageNormal.normalized + Vector3.ProjectOnPlane(slideVelocity, slideAverageNormal);
+					if (num5 > slideVelocityLimit * scale * exitMovingSurfaceThreshold)
 					{
 						exitMovingSurface = true;
 					}
@@ -2592,22 +2674,22 @@ public class GTPlayer : MonoBehaviour
 			}
 			else if (averagedVelocity.magnitude > velocityLimit * scale)
 			{
-				float num5 = ((InWater && CurrentWaterVolume != null) ? liquidPropertiesList[(int)CurrentWaterVolume.LiquidType].surfaceJumpFactor : 1f);
-				float num6 = ApplyNativeScaleAdjustment(enableHoverMode ? Mathf.Min(hoverMaxPaddleSpeed, averagedVelocity.magnitude) : Mathf.Min(maxJumpSpeed * ExtraVelMaxMultiplier(), jumpMultiplier * ExtraVelMultiplier() * num5 * averagedVelocity.magnitude));
-				Vector3 vector5 = num6 * siJumpMultiplier * averagedVelocity.normalized;
+				float num6 = ((InWater && CurrentWaterVolume != null) ? liquidPropertiesList[(int)CurrentWaterVolume.LiquidType].surfaceJumpFactor : 1f);
+				float num7 = ApplyNativeScaleAdjustment(enableHoverMode ? Mathf.Min(hoverMaxPaddleSpeed, averagedVelocity.magnitude) : Mathf.Min(maxJumpSpeed * ExtraVelMaxMultiplier(), jumpMultiplier * ExtraVelMultiplier() * num6 * averagedVelocity.magnitude));
+				Vector3 vector5 = num7 * siJumpMultiplier * averagedVelocity.normalized;
 				didAJump = true;
 				playerRigidBody.linearVelocity = vector5;
 				if (InWater)
 				{
 					swimmingVelocity += vector5 * GetSwimmingParams(CurrentWaterVolume).underwaterJumpsAsSwimVelocityFactor;
 				}
-				if (num6 > velocityLimit * scale * exitMovingSurfaceThreshold)
+				if (num7 > velocityLimit * scale * exitMovingSurfaceThreshold)
 				{
 					exitMovingSurface = true;
 				}
 			}
 		}
-		stuckHandsCheckLateUpdate(ref leftHand.finalPositionThisFrame, ref rightHand.finalPositionThisFrame);
+		StuckHandsCheckLateUpdate(ref leftHand.finalPositionThisFrame, ref rightHand.finalPositionThisFrame);
 		if (lastPlatformTouched != null && currentPlatform == null)
 		{
 			if (!playerRigidBody.isKinematic)
@@ -2670,15 +2752,15 @@ public class GTPlayer : MonoBehaviour
 			GorillaTagger.Instance.StartVibration(forLeftController: false, GorillaTagger.Instance.tapHapticStrength, GorillaTagger.Instance.tapHapticDuration);
 		}
 		zero2 = Vector3.ClampMagnitude(zero2, Mathf.Max(swimmingParams.waterSurfaceJumpMaxSpeed, swimmingParams2.waterSurfaceJumpMaxSpeed) * scale);
-		float num7 = Mathf.Max(a, leftHandNonDiveHapticsAmount);
-		if (num7 > 0.001f && time - lastWaterSurfaceJumpTimeLeft > GorillaTagger.Instance.tapHapticDuration)
+		float num8 = Mathf.Max(a, leftHandNonDiveHapticsAmount);
+		if (num8 > 0.001f && time - lastWaterSurfaceJumpTimeLeft > GorillaTagger.Instance.tapHapticDuration)
 		{
-			GorillaTagger.Instance.DoVibration(XRNode.LeftHand, num7, calcDeltaTime);
+			GorillaTagger.Instance.DoVibration(XRNode.LeftHand, num8, calcDeltaTime);
 		}
-		float num8 = Mathf.Max(a2, rightHandNonDiveHapticsAmount);
-		if (num8 > 0.001f && time - lastWaterSurfaceJumpTimeRight > GorillaTagger.Instance.tapHapticDuration)
+		float num9 = Mathf.Max(a2, rightHandNonDiveHapticsAmount);
+		if (num9 > 0.001f && time - lastWaterSurfaceJumpTimeRight > GorillaTagger.Instance.tapHapticDuration)
 		{
-			GorillaTagger.Instance.DoVibration(XRNode.RightHand, num8, calcDeltaTime);
+			GorillaTagger.Instance.DoVibration(XRNode.RightHand, num9, calcDeltaTime);
 		}
 		if (!disableMovement)
 		{
@@ -2845,22 +2927,22 @@ public class GTPlayer : MonoBehaviour
 			lastMovingSurfaceRot = Quaternion.identity;
 		}
 		Vector3 position2 = lastMovingSurfaceTouchWorld;
-		int num9 = -1;
+		int num10 = -1;
 		bool flag5 = false;
 		switch (movingSurfaceContactPoint)
 		{
 		case MovingSurfaceContactPoint.RIGHT:
-			num9 = movingSurfaceId;
+			num10 = movingSurfaceId;
 			flag5 = isMonkeBlock;
 			position2 = GorillaTagger.Instance.offlineVRRig.rightHandTransform.position;
 			break;
 		case MovingSurfaceContactPoint.LEFT:
-			num9 = movingSurfaceId2;
+			num10 = movingSurfaceId2;
 			flag5 = isMonkeBlock2;
 			position2 = GorillaTagger.Instance.offlineVRRig.leftHandTransform.position;
 			break;
 		case MovingSurfaceContactPoint.BODY:
-			num9 = movingSurfaceId3;
+			num10 = movingSurfaceId3;
 			flag5 = isMonkeBlock3;
 			position2 = GorillaTagger.Instance.offlineVRRig.bodyTransform.position;
 			break;
@@ -2869,16 +2951,16 @@ public class GTPlayer : MonoBehaviour
 			{
 				exitMovingSurface = true;
 			}
-			num9 = -1;
+			num10 = -1;
 			break;
 		}
 		if (!flag5)
 		{
 			lastMonkeBlock = null;
 		}
-		if (num9 != lastMovingSurfaceID || lastMovingSurfaceContact != movingSurfaceContactPoint || flag5 != wasMovingSurfaceMonkeBlock)
+		if (num10 != lastMovingSurfaceID || lastMovingSurfaceContact != movingSurfaceContactPoint || flag5 != wasMovingSurfaceMonkeBlock)
 		{
-			if (num9 == -1)
+			if (num10 == -1)
 			{
 				if (Time.frameCount - lastAttachedToMovingSurfaceFrame > 3)
 				{
@@ -2890,8 +2972,8 @@ public class GTPlayer : MonoBehaviour
 			{
 				if (lastMonkeBlock != null)
 				{
-					VRRig.AttachLocalPlayerToMovingSurface(num9, movingSurfaceContactPoint == MovingSurfaceContactPoint.LEFT, movingSurfaceContactPoint == MovingSurfaceContactPoint.BODY, lastMonkeBlock.transform.InverseTransformPoint(position2), flag5);
-					lastMovingSurfaceID = num9;
+					VRRig.AttachLocalPlayerToMovingSurface(num10, movingSurfaceContactPoint == MovingSurfaceContactPoint.LEFT, movingSurfaceContactPoint == MovingSurfaceContactPoint.BODY, lastMonkeBlock.transform.InverseTransformPoint(position2), flag5);
+					lastMovingSurfaceID = num10;
 				}
 				else
 				{
@@ -2901,10 +2983,10 @@ public class GTPlayer : MonoBehaviour
 			}
 			else if (MovingSurfaceManager.instance != null)
 			{
-				if (MovingSurfaceManager.instance.TryGetMovingSurface(num9, out var result))
+				if (MovingSurfaceManager.instance.TryGetMovingSurface(num10, out var result))
 				{
-					VRRig.AttachLocalPlayerToMovingSurface(num9, movingSurfaceContactPoint == MovingSurfaceContactPoint.LEFT, movingSurfaceContactPoint == MovingSurfaceContactPoint.BODY, result.transform.InverseTransformPoint(position2), flag5);
-					lastMovingSurfaceID = num9;
+					VRRig.AttachLocalPlayerToMovingSurface(num10, movingSurfaceContactPoint == MovingSurfaceContactPoint.LEFT, movingSurfaceContactPoint == MovingSurfaceContactPoint.BODY, result.transform.InverseTransformPoint(position2), flag5);
+					lastMovingSurfaceID = num10;
 				}
 				else
 				{
@@ -2972,6 +3054,44 @@ public class GTPlayer : MonoBehaviour
 		return 0f;
 	}
 
+	private void CachePhysicsToleranceDefaults()
+	{
+		playerRigidbodySleepThresholdDefault = playerRigidBody.sleepThreshold;
+		List<Collider> list = new List<Collider>();
+		Collider[] componentsInChildren = playerRigidBody.GetComponentsInChildren<Collider>(includeInactive: true);
+		foreach (Collider collider in componentsInChildren)
+		{
+			if (collider.GetComponentInParent<Rigidbody>(includeInactive: true) == playerRigidBody)
+			{
+				list.Add(collider);
+			}
+		}
+		playerPhysicsColliders = list.ToArray();
+		playerPhysicsColliderContactOffsetDefaults = new float[playerPhysicsColliders.Length];
+		for (int j = 0; j < playerPhysicsColliders.Length; j++)
+		{
+			playerPhysicsColliderContactOffsetDefaults[j] = playerPhysicsColliders[j].contactOffset;
+		}
+	}
+
+	private void UpdatePhysicsTolerancesForScale()
+	{
+		float num = Mathf.Min(scale, 1f);
+		if (playerPhysicsColliders == null || Mathf.Abs(appliedPhysicsToleranceScale - num) < 0.001f)
+		{
+			return;
+		}
+		appliedPhysicsToleranceScale = num;
+		playerRigidBody.sleepThreshold = playerRigidbodySleepThresholdDefault * num * num;
+		for (int i = 0; i < playerPhysicsColliders.Length; i++)
+		{
+			if (playerPhysicsColliders[i] != null)
+			{
+				playerPhysicsColliders[i].contactOffset = playerPhysicsColliderContactOffsetDefaults[i] * num;
+			}
+		}
+	}
+
 	private void StuckHandsCheckFixedUpdate()
 	{
 		Vector3 currentHandPosition = leftHand.GetCurrentHandPosition();
@@ -2980,7 +3100,7 @@ public class GTPlayer : MonoBehaviour
 		stuckRight = !controllerState.RightValid || (rightHand.isColliding && (currentHandPosition2 - rightHand.GetLastPosition()).magnitude > unStickDistance * scale && !Physics.Raycast(headCollider.transform.position, (currentHandPosition2 - headCollider.transform.position).normalized, (currentHandPosition2 - headCollider.transform.position).magnitude, locomotionEnabledLayers.value));
 	}
 
-	private void stuckHandsCheckLateUpdate(ref Vector3 finalLeftHandPosition, ref Vector3 finalRightHandPosition)
+	private void StuckHandsCheckLateUpdate(ref Vector3 finalLeftHandPosition, ref Vector3 finalRightHandPosition)
 	{
 		if (stuckLeft)
 		{
@@ -2994,7 +3114,7 @@ public class GTPlayer : MonoBehaviour
 		}
 	}
 
-	private void handleClimbing(float deltaTime)
+	private void HandleClimbing(float deltaTime)
 	{
 		if (isClimbing && (inOverlay || climbHelper == null || currentClimbable == null || !currentClimbable.isActiveAndEnabled))
 		{
@@ -4263,7 +4383,6 @@ public class GTPlayer : MonoBehaviour
 
 	internal void RemoveHandHold(GorillaGrabber grabber, bool forLeftHand)
 	{
-		_ = activeHandHold.objectHeld == grabber;
 		if (activeHandHold.grabber == grabber)
 		{
 			activeHandHold = secondaryHandHold;

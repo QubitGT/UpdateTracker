@@ -132,8 +132,6 @@ public class MonkeGravityController : MonoBehaviour, ICallbackUnique, ICallBack
 		if (!m_targetRigidBody.IsNull())
 		{
 			m_register = true;
-			m_globalGravityIntent = m_targetRigidBody.useGravity;
-			m_targetRigidBody.useGravity = false;
 		}
 	}
 
@@ -141,6 +139,8 @@ public class MonkeGravityController : MonoBehaviour, ICallbackUnique, ICallBack
 	{
 		if (m_register)
 		{
+			m_globalGravityIntent = m_targetRigidBody.useGravity;
+			m_targetRigidBody.useGravity = false;
 			MonkeGravityManager.AddMonkeGravityController(this);
 			if (m_alwaysInZone != null)
 			{
@@ -250,6 +250,34 @@ public class MonkeGravityController : MonoBehaviour, ICallbackUnique, ICallBack
 		{
 			ApplyGravityUpRotation(in tuple.Item2, tuple.Item3 * Time.fixedDeltaTime);
 		}
+	}
+
+	public Vector3 GetGravityAcceleration()
+	{
+		Vector3 vector;
+		if (m_gravityZones.Count > 0)
+		{
+			Vector3 position = GetWorldPoint();
+			vector = ProcessGravityZones(in position).Item1;
+		}
+		else
+		{
+			GravityInfo defaultGravityInfo = MonkeGravityManager.DefaultGravityInfo;
+			vector = defaultGravityInfo.gravityUpDirection * defaultGravityInfo.gravityStrength;
+		}
+		vector *= GravityMultiplier;
+		if (!m_overrideForceMode)
+		{
+			return vector;
+		}
+		float num = (m_targetRigidBody ? Mathf.Max(m_targetRigidBody.mass, 0.0001f) : 1f);
+		return m_forceModeOverride switch
+		{
+			ForceMode.Force => vector / num, 
+			ForceMode.Impulse => vector / (num * Time.fixedDeltaTime), 
+			ForceMode.VelocityChange => vector / Time.fixedDeltaTime, 
+			_ => vector, 
+		};
 	}
 
 	public virtual Vector3 GetWorldPoint()

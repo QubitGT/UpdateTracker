@@ -135,7 +135,7 @@ internal ref struct ValueStringBuilder
 			}
 			int length2 = _pos - index;
 			_chars.Slice(index, length2).CopyTo(_chars.Slice(index + length));
-			s.AsSpan().CopyTo(_chars.Slice(index));
+			MemoryExtensions.AsSpan(s).CopyTo(_chars.Slice(index));
 			_pos += length;
 		}
 	}
@@ -180,7 +180,7 @@ internal ref struct ValueStringBuilder
 		{
 			Grow(s.Length);
 		}
-		s.AsSpan().CopyTo(_chars.Slice(pos));
+		MemoryExtensions.AsSpan(s).CopyTo(_chars.Slice(pos));
 		_pos += s.Length;
 	}
 

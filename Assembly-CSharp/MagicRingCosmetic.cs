@@ -32,6 +32,8 @@ public class MagicRingCosmetic : MonoBehaviour
 
 	private MaterialPropertyBlock materialPropertyBlock;
 
+	private float appliedEmissiveAmount = float.NaN;
+
 	protected void Awake()
 	{
 		materialPropertyBlock = new MaterialPropertyBlock();
@@ -52,9 +54,13 @@ public class MagicRingCosmetic : MonoBehaviour
 			fadeState = FadeState.FadedOut;
 		}
 		emissiveAmount = Mathf.MoveTowards(emissiveAmount, (fadeState == FadeState.FadedIn) ? 1f : 0f, Time.deltaTime / fadeTime);
-		ringRenderer.GetPropertyBlock(materialPropertyBlock);
-		materialPropertyBlock.SetColor(ShaderProps._EmissionColor, new Color(defaultEmissiveColor.r, defaultEmissiveColor.g, defaultEmissiveColor.b, emissiveAmount));
-		materialPropertyBlock.SetFloat(ShaderProps._EmissiveAmount, emissiveAmount);
-		ringRenderer.SetPropertyBlock(materialPropertyBlock);
+		if (emissiveAmount != appliedEmissiveAmount)
+		{
+			appliedEmissiveAmount = emissiveAmount;
+			ringRenderer.GetPropertyBlock(materialPropertyBlock);
+			materialPropertyBlock.SetColor(ShaderProps._EmissionColor, new Color(defaultEmissiveColor.r, defaultEmissiveColor.g, defaultEmissiveColor.b, emissiveAmount));
+			materialPropertyBlock.SetFloat(ShaderProps._EmissiveAmount, emissiveAmount);
+			ringRenderer.SetPropertyBlock(materialPropertyBlock);
+		}
 	}
 }

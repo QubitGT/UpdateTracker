@@ -1,3 +1,4 @@
+using GorillaExtensions;
 using UnityEngine;
 
 [AddComponentMenu("GorillaTag/Environment/Second Look Skeleton Enabler")]
@@ -18,6 +19,16 @@ public class SecondLookSkeletonEnabler : Tappable
 		isTapped = false;
 		skele = Object.FindFirstObjectByType<SecondLookSkeleton>();
 		skele.spookyText = spookyText;
+	}
+
+	protected override void OnDisable()
+	{
+		base.OnDisable();
+		isTapped = false;
+		if (skele.IsNotNull())
+		{
+			skele.tapped = false;
+		}
 	}
 
 	public override void OnTapLocal(float tapStrength, float tapTime, PhotonMessageInfoWrapped info)

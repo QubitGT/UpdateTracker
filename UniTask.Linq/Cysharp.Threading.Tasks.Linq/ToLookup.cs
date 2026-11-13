@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Cysharp.Threading.Tasks.Internal;
 
@@ -203,7 +204,9 @@ internal static class ToLookup
 		ArrayPool<TSource> pool = ArrayPool<TSource>.Shared;
 		TSource[] array = pool.Rent(16);
 		IUniTaskAsyncEnumerator<TSource> e = source.GetAsyncEnumerator(cancellationToken);
-		ILookup<TKey, TSource> result;
+		object obj = null;
+		int num = 0;
+		ILookup<TKey, TSource> result = default(ILookup<TKey, TSource>);
 		try
 		{
 			int i = 0;
@@ -213,16 +216,28 @@ internal static class ToLookup
 				array[i++] = e.Current;
 			}
 			result = ((i != 0) ? Lookup<TKey, TSource>.Create(new ArraySegment<TSource>(array, 0, i), keySelector, comparer) : Lookup<TKey, TSource>.CreateEmpty());
+			num = 1;
 		}
-		finally
+		catch (object obj2)
 		{
-			pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
-			if (e != null)
-			{
-				await e.DisposeAsync();
-			}
+			obj = obj2;
 		}
-		return result;
+		pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		ILookup<TKey, TSource> result2 = default(ILookup<TKey, TSource>);
+		return result2;
 	}
 
 	internal static async UniTask<ILookup<TKey, TElement>> ToLookupAsync<TSource, TKey, TElement>(IUniTaskAsyncEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey> comparer, CancellationToken cancellationToken)
@@ -230,7 +245,9 @@ internal static class ToLookup
 		ArrayPool<TSource> pool = ArrayPool<TSource>.Shared;
 		TSource[] array = pool.Rent(16);
 		IUniTaskAsyncEnumerator<TSource> e = null;
-		ILookup<TKey, TElement> result;
+		object obj = null;
+		int num = 0;
+		ILookup<TKey, TElement> result = default(ILookup<TKey, TElement>);
 		try
 		{
 			e = source.GetAsyncEnumerator(cancellationToken);
@@ -241,16 +258,28 @@ internal static class ToLookup
 				array[i++] = e.Current;
 			}
 			result = ((i != 0) ? Lookup<TKey, TElement>.Create(new ArraySegment<TSource>(array, 0, i), keySelector, elementSelector, comparer) : Lookup<TKey, TElement>.CreateEmpty());
+			num = 1;
 		}
-		finally
+		catch (object obj2)
 		{
-			pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
-			if (e != null)
-			{
-				await e.DisposeAsync();
-			}
+			obj = obj2;
 		}
-		return result;
+		pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		ILookup<TKey, TElement> result2 = default(ILookup<TKey, TElement>);
+		return result2;
 	}
 
 	internal static async UniTask<ILookup<TKey, TSource>> ToLookupAwaitAsync<TSource, TKey>(IUniTaskAsyncEnumerable<TSource> source, Func<TSource, UniTask<TKey>> keySelector, IEqualityComparer<TKey> comparer, CancellationToken cancellationToken)
@@ -258,7 +287,9 @@ internal static class ToLookup
 		ArrayPool<TSource> pool = ArrayPool<TSource>.Shared;
 		TSource[] array = pool.Rent(16);
 		IUniTaskAsyncEnumerator<TSource> e = null;
-		ILookup<TKey, TSource> result;
+		object obj = null;
+		int num = 0;
+		ILookup<TKey, TSource> result = default(ILookup<TKey, TSource>);
 		try
 		{
 			e = source.GetAsyncEnumerator(cancellationToken);
@@ -269,16 +300,28 @@ internal static class ToLookup
 				array[i++] = e.Current;
 			}
 			result = ((i != 0) ? (await Lookup<TKey, TSource>.CreateAsync(new ArraySegment<TSource>(array, 0, i), keySelector, comparer)) : Lookup<TKey, TSource>.CreateEmpty());
+			num = 1;
 		}
-		finally
+		catch (object obj2)
 		{
-			pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
-			if (e != null)
-			{
-				await e.DisposeAsync();
-			}
+			obj = obj2;
 		}
-		return result;
+		pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		ILookup<TKey, TSource> result2 = default(ILookup<TKey, TSource>);
+		return result2;
 	}
 
 	internal static async UniTask<ILookup<TKey, TElement>> ToLookupAwaitAsync<TSource, TKey, TElement>(IUniTaskAsyncEnumerable<TSource> source, Func<TSource, UniTask<TKey>> keySelector, Func<TSource, UniTask<TElement>> elementSelector, IEqualityComparer<TKey> comparer, CancellationToken cancellationToken)
@@ -286,7 +329,9 @@ internal static class ToLookup
 		ArrayPool<TSource> pool = ArrayPool<TSource>.Shared;
 		TSource[] array = pool.Rent(16);
 		IUniTaskAsyncEnumerator<TSource> e = null;
-		ILookup<TKey, TElement> result;
+		object obj = null;
+		int num = 0;
+		ILookup<TKey, TElement> result = default(ILookup<TKey, TElement>);
 		try
 		{
 			e = source.GetAsyncEnumerator(cancellationToken);
@@ -297,16 +342,28 @@ internal static class ToLookup
 				array[i++] = e.Current;
 			}
 			result = ((i != 0) ? (await Lookup<TKey, TElement>.CreateAsync(new ArraySegment<TSource>(array, 0, i), keySelector, elementSelector, comparer)) : Lookup<TKey, TElement>.CreateEmpty());
+			num = 1;
 		}
-		finally
+		catch (object obj2)
 		{
-			pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
-			if (e != null)
-			{
-				await e.DisposeAsync();
-			}
+			obj = obj2;
 		}
-		return result;
+		pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		ILookup<TKey, TElement> result2 = default(ILookup<TKey, TElement>);
+		return result2;
 	}
 
 	internal static async UniTask<ILookup<TKey, TSource>> ToLookupAwaitWithCancellationAsync<TSource, TKey>(IUniTaskAsyncEnumerable<TSource> source, Func<TSource, CancellationToken, UniTask<TKey>> keySelector, IEqualityComparer<TKey> comparer, CancellationToken cancellationToken)
@@ -314,7 +371,9 @@ internal static class ToLookup
 		ArrayPool<TSource> pool = ArrayPool<TSource>.Shared;
 		TSource[] array = pool.Rent(16);
 		IUniTaskAsyncEnumerator<TSource> e = null;
-		ILookup<TKey, TSource> result;
+		object obj = null;
+		int num = 0;
+		ILookup<TKey, TSource> result = default(ILookup<TKey, TSource>);
 		try
 		{
 			e = source.GetAsyncEnumerator(cancellationToken);
@@ -325,16 +384,28 @@ internal static class ToLookup
 				array[i++] = e.Current;
 			}
 			result = ((i != 0) ? (await Lookup<TKey, TSource>.CreateAsync(new ArraySegment<TSource>(array, 0, i), keySelector, comparer, cancellationToken)) : Lookup<TKey, TSource>.CreateEmpty());
+			num = 1;
 		}
-		finally
+		catch (object obj2)
 		{
-			pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
-			if (e != null)
-			{
-				await e.DisposeAsync();
-			}
+			obj = obj2;
 		}
-		return result;
+		pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		ILookup<TKey, TSource> result2 = default(ILookup<TKey, TSource>);
+		return result2;
 	}
 
 	internal static async UniTask<ILookup<TKey, TElement>> ToLookupAwaitWithCancellationAsync<TSource, TKey, TElement>(IUniTaskAsyncEnumerable<TSource> source, Func<TSource, CancellationToken, UniTask<TKey>> keySelector, Func<TSource, CancellationToken, UniTask<TElement>> elementSelector, IEqualityComparer<TKey> comparer, CancellationToken cancellationToken)
@@ -342,7 +413,9 @@ internal static class ToLookup
 		ArrayPool<TSource> pool = ArrayPool<TSource>.Shared;
 		TSource[] array = pool.Rent(16);
 		IUniTaskAsyncEnumerator<TSource> e = null;
-		ILookup<TKey, TElement> result;
+		object obj = null;
+		int num = 0;
+		ILookup<TKey, TElement> result = default(ILookup<TKey, TElement>);
 		try
 		{
 			e = source.GetAsyncEnumerator(cancellationToken);
@@ -353,15 +426,27 @@ internal static class ToLookup
 				array[i++] = e.Current;
 			}
 			result = ((i != 0) ? (await Lookup<TKey, TElement>.CreateAsync(new ArraySegment<TSource>(array, 0, i), keySelector, elementSelector, comparer, cancellationToken)) : Lookup<TKey, TElement>.CreateEmpty());
+			num = 1;
 		}
-		finally
+		catch (object obj2)
 		{
-			pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
-			if (e != null)
-			{
-				await e.DisposeAsync();
-			}
+			obj = obj2;
 		}
-		return result;
+		pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
+		}
+		if (num == 1)
+		{
+			return result;
+		}
+		ILookup<TKey, TElement> result2 = default(ILookup<TKey, TElement>);
+		return result2;
 	}
 }

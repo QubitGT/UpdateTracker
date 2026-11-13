@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Cysharp.Threading.Tasks.Internal;
 
@@ -12,6 +13,7 @@ internal static class ToArray
 		TSource[] array = pool.Rent(16);
 		TSource[] result = null;
 		IUniTaskAsyncEnumerator<TSource> e = null;
+		object obj = null;
 		try
 		{
 			e = source.GetAsyncEnumerator(cancellationToken);
@@ -31,13 +33,19 @@ internal static class ToArray
 				Array.Copy(array, result, i);
 			}
 		}
-		finally
+		catch (object obj2)
 		{
-			pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
-			if (e != null)
-			{
-				await e.DisposeAsync();
-			}
+			obj = obj2;
+		}
+		pool.Return(array, !RuntimeHelpersAbstraction.IsWellKnownNoReferenceContainsType<TSource>());
+		if (e != null)
+		{
+			await e.DisposeAsync();
+		}
+		object obj3 = obj;
+		if (obj3 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 		return result;
 	}

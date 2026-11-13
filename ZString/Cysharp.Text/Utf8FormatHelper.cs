@@ -49,7 +49,7 @@ internal static class Utf8FormatHelper
 				sb.GetSpan(num).Fill(32);
 				sb.Advance(num);
 			}
-			ZString.AppendChars(ref sb, text.AsSpan());
+			ZString.AppendChars(ref sb, MemoryExtensions.AsSpan(text));
 			return;
 		}
 		Span<byte> destination = stackalloc byte[typeof(T).IsValueType ? (Unsafe.SizeOf<T>() * 8) : 1024];

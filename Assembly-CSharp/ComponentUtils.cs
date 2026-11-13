@@ -76,6 +76,7 @@ public static class ComponentUtils
 		{
 			return true;
 		}
+		Debug.LogError(caller + ": " + fieldTypeName + " \"" + fieldName + "\" is not assigned on \"" + c.name + "\". Disabling.", c);
 		c.enabled = false;
 		return false;
 	}

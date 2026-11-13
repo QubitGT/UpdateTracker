@@ -1,32 +1,32 @@
 {
   "generator": "ManifestHound",
-  "eventId": "90ddae3a-962a-4b9c-a2ad-4f90069868b5",
+  "eventId": "d2abe031-082c-45d4-8289-1cf449442b21",
   "appId": 1533390,
   "gameName": "Gorilla Tag",
-  "buildId": "26421070",
-  "previousBuildId": "26340126",
+  "buildId": "26633968",
+  "previousBuildId": "26421070",
   "manifestIds": {
-    "1533391": "2715707000532992451",
-    "1533392": "7748491256076022645"
+    "1533391": "1609241614497418210",
+    "1533392": "1591421734004226953"
   },
   "depots": [
     {
       "depotId": "1533391",
       "change": "changed",
-      "from": "5893006940871596948",
-      "to": "2715707000532992451",
+      "from": "2715707000532992451",
+      "to": "1609241614497418210",
       "tracked": false
     },
     {
       "depotId": "1533392",
       "change": "changed",
-      "from": "5259283002951263163",
-      "to": "7748491256076022645",
+      "from": "7748491256076022645",
+      "to": "1591421734004226953",
       "tracked": false
     }
   ],
-  "updateTime": "2026-11-04T16:58:30.000Z",
-  "detectedAt": "2026-11-05T21:41:42.630Z",
+  "updateTime": "2026-11-13T18:00:50.000Z",
+  "detectedAt": "2026-11-13T22:13:34.568Z",
   "tools": {
     "git": "git version 2.39.5",
     "ilspycmd": "ilspycmd: 8.2.0.7535",
@@ -200,8 +200,8 @@
     "XNode",
     "ZString"
   ],
-  "filesChanged": 2,
-  "added": 0,
-  "modified": 2,
+  "filesChanged": 204,
+  "added": 14,
+  "modified": 190,
   "removed": 0
 }

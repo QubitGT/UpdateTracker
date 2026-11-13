@@ -228,7 +228,7 @@ public class OVRGLTFAccessor : IDisposable
 		float[] array = new float[_activeGltfAccessor.Count];
 		if (_activeGltfAccessor.ComponentType == OVRGLTFComponentType.FLOAT)
 		{
-			_binaryChunk.Read(MemoryMarshal.AsBytes(array.AsSpan()));
+			_binaryChunk.Read(MemoryMarshal.AsBytes(MemoryExtensions.AsSpan(array)));
 		}
 		else
 		{
@@ -255,7 +255,7 @@ public class OVRGLTFAccessor : IDisposable
 		Vector2[] array = new Vector2[_activeGltfAccessor.Count];
 		if (!_requireStrideSeek && _activeGltfAccessor.ComponentType == OVRGLTFComponentType.FLOAT)
 		{
-			_binaryChunk.Read(MemoryMarshal.AsBytes(array.AsSpan()));
+			_binaryChunk.Read(MemoryMarshal.AsBytes(MemoryExtensions.AsSpan(array)));
 		}
 		else
 		{
@@ -274,7 +274,7 @@ public class OVRGLTFAccessor : IDisposable
 		Vector3[] array = new Vector3[_activeGltfAccessor.Count];
 		if (!_requireStrideSeek && _activeGltfAccessor.ComponentType == OVRGLTFComponentType.FLOAT)
 		{
-			_binaryChunk.Read(MemoryMarshal.AsBytes(array.AsSpan()));
+			_binaryChunk.Read(MemoryMarshal.AsBytes(MemoryExtensions.AsSpan(array)));
 			for (int i = 0; i < array.Length; i++)
 			{
 				array[i].Scale(conversionScale);
@@ -299,7 +299,7 @@ public class OVRGLTFAccessor : IDisposable
 		Vector4[] array = new Vector4[_activeGltfAccessor.Count];
 		if (!_requireStrideSeek && _activeGltfAccessor.ComponentType == OVRGLTFComponentType.FLOAT)
 		{
-			_binaryChunk.Read(MemoryMarshal.AsBytes(array.AsSpan()));
+			_binaryChunk.Read(MemoryMarshal.AsBytes(MemoryExtensions.AsSpan(array)));
 			for (int i = 0; i < array.Length; i++)
 			{
 				array[i].Scale(conversionScale);
@@ -360,7 +360,7 @@ public class OVRGLTFAccessor : IDisposable
 		Color[] array = new Color[_activeGltfAccessor.Count];
 		if (!_requireStrideSeek && _activeGltfAccessor.ComponentType == OVRGLTFComponentType.FLOAT && _activeGltfAccessor.Type == OVRGLTFType.VEC4)
 		{
-			_binaryChunk.Read(MemoryMarshal.AsBytes(array.AsSpan()));
+			_binaryChunk.Read(MemoryMarshal.AsBytes(MemoryExtensions.AsSpan(array)));
 		}
 		else
 		{
@@ -447,7 +447,7 @@ public class OVRGLTFAccessor : IDisposable
 		Quaternion[] array = new Quaternion[_activeGltfAccessor.Count];
 		if (!_requireStrideSeek && _activeGltfAccessor.ComponentType == OVRGLTFComponentType.FLOAT)
 		{
-			_binaryChunk.Read(MemoryMarshal.AsBytes(array.AsSpan()));
+			_binaryChunk.Read(MemoryMarshal.AsBytes(MemoryExtensions.AsSpan(array)));
 			for (int i = 0; i < array.Length; i++)
 			{
 				array[i].x *= gltfToUnitySpaceRotation.x;
@@ -481,7 +481,7 @@ public class OVRGLTFAccessor : IDisposable
 		Matrix4x4[] array = new Matrix4x4[_activeGltfAccessor.Count];
 		if (!_requireStrideSeek && _activeGltfAccessor.ComponentType == OVRGLTFComponentType.FLOAT)
 		{
-			_binaryChunk.Read(MemoryMarshal.AsBytes(array.AsSpan()));
+			_binaryChunk.Read(MemoryMarshal.AsBytes(MemoryExtensions.AsSpan(array)));
 			for (int i = 0; i < _activeGltfAccessor.Count; i++)
 			{
 				array[i] = matrix4x * array[i] * matrix4x;

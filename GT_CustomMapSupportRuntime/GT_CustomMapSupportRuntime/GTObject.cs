@@ -15,5 +15,6 @@ public enum GTObject
 	Store_TryOnArea,
 	Store_Checkout,
 	Store_TryOnConsole,
-	GeodeATM
+	GeodeATM,
+	DonationBooth
 }

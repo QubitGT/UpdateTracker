@@ -522,20 +522,21 @@ public class GamePlayerLocal : MonoBehaviour, IDelayedExecListener
 		InputData inputData = this.inputData[handIndex];
 		Vector3 vector3 = inputData.GetMaxSpeed(0f, 0.05f) * inputData.GetAvgVel(0f, 0.05f).normalized;
 		vector3 = rotation * vector3;
-		vector3 *= transform.localScale.x;
+		vector3 *= transform.localScale.x * gameEntity.throwVelocity;
 		vector2 = rotation * quaternion3 * handRotOffset * vector2;
 		gamePlayer.GetGrabbedGameEntityId(handIndex);
 		GorillaVelocityTracker bodyVelocityTracker = GTPlayer.Instance.bodyVelocityTracker;
 		vector3 += bodyVelocityTracker.GetAverageVelocity(worldSpace: true, 0.05f);
+		vector3 = Vector3.ClampMagnitude(vector3, 39.99f);
 		gameEntityManager.RequestThrowEntity(grabbedGameEntityId, flag, GTPlayer.Instance.HeadCenterPosition, vector3, vector2);
-		goto IL_02d5;
+		goto IL_02ea;
 		IL_004c:
 		if (!grab)
 		{
 			goto IL_0051;
 		}
-		goto IL_02d5;
-		IL_02d5:
+		goto IL_02ea;
+		IL_02ea:
 		ClearTriggerInteractables(handIndex);
 	}
 

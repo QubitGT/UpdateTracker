@@ -84,6 +84,10 @@ public class CustomMapsTerminal : MonoBehaviour
 
 	private static Mod atriumMap;
 
+	private static GTMapLoadOrigin atriumMapOrigin;
+
+	private static GTMapLoadOrigin takenAtriumMapOrigin;
+
 	private static long localModDetailsID = -1L;
 
 	private static long cachedModDetailsID = -1L;
@@ -385,9 +389,11 @@ public class CustomMapsTerminal : MonoBehaviour
 		previousScreen = localCurrentScreen;
 		localCurrentScreen = ScreenType.ModDetails;
 		localModDetailsID = mod.Id;
+		takenAtriumMapOrigin = default(GTMapLoadOrigin);
 		if (!instance.isTentTerminal)
 		{
 			atriumMap = mod;
+			atriumMapOrigin = instance.GetPageLoadOrigin(previousScreen);
 		}
 		HideDevScreen();
 		instance.modListScreen.Hide();
@@ -405,6 +411,7 @@ public class CustomMapsTerminal : MonoBehaviour
 	public static void ReturnFromDetailsScreen()
 	{
 		HideDevScreen();
+		takenAtriumMapOrigin = default(GTMapLoadOrigin);
 		if (!instance.isTentTerminal)
 		{
 			atriumMap = null;
@@ -609,6 +616,15 @@ public class CustomMapsTerminal : MonoBehaviour
 		localDriverID = -2;
 		instance.terminalControlButton.UnlockTerminalControl();
 		ShowTerminalControlScreen();
+		CustomMapDevWatchMode.StopWatching();
+	}
+
+	private static void StopWatchIfControlLost(bool wasDriver)
+	{
+		if (wasDriver && !IsDriver)
+		{
+			CustomMapDevWatchMode.StopWatching();
+		}
 	}
 
 	public static void HandleTerminalControlStatusChangeRequest(bool lockedStatus, int playerID)
@@ -634,6 +650,7 @@ public class CustomMapsTerminal : MonoBehaviour
 	public static void SetTerminalControlStatus(bool isLocked, int driverID = -2, bool sendRPC = false)
 	{
 		GTDev.Log($"[CustomMapsTerminal::SetTerminalControlStatus] isLocked: {isLocked} | driverID: {driverID} | playerId {LocalPlayerID} | sendRPC: {sendRPC}");
+		bool isDriver = IsDriver;
 		if (isLocked)
 		{
 			localDriverID = driverID;
@@ -660,6 +677,7 @@ public class CustomMapsTerminal : MonoBehaviour
 			instance.terminalControlButton.UnlockTerminalControl();
 			ShowTerminalControlScreen();
 		}
+		StopWatchIfControlLost(isDriver);
 		if (sendRPC && !IsLocalOnly && NetworkSystem.Instance.IsMasterClient)
 		{
 			VirtualStumpSerializer.Instance.SetTerminalControlStatus(isLocked, localDriverID);
@@ -971,13 +989,76 @@ public class CustomMapsTerminal : MonoBehaviour
 	{
 		mapId = 0L;
 		Mod mod = atriumMap;
+		GTMapLoadOrigin gTMapLoadOrigin = atriumMapOrigin;
 		atriumMap = null;
+		atriumMapOrigin = default(GTMapLoadOrigin);
 		if (mod == null || mod.File == null || mod.File.State != ModFileState.Installed)
 		{
 			return false;
 		}
 		mapId = mod.Id;
-		return mapId > 0;
+		if (mapId <= 0)
+		{
+			return false;
+		}
+		takenAtriumMapOrigin = gTMapLoadOrigin;
+		takenAtriumMapOrigin.Terminal = GTMapTerminal.tent;
+		return true;
+	}
+
+	public GTMapLoadOrigin GetDetailsLoadOrigin()
+	{
+		if (isTentTerminal && takenAtriumMapOrigin.Page != 0)
+		{
+			ScreenType screenType = previousScreen;
+			if (screenType == ScreenType.Invalid || screenType == ScreenType.TerminalControlPrompt)
+			{
+				return takenAtriumMapOrigin;
+			}
+		}
+		return GetPageLoadOrigin(previousScreen);
+	}
+
+	private GTMapLoadOrigin GetPageLoadOrigin(ScreenType page)
+	{
+		GTMapLoadOrigin gTMapLoadOrigin = default(GTMapLoadOrigin);
+		gTMapLoadOrigin.Terminal = ((!isTentTerminal) ? GTMapTerminal.atrium : GTMapTerminal.tent);
+		GTMapLoadOrigin result = gTMapLoadOrigin;
+		switch (page)
+		{
+		case ScreenType.FeaturedMods:
+			result.Page = GTMapTerminalPage.front_page;
+			break;
+		case ScreenType.AvailableMods:
+		case ScreenType.InstalledMods:
+		case ScreenType.FavoriteMods:
+		case ScreenType.SubscribedMods:
+			switch (modListScreen.currentState)
+			{
+			case CustomMapsListScreen.ListScreenState.AvailableMods:
+				result.Page = (modListScreen.CommunityMapsOnly ? GTMapTerminalPage.community : GTMapTerminalPage.browse);
+				result.BrowseSort = modListScreen.BrowseSort;
+				result.BrowsePage = modListScreen.CurrentModPage + 1;
+				break;
+			case CustomMapsListScreen.ListScreenState.InstalledMods:
+				result.Page = GTMapTerminalPage.installed;
+				break;
+			case CustomMapsListScreen.ListScreenState.FavoriteMods:
+				result.Page = GTMapTerminalPage.favorites;
+				break;
+			case CustomMapsListScreen.ListScreenState.SubscribedMods:
+				result.Page = GTMapTerminalPage.subscribed;
+				break;
+			}
+			break;
+		case ScreenType.SearchMods:
+			result.Page = GTMapTerminalPage.search;
+			break;
+		case ScreenType.DevMaps:
+			result.Page = GTMapTerminalPage.dev;
+			break;
+		}
+		return result;
 	}
 
 	public static void RequestDriverNickNameRefresh()
@@ -1031,6 +1112,7 @@ public class CustomMapsTerminal : MonoBehaviour
 		else
 		{
 			localDriverID = LocalPlayerID;
+			CustomMapDevWatchMode.StopWatching();
 		}
 		cachedLocalPlayerID = -1;
 	}

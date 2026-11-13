@@ -106,17 +106,17 @@ public class TitleDataDateRefActivation : MonoBehaviour, IGorillaSliceableSimple
 		readyState = ReadyState.Initializing;
 		if (titleDataKey.IsNullOrEmpty())
 		{
-			onTD("1/1/3001");
+			OnTD("1/1/3001");
 			return;
 		}
 		while (PlayFabTitleDataCache.Instance == null)
 		{
 			await Task.Yield();
 		}
-		PlayFabTitleDataCache.Instance.GetTitleData(titleDataKey, onTD, onTDError);
+		PlayFabTitleDataCache.Instance.GetTitleData(titleDataKey, OnTD, OnTDError);
 	}
 
-	private void onTD(string s)
+	private void OnTD(string s)
 	{
 		try
 		{
@@ -147,7 +147,7 @@ public class TitleDataDateRefActivation : MonoBehaviour, IGorillaSliceableSimple
 		activations = 0;
 	}
 
-	private void onTDError(PlayFabError error)
+	private void OnTDError(PlayFabError error)
 	{
 		Debug.LogError($"TitleDataDateRefActivation :: onTDError :: {error}");
 		readyState = ReadyState.Crashed;

@@ -4,7 +4,7 @@ public class CustomMapsKeyToggleButton : CustomMapsKeyButton
 {
 	private bool isPressed;
 
-	public override void PressButtonColourUpdate()
+	public override void PressButtonColorUpdate()
 	{
 	}
 

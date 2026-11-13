@@ -362,8 +362,7 @@ public class CosmeticsThrottler : MonoBehaviour, IGorillaSliceableSimple
 		int num = set.items.Length;
 		for (int i = 0; i < num; i++)
 		{
-			CosmeticItemInstance cosmeticItemInstance = rig.cosmeticsObjectRegistry.Cosmetic(set.items[i].displayName);
-			if (cosmeticItemInstance != null)
+			if (rig.cosmeticsObjectRegistry.TryGetLoaded(set.items[i].displayName, out var cosmeticItemInstance))
 			{
 				cosmeticItemInstance.ToggleRenderers(toggle);
 				cosmeticItemInstance.ToggleParticles(toggle);
@@ -383,8 +382,7 @@ public class CosmeticsThrottler : MonoBehaviour, IGorillaSliceableSimple
 		int num = mergedSet.items.Length;
 		for (int i = 0; i < num; i++)
 		{
-			CosmeticItemInstance cosmeticItemInstance = rig.cosmeticsObjectRegistry.Cosmetic(mergedSet.items[i].displayName);
-			if (cosmeticItemInstance == null)
+			if (!rig.cosmeticsObjectRegistry.TryGetLoaded(mergedSet.items[i].displayName, out var cosmeticItemInstance))
 			{
 				continue;
 			}

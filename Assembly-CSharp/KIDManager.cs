@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -563,172 +564,184 @@ public class KIDManager : MonoBehaviour
 	{
 		bool snapTurnDisabled = false;
 		float? cachedTapHapticsStrength = null;
+		object obj = null;
+		int num = 0;
 		try
 		{
-			bool num = !(await WaitForAuthentication());
+			bool num2 = !(await WaitForAuthentication());
 			UGCPermissionManager.UsePlayFabSafety();
-			if (num || !_useKid)
+			if (!num2 && _useKid)
 			{
-				return;
-			}
-			GorillaSnapTurn.DisableSnapTurn();
-			snapTurnDisabled = true;
-			if (GorillaTagger.Instance != null)
-			{
-				cachedTapHapticsStrength = GorillaTagger.Instance.tapHapticStrength;
-				GorillaTagger.Instance.tapHapticStrength = 0f;
-			}
-			GetPlayerData_Data newSessionData = await TryGetPlayerData(forceRefresh: true);
-			if (_requestCancellationSource.IsCancellationRequested)
-			{
-				return;
-			}
-			if (newSessionData == null)
-			{
-				Debug.LogError("[KID::MANAGER] [newSessionData] returned NULL. Something went wrong, we should always get a [GetPlayerData_Data]. Disabling k-ID");
-				return;
-			}
-			if (newSessionData.responseType == GetSessionResponseType.ERROR)
-			{
-				Debug.LogError("[KID::MANAGER] Failed to retrieve Player Data, response type: [" + newSessionData.responseType.ToString() + "]. Unable to proceed. Will default to Using Safeties");
-				return;
-			}
-			HasOptedInToKID = newSessionData.responseType != GetSessionResponseType.NOT_FOUND;
-			bool flag = await CheckWarningScreensOptedIn();
-			if (_requestCancellationSource.IsCancellationRequested || !flag)
-			{
-				return;
-			}
-			PreviousStatus = (SessionStatus)PlayerPrefs.GetInt(PreviousStatusPlayerPrefRef, 0);
-			TMPSession newSession = newSessionData.session;
-			_ = newSessionData.session?.AgeStatus;
-			_ageGateRequirements = await TryGetRequirements();
-			KIDAgeGate.SetAgeGateConfig(_ageGateRequirements);
-			if (_ageGateRequirements != null)
-			{
-				_ = _ageGateRequirements.AgeGateRequirements;
-			}
-			if (newSessionData.status == SessionStatus.PROHIBITED || newSessionData.status == SessionStatus.PENDING_AGE_APPEAL)
-			{
-				PrivateUIRoom.ForceStartOverlay(PrivateUIRoom.OverlaySource.KID);
-				KIDUI_AgeAppealController.Instance.StartAgeAppealScreens(newSessionData.status);
-				return;
-			}
-			TMPSession? session = newSessionData.session;
-			int num2;
-			if (session == null)
-			{
-				num2 = 1;
-			}
-			else
-			{
-				_ = session.AgeStatus;
-				num2 = 0;
-			}
-			if (num2 != 0)
-			{
-				PrivateUIRoom.ForceStartOverlay(PrivateUIRoom.OverlaySource.KID);
-				(AgeStatusType, TMPSession) obj = await AgeGateFlow(newSessionData);
-				_ = obj.Item1;
-				TMPSession item = obj.Item2;
-				if (_requestCancellationSource.IsCancellationRequested)
+				GorillaSnapTurn.DisableSnapTurn();
+				snapTurnDisabled = true;
+				if (GorillaTagger.Instance != null)
 				{
-					return;
+					cachedTapHapticsStrength = GorillaTagger.Instance.tapHapticStrength;
+					GorillaTagger.Instance.tapHapticStrength = 0f;
 				}
-				newSession = item;
+				GetPlayerData_Data newSessionData = await TryGetPlayerData(forceRefresh: true);
+				if (!_requestCancellationSource.IsCancellationRequested)
+				{
+					if (newSessionData == null)
+					{
+						Debug.LogError("[KID::MANAGER] [newSessionData] returned NULL. Something went wrong, we should always get a [GetPlayerData_Data]. Disabling k-ID");
+					}
+					else if (newSessionData.responseType == GetSessionResponseType.ERROR)
+					{
+						Debug.LogError("[KID::MANAGER] Failed to retrieve Player Data, response type: [" + newSessionData.responseType.ToString() + "]. Unable to proceed. Will default to Using Safeties");
+					}
+					else
+					{
+						HasOptedInToKID = newSessionData.responseType != GetSessionResponseType.NOT_FOUND;
+						bool flag = await CheckWarningScreensOptedIn();
+						if (!_requestCancellationSource.IsCancellationRequested && flag)
+						{
+							PreviousStatus = (SessionStatus)PlayerPrefs.GetInt(PreviousStatusPlayerPrefRef, 0);
+							TMPSession newSession = newSessionData.session;
+							_ = newSessionData.session?.AgeStatus;
+							_ageGateRequirements = await TryGetRequirements();
+							KIDAgeGate.SetAgeGateConfig(_ageGateRequirements);
+							if (_ageGateRequirements != null)
+							{
+								_ = _ageGateRequirements.AgeGateRequirements;
+							}
+							if (newSessionData.status == SessionStatus.PROHIBITED || newSessionData.status == SessionStatus.PENDING_AGE_APPEAL)
+							{
+								PrivateUIRoom.ForceStartOverlay(PrivateUIRoom.OverlaySource.KID);
+								KIDUI_AgeAppealController.Instance.StartAgeAppealScreens(newSessionData.status);
+							}
+							else
+							{
+								TMPSession? session = newSessionData.session;
+								int num3;
+								if (session == null)
+								{
+									num3 = 1;
+								}
+								else
+								{
+									_ = session.AgeStatus;
+									num3 = 0;
+								}
+								if (num3 != 0)
+								{
+									PrivateUIRoom.ForceStartOverlay(PrivateUIRoom.OverlaySource.KID);
+									(AgeStatusType, TMPSession) obj2 = await AgeGateFlow(newSessionData);
+									_ = obj2.Item1;
+									TMPSession item = obj2.Item2;
+									if (_requestCancellationSource.IsCancellationRequested)
+									{
+										goto IL_074a;
+									}
+									newSession = item;
+								}
+								if (LegalAgreements.instance != null)
+								{
+									await LegalAgreements.instance.StartLegalAgreements();
+									if (_requestCancellationSource.IsCancellationRequested)
+									{
+										goto IL_074a;
+									}
+								}
+								if (UpdatePermissions(newSession) && CurrentSession != null)
+								{
+									if (CurrentSession.IsDefault)
+									{
+										WaitForAndUpdateNewSession(forceRefresh: true);
+									}
+									if (!_requestCancellationSource.IsCancellationRequested)
+									{
+										UGCPermissionManager.UseKID();
+										Error error = await ModIOManager.ShowTermsOfUseAtGameLoad();
+										if ((bool)error)
+										{
+											Debug.LogError($"[KID::MANAGER] Failed to show Mod.io Terms of Use at game load: {error}");
+										}
+										if (!_requestCancellationSource.IsCancellationRequested)
+										{
+											await KIDUI_Controller.Instance.StartKIDScreens(_requestCancellationSource.Token);
+											while (!_requestCancellationSource.IsCancellationRequested)
+											{
+												await Task.Yield();
+												if (KIDUI_Controller.IsKIDUIActive)
+												{
+													continue;
+												}
+												if (_requestCancellationSource.IsCancellationRequested)
+												{
+													break;
+												}
+												if (CurrentSession == null)
+												{
+													Debug.LogError("[KID::MANAGER] PHASE SEVEN -- FAILURE -- CurrentSession is NULL, should at least have a default session!");
+													Debug.Log($"[KID::MANAGER] Safeties is: [{PlayFabAuthenticator.instance.GetSafety()}");
+													break;
+												}
+												if (!newSessionData.HasConfirmedSetup)
+												{
+													await KIDMessagingController.StartKIDConfirmationScreen(_requestCancellationSource.Token);
+												}
+												PlayerPrefs.SetInt(PreviousStatusPlayerPrefRef, (int)PreviousStatus);
+												PlayerPrefs.Save();
+												InitialisationSuccessful = true;
+												goto end_IL_00b7;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			goto IL_074a;
+			IL_074a:
+			num = 1;
+			end_IL_00b7:;
+		}
+		catch (object obj3)
+		{
+			obj = obj3;
+		}
+		InitialisationComplete = true;
+		if (!InitialisationSuccessful)
+		{
+			if (cachedTapHapticsStrength.HasValue && GorillaTagger.Instance != null)
+			{
+				GorillaTagger.Instance.tapHapticStrength = cachedTapHapticsStrength.Value;
+			}
+			if (snapTurnDisabled)
+			{
+				GorillaSnapTurn.LoadSettingsFromCache();
 			}
 			if (LegalAgreements.instance != null)
 			{
 				await LegalAgreements.instance.StartLegalAgreements();
-				if (_requestCancellationSource.IsCancellationRequested)
-				{
-					return;
-				}
 			}
-			if (!UpdatePermissions(newSession) || CurrentSession == null)
-			{
-				return;
-			}
-			if (CurrentSession.IsDefault)
-			{
-				WaitForAndUpdateNewSession(forceRefresh: true);
-			}
-			if (_requestCancellationSource.IsCancellationRequested)
-			{
-				return;
-			}
-			UGCPermissionManager.UseKID();
-			Error error = await ModIOManager.ShowTermsOfUseAtGameLoad();
-			if ((bool)error)
-			{
-				Debug.LogError($"[KID::MANAGER] Failed to show Mod.io Terms of Use at game load: {error}");
-			}
-			if (_requestCancellationSource.IsCancellationRequested)
-			{
-				return;
-			}
-			await KIDUI_Controller.Instance.StartKIDScreens(_requestCancellationSource.Token);
-			do
-			{
-				if (_requestCancellationSource.IsCancellationRequested)
-				{
-					return;
-				}
-				await Task.Yield();
-			}
-			while (KIDUI_Controller.IsKIDUIActive);
-			if (_requestCancellationSource.IsCancellationRequested)
-			{
-				return;
-			}
+			PrivateUIRoom.StopForcedOverlay(PrivateUIRoom.OverlaySource.KID);
+		}
+		object obj4 = obj;
+		if (obj4 != null)
+		{
+			ExceptionDispatchInfo.Capture((obj4 as Exception) ?? throw obj4).Throw();
+		}
+		if (num != 1)
+		{
+			UGCPermissionManager.CheckPermissions();
 			if (CurrentSession == null)
 			{
-				Debug.LogError("[KID::MANAGER] PHASE SEVEN -- FAILURE -- CurrentSession is NULL, should at least have a default session!");
-				Debug.Log($"[KID::MANAGER] Safeties is: [{PlayFabAuthenticator.instance.GetSafety()}");
-				return;
+				PlayFabAuthenticator.instance.GetSafety();
 			}
-			if (!newSessionData.HasConfirmedSetup)
+			if (cachedTapHapticsStrength.HasValue && GorillaTagger.Instance != null)
 			{
-				await KIDMessagingController.StartKIDConfirmationScreen(_requestCancellationSource.Token);
+				GorillaTagger.Instance.tapHapticStrength = cachedTapHapticsStrength.Value;
 			}
-			PlayerPrefs.SetInt(PreviousStatusPlayerPrefRef, (int)PreviousStatus);
-			PlayerPrefs.Save();
-			InitialisationSuccessful = true;
-		}
-		finally
-		{
-			InitialisationComplete = true;
-			if (!InitialisationSuccessful)
+			if (snapTurnDisabled)
 			{
-				if (cachedTapHapticsStrength.HasValue && GorillaTagger.Instance != null)
-				{
-					GorillaTagger.Instance.tapHapticStrength = cachedTapHapticsStrength.Value;
-				}
-				if (snapTurnDisabled)
-				{
-					GorillaSnapTurn.LoadSettingsFromCache();
-				}
-				if (LegalAgreements.instance != null)
-				{
-					await LegalAgreements.instance.StartLegalAgreements();
-				}
-				PrivateUIRoom.StopForcedOverlay(PrivateUIRoom.OverlaySource.KID);
+				GorillaSnapTurn.LoadSettingsFromCache();
 			}
+			PrivateUIRoom.StopForcedOverlay(PrivateUIRoom.OverlaySource.KID);
 		}
-		UGCPermissionManager.UseKID();
-		if (CurrentSession == null)
-		{
-			PlayFabAuthenticator.instance.GetSafety();
-		}
-		if (cachedTapHapticsStrength.HasValue && GorillaTagger.Instance != null)
-		{
-			GorillaTagger.Instance.tapHapticStrength = cachedTapHapticsStrength.Value;
-		}
-		if (snapTurnDisabled)
-		{
-			GorillaSnapTurn.LoadSettingsFromCache();
-		}
-		PrivateUIRoom.StopForcedOverlay(PrivateUIRoom.OverlaySource.KID);
 	}
 
 	private static bool UpdatePermissions(TMPSession newSession)

@@ -124,4 +124,29 @@ public class CosmeticItemRegistry
 		}
 		return value;
 	}
+
+	public bool TryGetLoaded(string itemName, out CosmeticItemInstance cosmeticItemInstance)
+	{
+		cosmeticItemInstance = null;
+		if (!string.IsNullOrEmpty(itemName))
+		{
+			return _nameToCosmeticMap.TryGetValue(itemName, out cosmeticItemInstance);
+		}
+		return false;
+	}
+
+	public void ReleaseCosmetic(string itemName, List<GameObject> cosmeticGObjs)
+	{
+		if (_nameToCosmeticMap.Remove(itemName, out var value))
+		{
+			value.ClearForRelease();
+		}
+		foreach (GameObject cosmeticGObj in cosmeticGObjs)
+		{
+			if (cosmeticGObj != null)
+			{
+				initializedCosmetics.Remove(cosmeticGObj);
+			}
+		}
+	}
 }

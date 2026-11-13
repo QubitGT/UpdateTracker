@@ -195,7 +195,6 @@ public class ZoneManagement : MonoBehaviour
 		}
 		allObjects = hashSet.ToArray();
 		objectActivationState = new bool[allObjects.Length];
-		AddSceneToForceStayLoaded("City");
 		Initialized = true;
 	}
 

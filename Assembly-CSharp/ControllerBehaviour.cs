@@ -169,6 +169,24 @@ public class ControllerBehaviour : MonoBehaviour, IBuildValidation
 		}
 	}
 
+	public float DominantStickX
+	{
+		get
+		{
+			if (Poller == null)
+			{
+				return 0f;
+			}
+			float x = Poller.leftControllerPrimary2DAxis.x;
+			float x2 = Poller.rightControllerPrimary2DAxis.x;
+			if (!(Mathf.Abs(x) >= Mathf.Abs(x2)))
+			{
+				return x2;
+			}
+			return x;
+		}
+	}
+
 	public bool TriggerDown
 	{
 		get
@@ -197,6 +215,14 @@ public class ControllerBehaviour : MonoBehaviour, IBuildValidation
 		else
 		{
 			Instance = this;
+		}
+	}
+
+	private void OnDestroy()
+	{
+		if (Instance == this)
+		{
+			Instance = null;
 		}
 	}
 
@@ -241,6 +267,10 @@ public class ControllerBehaviour : MonoBehaviour, IBuildValidation
 
 	public static ControllerBehaviour CreateNewControllerBehaviour(GameObject gameObject, UXSettings settings)
 	{
+		if (Instance != null)
+		{
+			return Instance;
+		}
 		ControllerBehaviour controllerBehaviour = gameObject.AddComponent<ControllerBehaviour>();
 		controllerBehaviour.uxSettings = settings;
 		return controllerBehaviour;

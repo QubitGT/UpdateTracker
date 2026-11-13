@@ -2297,7 +2297,7 @@ public static class ZString
 
 	public static string Join<T>(char separator, params T[] values)
 	{
-		return JoinInternal<T>(stackalloc char[1] { separator }, values.AsSpan());
+		return JoinInternal<T>(stackalloc char[1] { separator }, MemoryExtensions.AsSpan(values));
 	}
 
 	public static string Join<T>(char separator, List<T> values)
@@ -2337,42 +2337,42 @@ public static class ZString
 
 	public static string Join<T>(string separator, params T[] values)
 	{
-		return JoinInternal<T>(separator.AsSpan(), values.AsSpan());
+		return JoinInternal<T>(MemoryExtensions.AsSpan(separator), MemoryExtensions.AsSpan(values));
 	}
 
 	public static string Join<T>(string separator, List<T> values)
 	{
-		return JoinInternal(separator.AsSpan(), (IReadOnlyList<T>)values);
+		return JoinInternal(MemoryExtensions.AsSpan(separator), (IReadOnlyList<T>)values);
 	}
 
 	public static string Join<T>(string separator, ReadOnlySpan<T> values)
 	{
-		return JoinInternal(separator.AsSpan(), values);
+		return JoinInternal(MemoryExtensions.AsSpan(separator), values);
 	}
 
 	public static string Join<T>(string separator, ICollection<T> values)
 	{
-		return JoinInternal(separator.AsSpan(), values.AsEnumerable());
+		return JoinInternal(MemoryExtensions.AsSpan(separator), values.AsEnumerable());
 	}
 
 	public static string Join<T>(string separator, IList<T> values)
 	{
-		return JoinInternal(separator.AsSpan(), values);
+		return JoinInternal(MemoryExtensions.AsSpan(separator), values);
 	}
 
 	public static string Join<T>(string separator, IReadOnlyList<T> values)
 	{
-		return JoinInternal(separator.AsSpan(), values);
+		return JoinInternal(MemoryExtensions.AsSpan(separator), values);
 	}
 
 	public static string Join<T>(string separator, IReadOnlyCollection<T> values)
 	{
-		return JoinInternal(separator.AsSpan(), values.AsEnumerable());
+		return JoinInternal(MemoryExtensions.AsSpan(separator), values.AsEnumerable());
 	}
 
 	public static string Join<T>(string separator, IEnumerable<T> values)
 	{
-		return JoinInternal(separator.AsSpan(), values);
+		return JoinInternal(MemoryExtensions.AsSpan(separator), values);
 	}
 
 	public static string Join(char separator, ReadOnlySpan<string> values)
@@ -2382,17 +2382,17 @@ public static class ZString
 
 	public static string Join(char separator, params string[] values)
 	{
-		return JoinInternal(stackalloc char[1] { separator }, values.AsSpan());
+		return JoinInternal(stackalloc char[1] { separator }, MemoryExtensions.AsSpan(values));
 	}
 
 	public static string Join(string separator, params string[] values)
 	{
-		return JoinInternal(separator.AsSpan(), values.AsSpan());
+		return JoinInternal(MemoryExtensions.AsSpan(separator), MemoryExtensions.AsSpan(values));
 	}
 
 	public static string Concat<T>(params T[] values)
 	{
-		return JoinInternal<T>(default(ReadOnlySpan<char>), values.AsSpan());
+		return JoinInternal<T>(default(ReadOnlySpan<char>), MemoryExtensions.AsSpan(values));
 	}
 
 	public static string Concat<T>(List<T> values)
@@ -2445,7 +2445,7 @@ public static class ZString
 		}
 		if (values is string[] array)
 		{
-			return JoinInternal(separator, array.AsSpan());
+			return JoinInternal(separator, MemoryExtensions.AsSpan(array));
 		}
 		Utf16ValueStringBuilder utf16ValueStringBuilder = new Utf16ValueStringBuilder(disposeImmediately: true);
 		try
@@ -2521,14 +2521,14 @@ public static class ZString
 		string text2 = string.Create(num, 0, delegate
 		{
 		});
-		Span<char> span = MemoryMarshal.CreateSpan(ref MemoryMarshal.GetReference(text2.AsSpan()), text2.Length);
+		Span<char> span = MemoryMarshal.CreateSpan(ref MemoryMarshal.GetReference(MemoryExtensions.AsSpan(text2)), text2.Length);
 		int num2 = 0;
 		for (int j = 0; j < values.Length; j++)
 		{
 			string text3 = values[j];
 			if (text3 != null)
 			{
-				text3.AsSpan().CopyTo(span.Slice(num2));
+				MemoryExtensions.AsSpan(text3).CopyTo(span.Slice(num2));
 				num2 += text3.Length;
 			}
 			if (j < values.Length - 1)
@@ -3206,7 +3206,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -3214,7 +3214,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -3234,7 +3234,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -3250,7 +3250,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -3276,7 +3276,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -3284,7 +3284,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -3310,7 +3310,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -3326,7 +3326,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -3352,7 +3352,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -3360,7 +3360,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -3389,7 +3389,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -3405,7 +3405,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -3431,7 +3431,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -3439,7 +3439,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -3471,7 +3471,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -3487,7 +3487,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -3513,7 +3513,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -3521,7 +3521,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -3556,7 +3556,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -3572,7 +3572,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -3598,7 +3598,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -3606,7 +3606,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -3644,7 +3644,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -3660,7 +3660,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -3686,7 +3686,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -3694,7 +3694,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -3735,7 +3735,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -3751,7 +3751,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -3777,7 +3777,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -3785,7 +3785,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -3829,7 +3829,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -3845,7 +3845,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -3871,7 +3871,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -3879,7 +3879,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -3926,7 +3926,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -3942,7 +3942,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -3968,7 +3968,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -3976,7 +3976,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -4026,7 +4026,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -4042,7 +4042,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -4068,7 +4068,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -4076,7 +4076,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -4129,7 +4129,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -4145,7 +4145,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -4171,7 +4171,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -4179,7 +4179,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -4235,7 +4235,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -4251,7 +4251,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -4277,7 +4277,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -4285,7 +4285,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -4344,7 +4344,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -4360,7 +4360,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -4386,7 +4386,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -4394,7 +4394,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -4456,7 +4456,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -4472,7 +4472,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -4498,7 +4498,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -4506,7 +4506,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -4571,7 +4571,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -4587,7 +4587,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}
@@ -4613,7 +4613,7 @@ public static class ZString
 				{
 					int num3 = i - num;
 					Span<byte> span2 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num3));
-					int bytes2 = UTF8NoBom.GetBytes(format.AsSpan(num, num3), span2);
+					int bytes2 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num3), span2);
 					bufferWriter.Advance(bytes2);
 					i++;
 					num = i;
@@ -4621,7 +4621,7 @@ public static class ZString
 				}
 				int num4 = i - num;
 				Span<byte> span3 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num4));
-				int bytes3 = UTF8NoBom.GetBytes(format.AsSpan(num, num4), span3);
+				int bytes3 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num4), span3);
 				bufferWriter.Advance(bytes3);
 				FormatParser.ParseResult parseResult = FormatParser.Parse(format, i);
 				num = parseResult.LastIndex;
@@ -4689,7 +4689,7 @@ public static class ZString
 				{
 					int num2 = i - num;
 					Span<byte> span = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num2));
-					int bytes = UTF8NoBom.GetBytes(format.AsSpan(num, num2), span);
+					int bytes = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num2), span);
 					bufferWriter.Advance(bytes);
 					i++;
 					num = i;
@@ -4705,7 +4705,7 @@ public static class ZString
 		if (num5 > 0)
 		{
 			Span<byte> span4 = bufferWriter.GetSpan(UTF8NoBom.GetMaxByteCount(num5));
-			int bytes4 = UTF8NoBom.GetBytes(format.AsSpan(num, num5), span4);
+			int bytes4 = UTF8NoBom.GetBytes(MemoryExtensions.AsSpan(format, num, num5), span4);
 			bufferWriter.Advance(bytes4);
 		}
 	}

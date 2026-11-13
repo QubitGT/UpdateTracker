@@ -224,9 +224,32 @@ public class CustomMapsListScreen : CustomMapsTerminalScreen
 
 	public ListScreenState currentState;
 
+	private static readonly GTMapBrowseSort[] browseSortsByIndex = new GTMapBrowseSort[7]
+	{
+		GTMapBrowseSort.popular,
+		GTMapBrowseSort.most_players,
+		GTMapBrowseSort.newest,
+		GTMapBrowseSort.rating,
+		GTMapBrowseSort.downloads,
+		GTMapBrowseSort.subscribers,
+		GTMapBrowseSort.name
+	};
+
 	public bool CommunityMapsOnly => communityMapsOnly;
 
 	public int CurrentModPage => currentModPage;
+
+	public GTMapBrowseSort BrowseSort
+	{
+		get
+		{
+			if (sortTypeIndex < 0 || sortTypeIndex >= browseSortsByIndex.Length)
+			{
+				return GTMapBrowseSort.none;
+			}
+			return browseSortsByIndex[sortTypeIndex];
+		}
+	}
 
 	public int ModsPerPage => modsPerPage;
 

@@ -216,19 +216,28 @@ public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 
 	public Mod currentMapMod { get; private set; }
 
+	private CustomMapsTerminal OwnerTerminal
+	{
+		get
+		{
+			if (ownerTerminal == null)
+			{
+				ownerTerminal = GetComponentInParent<CustomMapsTerminal>(includeInactive: true);
+			}
+			return ownerTerminal;
+		}
+	}
+
 	private bool CanLoadFromThisTerminal()
 	{
 		if (!NetworkSystem.Instance.InRoom || !NetworkSystem.Instance.SessionIsPrivate)
 		{
 			return true;
 		}
-		if (ownerTerminal == null)
+		CustomMapsTerminal customMapsTerminal = OwnerTerminal;
+		if (customMapsTerminal != null)
 		{
-			ownerTerminal = GetComponentInParent<CustomMapsTerminal>(includeInactive: true);
-		}
-		if (ownerTerminal != null)
-		{
-			return ownerTerminal.IsTentTerminal;
+			return customMapsTerminal.IsTentTerminal;
 		}
 		return false;
 	}
@@ -870,7 +879,9 @@ public class CustomMapsDetailsScreen : CustomMapsTerminalScreen
 		subscriptionToggleButton.gameObject.SetActive(value: false);
 		CustomMapNetworkJoinTrigger.SuppressJoins = false;
 		GTMapLoadSource loadSource = ((CustomMapsTerminal.PreviousScreen == CustomMapsTerminal.ScreenType.SearchMods) ? GTMapLoadSource.terminal_search : GTMapLoadSource.terminal_browse);
-		VirtualStumpSerializer.Instance.LoadMapSynced(GetModId(), loadSource);
+		CustomMapsTerminal customMapsTerminal = OwnerTerminal;
+		GTMapLoadOrigin loadOrigin = ((customMapsTerminal != null) ? customMapsTerminal.GetDetailsLoadOrigin() : default(GTMapLoadOrigin));
+		VirtualStumpSerializer.Instance.LoadMapSynced(GetModId(), loadSource, loadOrigin);
 	}
 
 	private void UnloadMap()

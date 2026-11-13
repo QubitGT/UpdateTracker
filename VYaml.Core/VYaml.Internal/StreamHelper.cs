@@ -35,7 +35,7 @@ internal static class StreamHelper
 				}
 				try
 				{
-					num = await stream.ReadAsync(buffer.AsMemory(offset, buffer.Length - offset), cancellation).ConfigureAwait(continueOnCapturedContext: false);
+					num = await stream.ReadAsync(MemoryExtensions.AsMemory(buffer, offset, buffer.Length - offset), cancellation).ConfigureAwait(continueOnCapturedContext: false);
 				}
 				catch
 				{
@@ -45,7 +45,7 @@ internal static class StreamHelper
 				offset += num;
 			}
 			while (num != 0);
-			builder.Add(buffer.AsMemory(0, offset), returnToPool: true);
+			builder.Add(MemoryExtensions.AsMemory(buffer, 0, offset), returnToPool: true);
 		}
 		catch (Exception)
 		{

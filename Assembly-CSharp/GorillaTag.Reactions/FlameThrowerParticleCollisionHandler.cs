@@ -28,6 +28,8 @@ public class FlameThrowerParticleCollisionHandler : MonoBehaviour
 
 	private double _lastCollisionTime;
 
+	private double _lastExtinguishTime;
+
 	private SinglePool _pool;
 
 	protected void OnEnable()
@@ -40,6 +42,12 @@ public class FlameThrowerParticleCollisionHandler : MonoBehaviour
 		}
 		if (_prefabToSpawn != null && !_isPrefabInPool)
 		{
+			if (ObjectPools.instance == null)
+			{
+				Debug.LogError("FlameThrowerParticleCollisionHandler: Disabling because ObjectPools not found! Hierarchy path: " + base.transform.GetPath(), this);
+				base.enabled = false;
+				return;
+			}
 			if (_prefabToSpawn.CompareTag("Untagged"))
 			{
 				Debug.LogError("FlameThrowerParticleCollisionHandler: Disabling because Spawn Prefab has no tag! Hierarchy path: " + base.transform.GetPath(), this);
@@ -81,11 +89,18 @@ public class FlameThrowerParticleCollisionHandler : MonoBehaviour
 			return;
 		}
 		double num = GTTime.TimeAsDouble();
-		if ((float)(num - _lastCollisionTime) < 1f / _maxParticleHitReactionRate || _particleSystem.GetCollisionEvents(other, _collisionEvents) <= 0)
+		float num2 = 1f / _maxParticleHitReactionRate;
+		bool flag = _hasPrefabToSpawn && (float)(num - _lastCollisionTime) >= num2;
+		bool flag2 = _extinguishAmount > 0f && (float)(num - _lastExtinguishTime) >= num2;
+		if (!flag && !flag2)
 		{
 			return;
 		}
-		if (_hasPrefabToSpawn && _isPrefabInPool)
+		if (flag2 && FireManager.Extinguish(other, _extinguishAmount))
+		{
+			_lastExtinguishTime = num;
+		}
+		if (flag && _particleSystem.GetCollisionEvents(other, _collisionEvents) > 0)
 		{
 			if (_pool == null && ObjectPools.instance.initialized)
 			{
@@ -96,11 +111,7 @@ public class FlameThrowerParticleCollisionHandler : MonoBehaviour
 				ParticleCollisionEvent particleCollisionEvent = _collisionEvents[0];
 				FireManager.SpawnFire(_pool, particleCollisionEvent.intersection, particleCollisionEvent.normal, base.transform.lossyScale.x);
 			}
+			_lastCollisionTime = num;
 		}
-		if (_extinguishAmount > 0f)
-		{
-			FireManager.Extinguish(other, _extinguishAmount);
-		}
-		_lastCollisionTime = num;
 	}
 }

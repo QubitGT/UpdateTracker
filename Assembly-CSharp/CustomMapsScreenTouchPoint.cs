@@ -66,7 +66,7 @@ public abstract class CustomMapsScreenTouchPoint : MonoBehaviour, IClickable
 			GorillaTriggerColliderHandIndicator component = collider.GetComponent<GorillaTriggerColliderHandIndicator>();
 			pressTime = Time.time;
 			OnButtonPressedEvent();
-			PressButtonColourUpdate();
+			PressButtonColorUpdate();
 			if (screen != null)
 			{
 				screen.PressButton(keyBinding);
@@ -78,7 +78,7 @@ public abstract class CustomMapsScreenTouchPoint : MonoBehaviour, IClickable
 		}
 	}
 
-	public virtual void PressButtonColourUpdate()
+	public virtual void PressButtonColorUpdate()
 	{
 		if (base.gameObject.activeInHierarchy)
 		{

@@ -576,7 +576,7 @@ public class HID : InputDevice
 			try
 			{
 				HIDDeviceDescriptor result = default(HIDDeviceDescriptor);
-				ReadOnlySpan<char> readOnlySpan = json.AsSpan();
+				ReadOnlySpan<char> readOnlySpan = MemoryExtensions.AsSpan(json);
 				PredictiveParser predictiveParser = default(PredictiveParser);
 				predictiveParser.ExpectSingleChar(readOnlySpan, '{');
 				predictiveParser.AcceptString(readOnlySpan, out var output);

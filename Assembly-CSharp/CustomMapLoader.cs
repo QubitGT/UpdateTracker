@@ -108,6 +108,9 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 	private GameObject geodeAtmPrefab;
 
 	[SerializeField]
+	private GameObject donationBoothPrefab;
+
+	[SerializeField]
 	private GameObject storeDisplayStandPrefab;
 
 	[SerializeField]
@@ -280,6 +283,10 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 	private static GameObject customMapGeodeATM = null;
 
 	private static Scene customMapGeodeATMScene;
+
+	private static GameObject customMapDonationBooth = null;
+
+	private static Scene customMapDonationBoothScene;
 
 	private static List<GameObject> storeCheckouts = new List<GameObject>();
 
@@ -515,6 +522,7 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 		audioWatchdogCoroutine = null;
 		customMapATM = null;
 		customMapGeodeATM = null;
+		customMapDonationBooth = null;
 		storeCheckouts = new List<GameObject>();
 		storeDisplayStands = new List<GameObject>();
 		storeTryOnConsoles = new List<GameObject>();
@@ -1889,17 +1897,17 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 			list = new List<Collider>(component.GetComponents<Collider>());
 			if (component.useDefaultPlaceholder || list.Count == 0)
 			{
-				GameObject gameObject12 = UnityEngine.Object.Instantiate(instance.gliderWindVolume, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-				if (gameObject12 != null)
+				GameObject gameObject8 = UnityEngine.Object.Instantiate(instance.gliderWindVolume, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+				if (gameObject8 != null)
 				{
-					placeholderReplacements.Add(gameObject12);
-					gameObject12.transform.localScale = placeholderGameObject.transform.localScale;
+					placeholderReplacements.Add(gameObject8);
+					gameObject8.transform.localScale = placeholderGameObject.transform.localScale;
 					placeholderGameObject.transform.localScale = Vector3.one;
-					gameObject12.transform.SetParent(placeholderGameObject.transform);
-					GliderWindVolume component9 = gameObject12.GetComponent<GliderWindVolume>();
-					if (!(component9 == null))
+					gameObject8.transform.SetParent(placeholderGameObject.transform);
+					GliderWindVolume component5 = gameObject8.GetComponent<GliderWindVolume>();
+					if (!(component5 == null))
 					{
-						component9.SetProperties(component.maxSpeed, component.maxAccel, component.SpeedVSAccelCurve, component.localWindDirection);
+						component5.SetProperties(component.maxSpeed, component.maxAccel, component.SpeedVSAccelCurve, component.localWindDirection);
 					}
 				}
 			}
@@ -1918,35 +1926,35 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 			list = new List<Collider>(component.GetComponents<Collider>());
 			if (component.useDefaultPlaceholder || list.Count == 0)
 			{
-				GameObject gameObject3 = UnityEngine.Object.Instantiate(instance.waterVolumePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-				if (!(gameObject3 != null))
+				GameObject gameObject13 = UnityEngine.Object.Instantiate(instance.waterVolumePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+				if (!(gameObject13 != null))
 				{
 					break;
 				}
-				placeholderReplacements.Add(gameObject3);
-				gameObject3.layer = UnityLayer.Water.ToLayerIndex();
-				gameObject3.transform.localScale = placeholderGameObject.transform.localScale;
+				placeholderReplacements.Add(gameObject13);
+				gameObject13.layer = UnityLayer.Water.ToLayerIndex();
+				gameObject13.transform.localScale = placeholderGameObject.transform.localScale;
 				placeholderGameObject.transform.localScale = Vector3.one;
-				gameObject3.transform.SetParent(placeholderGameObject.transform);
-				MeshRenderer component4 = gameObject3.GetComponent<MeshRenderer>();
-				if (component4.IsNull())
+				gameObject13.transform.SetParent(placeholderGameObject.transform);
+				MeshRenderer component8 = gameObject13.GetComponent<MeshRenderer>();
+				if (component8.IsNull())
 				{
 					break;
 				}
 				if (component.useWaterMesh)
 				{
-					component4.enabled = true;
-					WaterSurfaceMaterialController component5 = gameObject3.GetComponent<WaterSurfaceMaterialController>();
-					if (!component5.IsNull())
+					component8.enabled = true;
+					WaterSurfaceMaterialController component9 = gameObject13.GetComponent<WaterSurfaceMaterialController>();
+					if (!component9.IsNull())
 					{
-						component5.ScrollX = component.scrollTextureX;
-						component5.ScrollY = component.scrollTextureY;
-						component5.Scale = component.scaleTexture;
+						component9.ScrollX = component.scrollTextureX;
+						component9.ScrollY = component.scrollTextureY;
+						component9.Scale = component.scaleTexture;
 					}
 				}
 				else
 				{
-					component4.enabled = false;
+					component8.enabled = false;
 				}
 				break;
 			}
@@ -1974,17 +1982,17 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 			list = new List<Collider>(component.GetComponents<Collider>());
 			if (component.useDefaultPlaceholder || list.Count == 0)
 			{
-				GameObject gameObject9 = UnityEngine.Object.Instantiate(instance.forceVolumePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-				if (gameObject9.IsNotNull())
+				GameObject gameObject10 = UnityEngine.Object.Instantiate(instance.forceVolumePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+				if (gameObject10.IsNotNull())
 				{
-					placeholderReplacements.Add(gameObject9);
-					gameObject9.transform.localScale = placeholderGameObject.transform.localScale;
+					placeholderReplacements.Add(gameObject10);
+					gameObject10.transform.localScale = placeholderGameObject.transform.localScale;
 					placeholderGameObject.transform.localScale = Vector3.one;
-					gameObject9.transform.SetParent(placeholderGameObject.transform);
-					ForceVolume component7 = gameObject9.GetComponent<ForceVolume>();
-					if (!component7.IsNull())
+					gameObject10.transform.SetParent(placeholderGameObject.transform);
+					ForceVolume component6 = gameObject10.GetComponent<ForceVolume>();
+					if (!component6.IsNull())
 					{
-						component7.SetPropertiesFromPlaceholder(component.GetForceVolumeProperties(), null, null);
+						component6.SetPropertiesFromPlaceholder(component.GetForceVolumeProperties(), null, null);
 					}
 				}
 				break;
@@ -2012,15 +2020,15 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 					audioSource.enabled = true;
 				}
 				audioSource.outputAudioMixerGroup = instance.masterAudioMixer;
-				for (int num3 = list.Count - 1; num3 >= 0; num3--)
+				for (int num2 = list.Count - 1; num2 >= 0; num2--)
 				{
-					if (num3 == 0)
+					if (num2 == 0)
 					{
-						list[num3].isTrigger = true;
+						list[num2].isTrigger = true;
 					}
 					else
 					{
-						UnityEngine.Object.Destroy(list[num3]);
+						UnityEngine.Object.Destroy(list[num2]);
 					}
 				}
 				placeholderGameObject.layer = UnityLayer.GorillaBoundary.ToLayerIndex();
@@ -2044,24 +2052,24 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 				UnityEngine.Object.Destroy(component);
 				break;
 			}
-			GameObject gameObject7 = instance.atmPrefab;
+			GameObject gameObject4 = instance.atmPrefab;
 			if (component.useCustomMesh)
 			{
-				gameObject7 = instance.atmNoShellPrefab;
+				gameObject4 = instance.atmNoShellPrefab;
 			}
-			if (gameObject7.IsNull())
+			if (gameObject4.IsNull())
 			{
 				break;
 			}
-			GameObject gameObject8 = UnityEngine.Object.Instantiate(gameObject7, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-			if (!gameObject8.IsNotNull())
+			GameObject gameObject5 = UnityEngine.Object.Instantiate(gameObject4, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+			if (!gameObject5.IsNotNull())
 			{
 				break;
 			}
-			gameObject8.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
-			gameObject8.transform.localScale = Vector3.one;
-			customMapATM = gameObject8;
-			ATM_UI componentInChildren2 = gameObject8.GetComponentInChildren<ATM_UI>();
+			gameObject5.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
+			gameObject5.transform.localScale = Vector3.one;
+			customMapATM = gameObject5;
+			ATM_UI componentInChildren2 = gameObject5.GetComponentInChildren<ATM_UI>();
 			if (componentInChildren2.IsNotNull() && ATM_Manager.instance.IsNotNull())
 			{
 				componentInChildren2.SetCustomMapScene(placeholderGameObject.scene);
@@ -2084,13 +2092,42 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 			}
 			else if (!instance.geodeAtmPrefab.IsNull())
 			{
-				GameObject gameObject6 = UnityEngine.Object.Instantiate(instance.geodeAtmPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-				if (gameObject6.IsNotNull())
+				GameObject gameObject9 = UnityEngine.Object.Instantiate(instance.geodeAtmPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+				if (gameObject9.IsNotNull())
 				{
-					gameObject6.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
-					gameObject6.transform.localScale = Vector3.one;
-					customMapGeodeATM = gameObject6;
+					gameObject9.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
+					gameObject9.transform.localScale = Vector3.one;
+					customMapGeodeATM = gameObject9;
 					customMapGeodeATMScene = placeholderGameObject.scene;
+				}
+			}
+			break;
+		case GTObject.DonationBooth:
+			if (customMapDonationBooth.IsNotNull())
+			{
+				UnityEngine.Object.Destroy(component);
+			}
+			else if (!ValidateStorePlaceholderPosition(placeholderGameObject))
+			{
+				UnityEngine.Object.Destroy(component);
+			}
+			else
+			{
+				if (instance.donationBoothPrefab.IsNull())
+				{
+					break;
+				}
+				GameObject gameObject7 = UnityEngine.Object.Instantiate(instance.donationBoothPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+				if (gameObject7.IsNotNull())
+				{
+					gameObject7.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
+					gameObject7.transform.localScale = Vector3.one;
+					if (gameObject7.TryGetComponent<CustomMapDonationBooth>(out var component4))
+					{
+						component4.InitializeForCustomMap(component.useCustomMesh);
+					}
+					customMapDonationBooth = gameObject7;
+					customMapDonationBoothScene = placeholderGameObject.scene;
 				}
 			}
 			break;
@@ -2111,15 +2148,15 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 				}
 				break;
 			}
-			for (int num2 = list.Count - 1; num2 >= 0; num2--)
+			for (int num3 = list.Count - 1; num3 >= 0; num3--)
 			{
-				if (num2 == 0)
+				if (num3 == 0)
 				{
-					list[num2].isTrigger = true;
+					list[num3].isTrigger = true;
 				}
 				else
 				{
-					UnityEngine.Object.Destroy(list[num2]);
+					UnityEngine.Object.Destroy(list[num3]);
 				}
 			}
 			break;
@@ -2131,67 +2168,67 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 				Debug.LogError("[CustomMapLoader::ReplacePlaceholders] hoverboardDispenserPrefab is NULL!");
 				break;
 			}
-			GameObject gameObject13 = UnityEngine.Object.Instantiate(instance.hoverboardDispenserPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-			if (gameObject13.IsNotNull())
+			GameObject gameObject6 = UnityEngine.Object.Instantiate(instance.hoverboardDispenserPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+			if (gameObject6.IsNotNull())
 			{
-				placeholderReplacements.Add(gameObject13);
-				gameObject13.transform.SetParent(placeholderGameObject.transform);
+				placeholderReplacements.Add(gameObject6);
+				gameObject6.transform.SetParent(placeholderGameObject.transform);
 			}
 			break;
 		}
 		case GTObject.RopeSwing:
 		{
-			GameObject gameObject2 = UnityEngine.Object.Instantiate(instance.ropeSwingPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-			if (gameObject2.IsNull())
+			GameObject gameObject12 = UnityEngine.Object.Instantiate(instance.ropeSwingPrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+			if (gameObject12.IsNull())
 			{
 				break;
 			}
-			gameObject2.transform.SetParent(placeholderGameObject.transform);
-			CustomMapsGorillaRopeSwing component3 = gameObject2.GetComponent<CustomMapsGorillaRopeSwing>();
-			if (component3.IsNull())
+			gameObject12.transform.SetParent(placeholderGameObject.transform);
+			CustomMapsGorillaRopeSwing component7 = gameObject12.GetComponent<CustomMapsGorillaRopeSwing>();
+			if (component7.IsNull())
 			{
-				UnityEngine.Object.Destroy(gameObject2);
+				UnityEngine.Object.Destroy(gameObject12);
 				break;
 			}
 			component.ropeLength = System.Math.Clamp(component.ropeLength, 3, 31);
 			if (component.useDefaultPlaceholder)
 			{
-				component3.SetRopeLength(component.ropeLength);
+				component7.SetRopeLength(component.ropeLength);
 			}
 			else
 			{
-				component3.SetRopeProperties(component);
+				component7.SetRopeProperties(component);
 			}
-			placeholderReplacements.Add(gameObject2);
+			placeholderReplacements.Add(gameObject12);
 			break;
 		}
 		case GTObject.ZipLine:
 		{
-			GameObject gameObject10 = UnityEngine.Object.Instantiate(instance.ziplinePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
-			if (gameObject10.IsNull())
+			GameObject gameObject14 = UnityEngine.Object.Instantiate(instance.ziplinePrefab, placeholderGameObject.transform.position, placeholderGameObject.transform.rotation);
+			if (gameObject14.IsNull())
 			{
 				break;
 			}
-			gameObject10.transform.SetParent(placeholderGameObject.transform);
-			CustomMapsGorillaZipline component8 = gameObject10.GetComponent<CustomMapsGorillaZipline>();
-			if (component8.IsNull())
+			gameObject14.transform.SetParent(placeholderGameObject.transform);
+			CustomMapsGorillaZipline component10 = gameObject14.GetComponent<CustomMapsGorillaZipline>();
+			if (component10.IsNull())
 			{
-				UnityEngine.Object.Destroy(gameObject10);
+				UnityEngine.Object.Destroy(gameObject14);
 				break;
 			}
 			if (component.useDefaultPlaceholder)
 			{
-				if (!component8.GenerateZipline(component.spline))
+				if (!component10.GenerateZipline(component.spline))
 				{
-					UnityEngine.Object.Destroy(gameObject10);
+					UnityEngine.Object.Destroy(gameObject14);
 					break;
 				}
 			}
 			else
 			{
-				component8.Init(component);
+				component10.Init(component);
 			}
-			placeholderReplacements.Add(gameObject10);
+			placeholderReplacements.Add(gameObject14);
 			break;
 		}
 		case GTObject.Store_DisplayStand:
@@ -2215,20 +2252,20 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 				UnityEngine.Object.Destroy(component);
 				break;
 			}
-			GameObject gameObject4 = UnityEngine.Object.Instantiate(instance.storeDisplayStandPrefab, placeholderGameObject.transform);
-			if (!gameObject4.IsNull())
+			GameObject gameObject2 = UnityEngine.Object.Instantiate(instance.storeDisplayStandPrefab, placeholderGameObject.transform);
+			if (!gameObject2.IsNull())
 			{
-				gameObject4.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
-				gameObject4.transform.localScale = Vector3.one;
-				DynamicCosmeticStand component6 = gameObject4.GetComponent<DynamicCosmeticStand>();
-				if (component6.IsNull())
+				gameObject2.transform.SetParent(instance.compositeTryOnArea.transform, worldPositionStays: true);
+				gameObject2.transform.localScale = Vector3.one;
+				DynamicCosmeticStand component3 = gameObject2.GetComponent<DynamicCosmeticStand>();
+				if (component3.IsNull())
 				{
-					UnityEngine.Object.Destroy(gameObject4);
+					UnityEngine.Object.Destroy(gameObject2);
 					break;
 				}
-				component6.InitializeForCustomMapCosmeticItem(component.CosmeticItem, placeholderGameObject.scene);
-				storeDisplayStands.Add(gameObject4);
-				placeholderReplacements.Add(gameObject4);
+				component3.InitializeForCustomMapCosmeticItem(component.CosmeticItem, placeholderGameObject.scene);
+				storeDisplayStands.Add(gameObject2);
+				placeholderReplacements.Add(gameObject2);
 			}
 			break;
 		}
@@ -2253,20 +2290,20 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 				UnityEngine.Object.Destroy(component);
 				break;
 			}
-			GameObject gameObject5 = UnityEngine.Object.Instantiate(instance.storeCheckoutCounterPrefab, placeholderGameObject.transform);
-			if (!gameObject5.IsNull())
+			GameObject gameObject3 = UnityEngine.Object.Instantiate(instance.storeCheckoutCounterPrefab, placeholderGameObject.transform);
+			if (!gameObject3.IsNull())
 			{
-				gameObject5.transform.SetParent(instance.compositeTryOnArea.transform);
-				gameObject5.transform.localScale = Vector3.one;
-				ItemCheckout componentInChildren = gameObject5.GetComponentInChildren<ItemCheckout>();
+				gameObject3.transform.SetParent(instance.compositeTryOnArea.transform);
+				gameObject3.transform.localScale = Vector3.one;
+				ItemCheckout componentInChildren = gameObject3.GetComponentInChildren<ItemCheckout>();
 				if (componentInChildren.IsNull())
 				{
-					UnityEngine.Object.Destroy(gameObject5);
+					UnityEngine.Object.Destroy(gameObject3);
 					break;
 				}
 				componentInChildren.InitializeForCustomMap(instance.compositeTryOnArea, placeholderGameObject.scene, component.useCustomMesh);
-				storeCheckouts.Add(gameObject5);
-				placeholderReplacements.Add(gameObject5);
+				storeCheckouts.Add(gameObject3);
+				placeholderReplacements.Add(gameObject3);
 			}
 			break;
 		}
@@ -3004,6 +3041,11 @@ public class CustomMapLoader : MonoBehaviour, IBuildValidation
 		{
 			UnityEngine.Object.Destroy(customMapGeodeATM);
 			customMapGeodeATM = null;
+		}
+		if (customMapDonationBooth.IsNotNull() && customMapDonationBoothScene == unloadingScene)
+		{
+			UnityEngine.Object.Destroy(customMapDonationBooth);
+			customMapDonationBooth = null;
 		}
 		int num = 0;
 		for (num = storeDisplayStands.Count - 1; num >= 0; num--)

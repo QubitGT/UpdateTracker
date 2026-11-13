@@ -28,7 +28,12 @@ public class BasicFireSpawner : MonoBehaviour
 	{
 		if (firePool == null)
 		{
-			firePool = ObjectPools.instance.GetPoolByHash(firePrefab);
+			ObjectPools instance = ObjectPools.instance;
+			if (instance == null || !instance.initialized || !instance.DoesPoolExist(firePrefab))
+			{
+				return;
+			}
+			firePool = instance.GetPoolByHash(firePrefab);
 		}
 		FireManager.SpawnFire(firePool, base.transform.position, Vector3.up, scale);
 	}

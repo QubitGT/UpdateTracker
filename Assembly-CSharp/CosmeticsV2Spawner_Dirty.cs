@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using Cysharp.Text;
 using GorillaExtensions;
 using GorillaLocomotion;
@@ -14,34 +15,24 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 {
-	private struct LoadOpInfo
+	private readonly struct LoadOpInfo
 	{
-		public bool isStarted;
-
-		public AsyncOperationHandle<GameObject> loadOp;
-
-		public GameObject resultGObj;
-
 		public readonly CosmeticAttachInfo attachInfo;
 
 		public readonly CosmeticPart part;
 
 		public readonly int partIndex;
 
-		public readonly CosmeticInfoV2 cosmeticInfoV2;
+		public readonly CosmeticSO cosmeticSO;
 
-		public readonly int vrRigIndex;
+		public ref readonly CosmeticInfoV2 cosmeticInfoV2 => ref cosmeticSO.info;
 
-		public LoadOpInfo(CosmeticAttachInfo attachInfo, CosmeticPart part, int partIndex, CosmeticInfoV2 cosmeticInfoV2, int vrRigIndex)
+		public LoadOpInfo(CosmeticAttachInfo attachInfo, CosmeticPart part, int partIndex, CosmeticSO cosmeticSO)
 		{
-			isStarted = false;
-			loadOp = default(AsyncOperationHandle<GameObject>);
-			resultGObj = null;
 			this.attachInfo = attachInfo;
 			this.part = part;
 			this.partIndex = partIndex;
-			this.cosmeticInfoV2 = cosmeticInfoV2;
-			this.vrRigIndex = vrRigIndex;
+			this.cosmeticSO = cosmeticSO;
 		}
 	}
 
@@ -82,6 +73,66 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 		}
 	}
 
+	private enum ERecordState
+	{
+		Loading,
+		Loaded,
+		Releasing
+	}
+
+	private sealed class SpawnedPart
+	{
+		public LoadOpInfo info;
+
+		public AsyncOperationHandle<GameObject> handle;
+
+		public CosmeticRecord owner;
+
+		public bool failed;
+
+		public GameObject root;
+
+		public GameObject inner;
+
+		public TransferrableObject transferrable;
+
+		public int allObjectsIndex = -1;
+
+		public SnowballThrowable throwable;
+
+		public EHandedness throwableHand;
+
+		public readonly List<CosmeticRefTarget> refTargets = new List<CosmeticRefTarget>(2);
+
+		public bool IsOverride
+		{
+			get
+			{
+				ECosmeticPartType partType = info.part.partType;
+				return partType == ECosmeticPartType.FirstPerson || partType == ECosmeticPartType.LocalRig;
+			}
+		}
+	}
+
+	private sealed class CosmeticRecord
+	{
+		public string playFabId;
+
+		public int rigIndex;
+
+		public VRRig rig;
+
+		public CosmeticItemRegistry registry;
+
+		public readonly List<SpawnedPart> parts = new List<SpawnedPart>(4);
+
+		public int pending;
+
+		public ERecordState state;
+
+		public bool pinned;
+	}
+
 	private static CosmeticsV2Spawner_Dirty _instance;
 
 	public static Action OnPostInstantiateAllPrefabs;
@@ -98,14 +149,11 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 
 	private const int _k_delayedStatusCheckContextId = -100;
 
-	[OnEnterPlay_Clear]
-	private static readonly List<LoadOpInfo> _g_loadOpInfos = new List<LoadOpInfo>(100000);
+	[OnEnterPlay_SetNull]
+	private static Dictionary<string, CosmeticSO> _g_cosmeticSOByID;
 
 	[OnEnterPlay_Clear]
-	private static Dictionary<string, List<LoadOpInfo>>[] _g_loadOpInfosForRigAndCosmeticIDDicts;
-
-	[OnEnterPlay_Clear]
-	private static readonly Dictionary<AsyncOperationHandle<GameObject>, int> _g_loadOp_to_index = new Dictionary<AsyncOperationHandle<GameObject>, int>(100000);
+	private static readonly List<LoadOpInfo> _g_loadOpInfosScratch = new List<LoadOpInfo>(8);
 
 	[OnEnterPlay_SetNull]
 	private static SnowballMaker _gSnowballMakerLeft;
@@ -141,24 +189,27 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 	[OnEnterPlay_Clear]
 	private static Dictionary<int, string> throwableIndexPlayfabIdStringLeft;
 
-	private static Dictionary<VRRig, HashSet<string>> processedIdsByRig = new Dictionary<VRRig, HashSet<string>>();
+	[OnEnterPlay_SetNull]
+	private static Dictionary<string, CosmeticRecord>[] _g_recordsByRig;
 
-	private static Dictionary<CosmeticItemRegistry, List<GameObject>> currentGOBatchByRegistry = new Dictionary<CosmeticItemRegistry, List<GameObject>>();
+	[OnEnterPlay_Clear]
+	private static readonly Dictionary<AsyncOperationHandle<GameObject>, SpawnedPart> _g_partByHandle = new Dictionary<AsyncOperationHandle<GameObject>, SpawnedPart>(512);
 
-	private static Dictionary<CosmeticItemRegistry, List<StringEnum<ECosmeticSelectSide>>> sides = new Dictionary<CosmeticItemRegistry, List<StringEnum<ECosmeticSelectSide>>>();
+	[OnEnterPlay_SetNull]
+	private static bool[] _g_releaseWhenLoaded;
 
-	private static Dictionary<CosmeticItemRegistry, List<bool>> overrides = new Dictionary<CosmeticItemRegistry, List<bool>>();
+	[OnEnterPlay_Clear]
+	private static readonly List<CosmeticRecord> _g_releaseScratch = new List<CosmeticRecord>(64);
+
+	[OnEnterPlay_Set(0)]
+	private static int _g_releasedSinceAssetGC;
 
 	[field: OnEnterPlay_Set(false)]
 	public static bool isPrepared { get; private set; }
 
 	void IDelayedExecListener.OnDelayedAction(int contextId)
 	{
-		if (contextId >= 0 && contextId < 1000000)
-		{
-			_RetryDownload(contextId);
-		}
-		else if (contextId == -Mathf.Abs("_Step5_InitializeVRRigsAndCosmeticsControllerFinalize".GetHashCode()))
+		if (contextId == -Mathf.Abs("_Step5_InitializeVRRigsAndCosmeticsControllerFinalize".GetHashCode()))
 		{
 			_Step5_InitializeVRRigsAndCosmeticsControllerFinalize();
 		}
@@ -210,7 +261,6 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 		}
 		_gVRRigDatas.Add(new VRRigData(VRRig.LocalRig, outBoneXforms));
 		_gVRRigDatasIndexByRig[VRRig.LocalRig] = 0;
-		int vrRigIndex = 0;
 		VRRig[] allRigs = VRRigCache.Instance.GetAllRigs();
 		foreach (VRRig vRRig in allRigs)
 		{
@@ -228,143 +278,102 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 		materialIndexToSnowballThrowablePlayfabIdStringRight = new Dictionary<int, string>();
 		throwableIndexPlayfabIdStringLeft = new Dictionary<int, string>();
 		throwableIndexPlayfabIdStringRight = new Dictionary<int, string>();
-		_g_loadOpInfosForRigAndCosmeticIDDicts = new Dictionary<string, List<LoadOpInfo>>[20];
-		int partCount = 0;
-		int partCount2 = 0;
-		int partCount3 = 0;
+		_g_cosmeticSOByID = new Dictionary<string, CosmeticSO>(allCosmeticsArraySO.sturdyAssetRefs.Length);
+		_g_recordsByRig = new Dictionary<string, CosmeticRecord>[20];
+		_g_releaseWhenLoaded = new bool[20];
 		GTDirectAssetRef<CosmeticSO>[] sturdyAssetRefs = allCosmeticsArraySO.sturdyAssetRefs;
 		foreach (GTDirectAssetRef<CosmeticSO> gTDirectAssetRef in sturdyAssetRefs)
 		{
-			CosmeticInfoV2 info = gTDirectAssetRef.obj.info;
-			if (info.hasHoldableParts)
-			{
-				for (int k = 0; k < _gVRRigDatas.Count; k++)
-				{
-					for (int l = 0; l < info.holdableParts.Length; l++)
-					{
-						CosmeticPart part = info.holdableParts[l];
-						if (!part.prefabAssetRef.RuntimeKeyIsValid())
-						{
-							if (k == 0)
-							{
-								GTDev.LogError("Cosmetic " + info.displayName + " has missing object reference in wearable parts, skipping load");
-							}
-						}
-						else
-						{
-							AddEachAttachInfoToLoadOpInfosList(part, l, info, k, ref partCount);
-						}
-					}
-				}
-			}
-			if (info.hasFunctionalParts)
-			{
-				for (int m = 0; m < _gVRRigDatas.Count; m++)
-				{
-					for (int n = 0; n < info.functionalParts.Length; n++)
-					{
-						CosmeticPart part2 = info.functionalParts[n];
-						if (!part2.prefabAssetRef.RuntimeKeyIsValid())
-						{
-							if (m == 0)
-							{
-								GTDev.LogError("Cosmetic " + info.displayName + " has missing object reference in functional parts, skipping load");
-							}
-						}
-						else
-						{
-							AddEachAttachInfoToLoadOpInfosList(part2, n, info, m, ref partCount);
-						}
-					}
-				}
-			}
-			if (info.hasFirstPersonViewParts)
-			{
-				for (int num = 0; num < info.firstPersonViewParts.Length; num++)
-				{
-					CosmeticPart part3 = info.firstPersonViewParts[num];
-					if (!part3.prefabAssetRef.RuntimeKeyIsValid())
-					{
-						GTDev.LogError("Cosmetic " + info.displayName + " has missing object reference in first person parts, skipping load");
-					}
-					else
-					{
-						AddEachAttachInfoToLoadOpInfosList(part3, num, info, vrRigIndex, ref partCount2);
-					}
-				}
-			}
-			if (!info.hasLocalRigParts)
+			CosmeticSO obj = gTDirectAssetRef.obj;
+			_g_cosmeticSOByID.TryAdd(obj.info.playFabID, obj);
+			_g_loadOpInfosScratch.Clear();
+			_GetLoadOpInfos(obj, includeLocalRigParts: true, logMissingParts: true, _g_loadOpInfosScratch);
+			if (!obj.info.isThrowable)
 			{
 				continue;
 			}
-			for (int num2 = 0; num2 < info.localRigParts.Length; num2++)
+			foreach (LoadOpInfo item in _g_loadOpInfosScratch)
 			{
-				CosmeticPart part4 = info.localRigParts[num2];
-				if (!part4.prefabAssetRef.RuntimeKeyIsValid())
-				{
-					GTDev.LogError("Cosmetic " + info.displayName + " has missing object reference in local rig parts, skipping load");
-				}
-				else
-				{
-					AddEachAttachInfoToLoadOpInfosList(part4, num2, info, vrRigIndex, ref partCount3);
-				}
+				_RegisterThrowableIndices(item);
 			}
 		}
+		_g_loadOpInfosScratch.Clear();
 		_Step4_PopulateAllArrays();
 	}
 
-	private static void AddEachAttachInfoToLoadOpInfosList(CosmeticPart part, int partIndex, CosmeticInfoV2 cosmeticInfo, int vrRigIndex, ref int partCount)
+	private static void _GetLoadOpInfos(CosmeticSO cosmeticSO, bool includeLocalRigParts, bool logMissingParts, List<LoadOpInfo> outLoadOpInfos)
 	{
-		if (ApplicationQuittingState.IsQuitting)
+		CosmeticInfoV2 info = cosmeticSO.info;
+		if (info.hasHoldableParts)
 		{
+			_AddPartLoadOpInfos(cosmeticSO, info.holdableParts, logMissingParts ? "wearable" : null, outLoadOpInfos);
+		}
+		if (info.hasFunctionalParts)
+		{
+			_AddPartLoadOpInfos(cosmeticSO, info.functionalParts, logMissingParts ? "functional" : null, outLoadOpInfos);
+		}
+		if (includeLocalRigParts)
+		{
+			if (info.hasFirstPersonViewParts)
+			{
+				_AddPartLoadOpInfos(cosmeticSO, info.firstPersonViewParts, logMissingParts ? "first person" : null, outLoadOpInfos);
+			}
+			if (info.hasLocalRigParts)
+			{
+				_AddPartLoadOpInfos(cosmeticSO, info.localRigParts, logMissingParts ? "local rig" : null, outLoadOpInfos);
+			}
+		}
+	}
+
+	private static void _AddPartLoadOpInfos(CosmeticSO cosmeticSO, CosmeticPart[] parts, string logMissingPartsKind, List<LoadOpInfo> outLoadOpInfos)
+	{
+		for (int i = 0; i < parts.Length; i++)
+		{
+			CosmeticPart part = parts[i];
+			if (!part.prefabAssetRef.RuntimeKeyIsValid())
+			{
+				if (logMissingPartsKind != null)
+				{
+					GTDev.LogError("Cosmetic " + cosmeticSO.info.displayName + " has missing object reference in " + logMissingPartsKind + " parts, skipping load");
+				}
+				continue;
+			}
+			for (int j = 0; j < part.attachAnchors.Length; j++)
+			{
+				outLoadOpInfos.Add(new LoadOpInfo(part.attachAnchors[j], part, i, cosmeticSO));
+				if (part.partType == ECosmeticPartType.Holdable)
+				{
+					break;
+				}
+			}
+		}
+	}
+
+	private static void _RegisterThrowableIndices(LoadOpInfo loadOpInfo)
+	{
+		ref readonly CosmeticInfoV2 cosmeticInfoV = ref loadOpInfo.cosmeticInfoV2;
+		if (GTHardCodedBones.GetHandednessFromBone(loadOpInfo.attachInfo.parentBone) == EHandedness.Right)
+		{
+			for (int i = 0; i < cosmeticInfoV.throwableMaterialGrabIndices.Length; i++)
+			{
+				int key = cosmeticInfoV.throwableMaterialGrabIndices[i];
+				if (!materialIndexToSnowballThrowablePlayfabIdStringRight.ContainsKey(key))
+				{
+					materialIndexToSnowballThrowablePlayfabIdStringRight[key] = cosmeticInfoV.playFabID;
+				}
+			}
+			throwableIndexPlayfabIdStringRight.TryAdd(cosmeticInfoV.throwableIndex, cosmeticInfoV.playFabID);
 			return;
 		}
-		for (int i = 0; i < part.attachAnchors.Length; i++)
+		for (int j = 0; j < cosmeticInfoV.throwableMaterialGrabIndices.Length; j++)
 		{
-			LoadOpInfo item = new LoadOpInfo(part.attachAnchors[i], part, partIndex, cosmeticInfo, vrRigIndex);
-			if (cosmeticInfo.isThrowable)
+			int key2 = cosmeticInfoV.throwableMaterialGrabIndices[j];
+			if (!materialIndexToSnowballThrowablePlayfabIdStringLeft.ContainsKey(key2))
 			{
-				if (GTHardCodedBones.GetHandednessFromBone(item.attachInfo.parentBone) == EHandedness.Right)
-				{
-					for (int j = 0; j < cosmeticInfo.throwableMaterialGrabIndices.Length; j++)
-					{
-						int key = cosmeticInfo.throwableMaterialGrabIndices[j];
-						if (!materialIndexToSnowballThrowablePlayfabIdStringRight.ContainsKey(key))
-						{
-							materialIndexToSnowballThrowablePlayfabIdStringRight[key] = cosmeticInfo.playFabID;
-						}
-					}
-					throwableIndexPlayfabIdStringRight.TryAdd(cosmeticInfo.throwableIndex, cosmeticInfo.playFabID);
-				}
-				else
-				{
-					for (int k = 0; k < cosmeticInfo.throwableMaterialGrabIndices.Length; k++)
-					{
-						int key2 = cosmeticInfo.throwableMaterialGrabIndices[k];
-						if (!materialIndexToSnowballThrowablePlayfabIdStringLeft.ContainsKey(key2))
-						{
-							materialIndexToSnowballThrowablePlayfabIdStringLeft[key2] = cosmeticInfo.playFabID;
-						}
-					}
-					throwableIndexPlayfabIdStringLeft.TryAdd(cosmeticInfo.throwableIndex, cosmeticInfo.playFabID);
-				}
-			}
-			_g_loadOpInfos.Add(item);
-			if (_g_loadOpInfosForRigAndCosmeticIDDicts[vrRigIndex] == null)
-			{
-				_g_loadOpInfosForRigAndCosmeticIDDicts[vrRigIndex] = new Dictionary<string, List<LoadOpInfo>>();
-			}
-			if (!_g_loadOpInfosForRigAndCosmeticIDDicts[vrRigIndex].ContainsKey(cosmeticInfo.playFabID))
-			{
-				_g_loadOpInfosForRigAndCosmeticIDDicts[vrRigIndex].Add(cosmeticInfo.playFabID, new List<LoadOpInfo>());
-			}
-			_g_loadOpInfosForRigAndCosmeticIDDicts[vrRigIndex][cosmeticInfo.playFabID].Add(item);
-			partCount++;
-			if (part.partType == ECosmeticPartType.Holdable && i == 0)
-			{
-				break;
+				materialIndexToSnowballThrowablePlayfabIdStringLeft[key2] = cosmeticInfoV.playFabID;
 			}
 		}
+		throwableIndexPlayfabIdStringLeft.TryAdd(cosmeticInfoV.throwableIndex, cosmeticInfoV.playFabID);
 	}
 
 	public static bool GetPlayfabIdFromThrowableIndex(bool isLeft, int throwableIndex, out string playfabId)
@@ -407,207 +416,125 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 
 	public static void ProcessLoadOpInfos(VRRig rig, string playfabId, CosmeticItemRegistry registry)
 	{
-		if (!processedIdsByRig.ContainsKey(rig))
-		{
-			processedIdsByRig.Add(rig, new HashSet<string>());
-		}
-		else if (processedIdsByRig[rig].Contains(playfabId))
+		if (ApplicationQuittingState.IsQuitting || _g_recordsByRig == null || !_gVRRigDatasIndexByRig.TryGetValue(rig, out var value))
 		{
 			return;
 		}
-		processedIdsByRig[rig].Add(playfabId);
-		if (!currentGOBatchByRegistry.ContainsKey(registry))
+		if (rig.gameObject.activeInHierarchy)
 		{
-			currentGOBatchByRegistry[registry] = new List<GameObject>();
+			_g_releaseWhenLoaded[value] = false;
 		}
-		if (!sides.ContainsKey(registry))
+		Dictionary<string, CosmeticRecord>[] g_recordsByRig = _g_recordsByRig;
+		int num = value;
+		Dictionary<string, CosmeticRecord> dictionary = g_recordsByRig[num] ?? (g_recordsByRig[num] = new Dictionary<string, CosmeticRecord>());
+		if (dictionary.ContainsKey(playfabId))
 		{
-			sides[registry] = new List<StringEnum<ECosmeticSelectSide>>();
+			return;
 		}
-		if (!overrides.ContainsKey(registry))
+		CosmeticRecord cosmeticRecord = new CosmeticRecord
 		{
-			overrides[registry] = new List<bool>();
+			playFabId = playfabId,
+			rigIndex = value,
+			rig = rig,
+			registry = registry,
+			state = ERecordState.Loading,
+			pinned = (playfabId == "Slingshot")
+		};
+		dictionary.Add(playfabId, cosmeticRecord);
+		if (!_g_cosmeticSOByID.TryGetValue(playfabId, out var value2))
+		{
+			cosmeticRecord.state = ERecordState.Loaded;
+			return;
 		}
-		if (_g_loadOpInfosForRigAndCosmeticIDDicts[_gVRRigDatasIndexByRig[rig]].TryGetValue(playfabId, out var value))
+		_g_loadOpInfosScratch.Clear();
+		_GetLoadOpInfos(value2, value == 0, logMissingParts: false, _g_loadOpInfosScratch);
+		foreach (LoadOpInfo item in _g_loadOpInfosScratch)
 		{
-			for (int i = 0; i < value.Count; i++)
+			cosmeticRecord.parts.Add(new SpawnedPart
 			{
-				int currentIndex = _g_loadOp_to_index.Count;
-				_ProcessLoadOpInfo(currentIndex, value[i]);
-				LoadOpInfo loadOpInfo2 = _g_loadOpInfos[currentIndex];
-				loadOpInfo2.loadOp.Completed += AddToRegistryWhenCompleted;
-				void AddToRegistryWhenCompleted(AsyncOperationHandle<GameObject> loadOp)
-				{
-					GameObject item = ObjectToInitialize(_g_loadOpInfos[currentIndex]);
-					overrides[registry].Add(_g_loadOpInfos[currentIndex].part.partType == ECosmeticPartType.LocalRig || _g_loadOpInfos[currentIndex].part.partType == ECosmeticPartType.FirstPerson);
-					sides[registry].Add(_g_loadOpInfos[currentIndex].attachInfo.selectSide);
-					currentGOBatchByRegistry[registry].Add(item);
-					if (_g_loadOpsCountCompleted >= _g_loadOp_to_index.Count)
-					{
-						PostCompletionProcess();
-					}
-				}
-			}
+				info = item,
+				owner = cosmeticRecord
+			});
 		}
-		static GameObject ObjectToInitialize(LoadOpInfo loadOpInfo)
+		_g_loadOpInfosScratch.Clear();
+		if (cosmeticRecord.parts.Count == 0)
 		{
-			if (loadOpInfo.resultGObj == null)
+			cosmeticRecord.state = ERecordState.Loaded;
+			return;
+		}
+		cosmeticRecord.pending = cosmeticRecord.parts.Count;
+		for (int i = 0; i < cosmeticRecord.parts.Count; i++)
+		{
+			SpawnedPart spawnedPart = cosmeticRecord.parts[i];
+			try
 			{
-				return null;
+				spawnedPart.handle = spawnedPart.info.part.prefabAssetRef.InstantiateAsync(_gDeactivatedSpawnParent);
 			}
-			Transform transform = loadOpInfo.resultGObj.transform;
-			CosmeticPart[] holdableParts = loadOpInfo.cosmeticInfoV2.holdableParts;
-			if (holdableParts != null && holdableParts.Length > 0)
+			catch (InvalidKeyException ex)
 			{
-				TransferrableObject componentInChildren = loadOpInfo.resultGObj.GetComponentInChildren<TransferrableObject>(includeInactive: true);
-				if ((bool)componentInChildren && componentInChildren.gameObject != loadOpInfo.resultGObj)
-				{
-					transform = componentInChildren.transform;
-					transform.gameObject.SetActive(value: false);
-					loadOpInfo.resultGObj.SetActive(value: true);
-				}
+				UnityEngine.Debug.LogError("CosmeticsV2Spawner_Dirty: Missing Addressable for " + $"\"{spawnedPart.info.cosmeticInfoV2.displayName}\" part index {spawnedPart.info.partIndex}. Skipping. {ex.Message}");
+				spawnedPart.failed = true;
+				cosmeticRecord.pending--;
+				continue;
 			}
-			if (loadOpInfo.cosmeticInfoV2.isThrowable)
+			catch (ArgumentException ex2)
 			{
-				SnowballThrowable componentInChildren2 = loadOpInfo.resultGObj.GetComponentInChildren<SnowballThrowable>(includeInactive: true);
-				if ((bool)componentInChildren2 && componentInChildren2.gameObject != loadOpInfo.resultGObj)
-				{
-					transform = componentInChildren2.transform;
-					transform.gameObject.SetActive(value: false);
-					loadOpInfo.resultGObj.SetActive(value: true);
-				}
+				UnityEngine.Debug.LogError("CosmeticsV2Spawner_Dirty: Invalid Addressable key/config for " + $"\"{spawnedPart.info.cosmeticInfoV2.displayName}\" part index {spawnedPart.info.partIndex}. Skipping. {ex2.Message}");
+				spawnedPart.failed = true;
+				cosmeticRecord.pending--;
+				continue;
 			}
-			return transform.gameObject;
+			_g_partByHandle[spawnedPart.handle] = spawnedPart;
+			spawnedPart.handle.Completed += _Step3_HandleLoadOpCompleted;
 		}
-		static void PostCompletionProcess()
+		if (cosmeticRecord.pending == 0)
 		{
-			foreach (KeyValuePair<CosmeticItemRegistry, List<GameObject>> item2 in currentGOBatchByRegistry)
-			{
-				List<GameObject> value2 = item2.Value;
-				CosmeticItemRegistry key = item2.Key;
-				for (int j = 0; j < value2.Count; j++)
-				{
-					if (!(value2[j] == null))
-					{
-						try
-						{
-							if (overrides[key][j])
-							{
-								key.InitializeCosmetic(value2[j], isOverride: true);
-							}
-						}
-						catch (Exception exception)
-						{
-							UnityEngine.Debug.LogError("CosmeticsV2Spawner_Dirty.PostCompletionProcess: InitializeCosmetic (override) threw for \"" + value2[j].name + "\" on rig \"" + ((key.Rig != null) ? key.Rig.name : "<null rig>") + "\". Skipping this cosmetic so the rest of the batch still initializes. Exception follows:", value2[j]);
-							UnityEngine.Debug.LogException(exception, value2[j]);
-						}
-					}
-				}
-				for (int k = 0; k < value2.Count; k++)
-				{
-					if (!(value2[k] == null))
-					{
-						try
-						{
-							if (!overrides[key][k])
-							{
-								key.InitializeCosmetic(value2[k], isOverride: false);
-							}
-						}
-						catch (Exception exception2)
-						{
-							UnityEngine.Debug.LogError("CosmeticsV2Spawner_Dirty.PostCompletionProcess: InitializeCosmetic threw for \"" + value2[k].name + "\" on rig \"" + ((key.Rig != null) ? key.Rig.name : "<null rig>") + "\". Skipping this cosmetic so the rest of the batch still initializes. Exception follows:", value2[k]);
-							UnityEngine.Debug.LogException(exception2, value2[k]);
-						}
-					}
-				}
-				for (int l = 0; l < value2.Count; l++)
-				{
-					if (!(value2[l] == null))
-					{
-						ISpawnable[] componentsInChildren = value2[l].GetComponentsInChildren<ISpawnable>(includeInactive: true);
-						for (int m = 0; m < componentsInChildren.Length; m++)
-						{
-							if (!componentsInChildren[m].IsSpawned)
-							{
-								try
-								{
-									componentsInChildren[m].IsSpawned = true;
-									componentsInChildren[m].CosmeticSelectedSide = sides[key][l];
-									componentsInChildren[m].OnSpawn(key.Rig);
-								}
-								catch (Exception exception3)
-								{
-									UnityEngine.Debug.LogException(exception3);
-								}
-							}
-						}
-					}
-				}
-				value2.Clear();
-				sides[key].Clear();
-				overrides[key].Clear();
-				key.RefreshRig();
-				if (key.Rig != null && key.Rig.myBodyDockPositions != null)
-				{
-					key.Rig.myBodyDockPositions.RefreshTransferrableItems();
-				}
-			}
-		}
-	}
-
-	private static void _ProcessLoadOpInfo(int currentIndex, LoadOpInfo loadOpInfo)
-	{
-		try
-		{
-			loadOpInfo.loadOp = loadOpInfo.part.prefabAssetRef.InstantiateAsync(_gDeactivatedSpawnParent);
-			loadOpInfo.isStarted = true;
-			_g_loadOp_to_index.Add(loadOpInfo.loadOp, currentIndex);
-			loadOpInfo.loadOp.Completed += _Step3_HandleLoadOpCompleted;
-			_g_loadOpInfos[currentIndex] = loadOpInfo;
-		}
-		catch (InvalidKeyException ex)
-		{
-			UnityEngine.Debug.LogError("CosmeticsV2Spawner_Dirty: Missing Addressable for " + $"\"{loadOpInfo.cosmeticInfoV2.displayName}\" part index {loadOpInfo.partIndex}. Skipping. {ex.Message}");
-			loadOpInfo.isStarted = true;
-			loadOpInfo.resultGObj = null;
-			_g_loadOpInfos[currentIndex] = loadOpInfo;
-			_g_loadOpsCountCompleted++;
-		}
-		catch (ArgumentException ex2)
-		{
-			UnityEngine.Debug.LogError("CosmeticsV2Spawner_Dirty: Invalid Addressable key/config for " + $"\"{loadOpInfo.cosmeticInfoV2.displayName}\" part index {loadOpInfo.partIndex}. Skipping. {ex2.Message}");
-			loadOpInfo.isStarted = true;
-			loadOpInfo.resultGObj = null;
-			_g_loadOpInfos[currentIndex] = loadOpInfo;
-			_g_loadOpsCountCompleted++;
+			_FinalizeRecord(cosmeticRecord);
 		}
 	}
 
 	private static void _Step3_HandleLoadOpCompleted(AsyncOperationHandle<GameObject> loadOp)
 	{
-		if (ApplicationQuittingState.IsQuitting)
+		if (ApplicationQuittingState.IsQuitting || !_g_partByHandle.TryGetValue(loadOp, out var value))
 		{
-			return;
-		}
-		if (!_g_loadOp_to_index.TryGetValue(loadOp, out var value))
-		{
-			throw new Exception("(this should never happen) could not find LoadOpInfo in `_g_loadOpInfos`.");
-		}
-		LoadOpInfo loadOpInfo = _g_loadOpInfos[value];
-		if (loadOp.Status == AsyncOperationStatus.Failed)
-		{
-			UnityEngine.Debug.LogWarning("CosmeticsV2Spawner_Dirty: Failed to load part " + $"\"{loadOpInfo.cosmeticInfoV2.displayName}\" (key: {loadOpInfo.part.prefabAssetRef.RuntimeKey}). Skipping.");
-			_g_loadOpsCountCompleted++;
-			_g_loadOp_to_index.Remove(loadOp);
 			return;
 		}
 		_g_loadOpsCountCompleted++;
-		ECosmeticSelectSide eCosmeticSelectSide = loadOpInfo.attachInfo.selectSide;
-		string name = loadOpInfo.cosmeticInfoV2.playFabID;
+		if (loadOp.Status != AsyncOperationStatus.Succeeded)
+		{
+			UnityEngine.Debug.LogWarning("CosmeticsV2Spawner_Dirty: Failed to load part " + $"\"{value.info.cosmeticInfoV2.displayName}\" (key: {value.info.part.prefabAssetRef.RuntimeKey}). Skipping.");
+			value.failed = true;
+			_g_partByHandle.Remove(loadOp);
+			if (loadOp.IsValid())
+			{
+				Addressables.Release(loadOp);
+			}
+		}
+		else
+		{
+			try
+			{
+				_AttachPart(value, loadOp.Result);
+			}
+			catch (Exception exception)
+			{
+				UnityEngine.Debug.LogException(exception);
+			}
+		}
+		if (--value.owner.pending == 0)
+		{
+			_FinalizeRecord(value.owner);
+		}
+	}
+
+	private static void _AttachPart(SpawnedPart part, GameObject resultGObj)
+	{
+		LoadOpInfo info = part.info;
+		ECosmeticSelectSide eCosmeticSelectSide = info.attachInfo.selectSide;
+		string name = info.cosmeticInfoV2.playFabID;
 		if (eCosmeticSelectSide != 0)
 		{
-			string playFabID = loadOpInfo.cosmeticInfoV2.playFabID;
+			string playFabID = info.cosmeticInfoV2.playFabID;
 			name = ZString.Concat(playFabID, eCosmeticSelectSide switch
 			{
 				ECosmeticSelectSide.Left => " LEFT.", 
@@ -615,77 +542,79 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 				_ => "", 
 			});
 		}
-		loadOpInfo.resultGObj = loadOp.Result;
-		loadOpInfo.resultGObj.SetActive(value: false);
-		Transform transform = loadOpInfo.resultGObj.transform;
+		part.root = resultGObj;
+		resultGObj.SetActive(value: false);
+		Transform transform = resultGObj.transform;
 		Transform transform2 = transform;
-		CosmeticPart[] holdableParts = loadOpInfo.cosmeticInfoV2.holdableParts;
+		CosmeticPart[] holdableParts = info.cosmeticInfoV2.holdableParts;
 		if (holdableParts != null && holdableParts.Length > 0)
 		{
-			TransferrableObject componentInChildren = loadOpInfo.resultGObj.GetComponentInChildren<TransferrableObject>(includeInactive: true);
-			if ((bool)componentInChildren && componentInChildren.gameObject != loadOpInfo.resultGObj)
+			TransferrableObject componentInChildren = resultGObj.GetComponentInChildren<TransferrableObject>(includeInactive: true);
+			if ((bool)componentInChildren && componentInChildren.gameObject != resultGObj)
 			{
 				transform2 = componentInChildren.transform;
 				transform2.gameObject.SetActive(value: false);
-				loadOpInfo.resultGObj.SetActive(value: true);
+				resultGObj.SetActive(value: true);
 			}
 		}
-		if (loadOpInfo.cosmeticInfoV2.isThrowable)
+		if (info.cosmeticInfoV2.isThrowable)
 		{
-			SnowballThrowable componentInChildren2 = loadOpInfo.resultGObj.GetComponentInChildren<SnowballThrowable>(includeInactive: true);
-			if ((bool)componentInChildren2 && componentInChildren2.gameObject != loadOpInfo.resultGObj)
+			SnowballThrowable componentInChildren2 = resultGObj.GetComponentInChildren<SnowballThrowable>(includeInactive: true);
+			if ((bool)componentInChildren2 && componentInChildren2.gameObject != resultGObj)
 			{
 				transform2 = componentInChildren2.transform;
 				transform2.gameObject.SetActive(value: false);
-				loadOpInfo.resultGObj.SetActive(value: true);
+				resultGObj.SetActive(value: true);
 			}
 		}
 		transform2.name = name;
-		VRRigData value2 = ((loadOpInfo.vrRigIndex != -1) ? _gVRRigDatas[loadOpInfo.vrRigIndex] : default(VRRigData));
-		if (loadOpInfo.cosmeticInfoV2.category != CosmeticsController.CosmeticCategory.Collectable)
+		part.inner = transform2.gameObject;
+		VRRigData value = _gVRRigDatas[part.owner.rigIndex];
+		if (info.cosmeticInfoV2.category != CosmeticsController.CosmeticCategory.Collectable)
 		{
-			Transform transform3 = loadOpInfo.part.partType switch
+			Transform transform3 = info.part.partType switch
 			{
-				ECosmeticPartType.Holdable => ((GTHardCodedBones.EBone)loadOpInfo.attachInfo.parentBone != GTHardCodedBones.EBone.body_AnchorFront_StowSlot) ? value2.parentOfDeactivatedHoldables : value2.boneXforms[(int)loadOpInfo.attachInfo.parentBone], 
-				ECosmeticPartType.Functional => value2.boneXforms[(int)loadOpInfo.attachInfo.parentBone], 
+				ECosmeticPartType.Holdable => ((GTHardCodedBones.EBone)info.attachInfo.parentBone != GTHardCodedBones.EBone.body_AnchorFront_StowSlot) ? value.parentOfDeactivatedHoldables : value.boneXforms[(int)info.attachInfo.parentBone], 
+				ECosmeticPartType.Functional => value.boneXforms[(int)info.attachInfo.parentBone], 
 				ECosmeticPartType.FirstPerson => g_gorillaPlayer.CosmeticsHeadTarget, 
-				ECosmeticPartType.LocalRig => value2.boneXforms[(int)loadOpInfo.attachInfo.parentBone], 
+				ECosmeticPartType.LocalRig => value.boneXforms[(int)info.attachInfo.parentBone], 
 				_ => throw new ArgumentOutOfRangeException("partType", "unhandled part type."), 
 			};
 			if ((bool)transform3)
 			{
 				transform.SetParent(transform3, worldPositionStays: false);
-				transform.localPosition = loadOpInfo.attachInfo.offset.pos;
-				transform.localRotation = loadOpInfo.attachInfo.offset.rot;
-				transform.localScale = loadOpInfo.attachInfo.offset.scale;
+				transform.localPosition = info.attachInfo.offset.pos;
+				transform.localRotation = info.attachInfo.offset.rot;
+				transform.localScale = info.attachInfo.offset.scale;
 			}
 			else
 			{
-				UnityEngine.Debug.LogError($"Bone transform not found for cosmetic part type {loadOpInfo.part.partType}. Cosmetic: " + "\"" + loadOpInfo.cosmeticInfoV2.displayName + "\"," + $"part: \"{loadOpInfo.part.prefabAssetRef.RuntimeKey}\"");
+				UnityEngine.Debug.LogError($"Bone transform not found for cosmetic part type {info.part.partType}. Cosmetic: " + "\"" + info.cosmeticInfoV2.displayName + "\"," + $"part: \"{info.part.prefabAssetRef.RuntimeKey}\"");
 			}
 		}
-		switch (loadOpInfo.part.partType)
+		switch (info.part.partType)
 		{
 		case ECosmeticPartType.Holdable:
 		{
-			value2.vrRig_cosmetics.Add(transform2.gameObject);
-			HoldableObject componentInChildren3 = loadOpInfo.resultGObj.GetComponentInChildren<HoldableObject>(includeInactive: true);
+			value.vrRig_cosmetics.Add(transform2.gameObject);
+			HoldableObject componentInChildren3 = resultGObj.GetComponentInChildren<HoldableObject>(includeInactive: true);
 			if (!(componentInChildren3 is SnowballThrowable throwable))
 			{
 				if (!(componentInChildren3 is TransferrableObject transferrableObject))
 				{
 					if ((object)componentInChildren3 != null)
 					{
-						throw new Exception("Encountered unexpected HoldableObject derived type on cosmetic part: \"" + loadOpInfo.cosmeticInfoV2.displayName + "\"");
+						throw new Exception("Encountered unexpected HoldableObject derived type on cosmetic part: \"" + info.cosmeticInfoV2.displayName + "\"");
 					}
 					break;
 				}
-				string playFabID2 = loadOpInfo.cosmeticInfoV2.playFabID;
+				part.transferrable = transferrableObject;
+				string playFabID2 = info.cosmeticInfoV2.playFabID;
 				if (CosmeticsLegacyV1Info.TryGetBodyDockAllObjectsIndexes(playFabID2, out var bdAllIndexes))
 				{
-					if (loadOpInfo.partIndex < bdAllIndexes.Length && loadOpInfo.partIndex >= 0)
+					if (info.partIndex < bdAllIndexes.Length && info.partIndex >= 0)
 					{
-						transferrableObject.myIndex = bdAllIndexes[loadOpInfo.partIndex];
+						transferrableObject.myIndex = bdAllIndexes[info.partIndex];
 					}
 				}
 				else if (playFabID2.Length >= 5 && playFabID2[0] == 'L')
@@ -704,73 +633,276 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 					transferrableObject.myIndex = -2;
 					if (!(playFabID2 == "STICKABLE TARGET"))
 					{
-						UnityEngine.Debug.LogError("Cosmetic \"" + loadOpInfo.cosmeticInfoV2.displayName + "\" cannot derive `TransferrableObject.myIndex` from playFabId \"" + playFabID2 + "\" and so will not be included in `BodyDockPositions.allObjects` array.");
+						UnityEngine.Debug.LogError("Cosmetic \"" + info.cosmeticInfoV2.displayName + "\" cannot derive `TransferrableObject.myIndex` from playFabId \"" + playFabID2 + "\" and so will not be included in `BodyDockPositions.allObjects` array.");
 					}
 				}
-				if (transferrableObject is ProjectileWeapon projectileWeapon && loadOpInfo.cosmeticInfoV2.playFabID == "Slingshot")
+				if (transferrableObject is ProjectileWeapon projectileWeapon && info.cosmeticInfoV2.playFabID == "Slingshot")
 				{
-					value2.vrRig.projectileWeapon = projectileWeapon;
+					value.vrRig.projectileWeapon = projectileWeapon;
 				}
-				if (transferrableObject.myIndex > 0 && transferrableObject.myIndex < value2.bdPositions_allObjects_length)
+				if (transferrableObject.myIndex > 0 && transferrableObject.myIndex < value.bdPositions_allObjects_length)
 				{
-					value2.bdPositionsComp._allObjects[transferrableObject.myIndex] = transferrableObject;
-					if (!value2.vrRig.isOfflineVRRig)
+					value.bdPositionsComp._allObjects[transferrableObject.myIndex] = transferrableObject;
+					part.allObjectsIndex = transferrableObject.myIndex;
+					if (!value.vrRig.isOfflineVRRig)
 					{
-						value2.bdPositionsComp.RefreshTransferrableItems();
+						value.bdPositionsComp.RefreshTransferrableItems();
 					}
 				}
 			}
 			else
 			{
-				AddPartToThrowableLists(loadOpInfo, throwable);
+				part.throwable = throwable;
+				part.throwableHand = AddPartToThrowableLists(info, part.owner.rigIndex, throwable);
 			}
 			break;
 		}
 		case ECosmeticPartType.Functional:
-			value2.vrRig_cosmetics.Add(transform2.gameObject);
+			value.vrRig_cosmetics.Add(transform2.gameObject);
 			break;
 		case ECosmeticPartType.FirstPerson:
 		case ECosmeticPartType.LocalRig:
-			value2.vrRig_override.Add(transform2.gameObject);
+			value.vrRig_override.Add(transform2.gameObject);
 			break;
 		default:
-			throw new ArgumentOutOfRangeException("Unexpected ECosmeticPartType value encountered: " + $"{loadOpInfo.part.partType}, " + $"int: {(int)loadOpInfo.part.partType}.");
+			throw new ArgumentOutOfRangeException("Unexpected ECosmeticPartType value encountered: " + $"{info.part.partType}, " + $"int: {(int)info.part.partType}.");
 		}
-		if (loadOpInfo.vrRigIndex > -1)
-		{
-			_gVRRigDatas[loadOpInfo.vrRigIndex] = value2;
-		}
-		CosmeticRefRegistry cosmeticReferences = _gVRRigDatas[loadOpInfo.vrRigIndex].vrRig.cosmeticReferences;
-		CosmeticRefTarget[] componentsInChildren = loadOpInfo.resultGObj.GetComponentsInChildren<CosmeticRefTarget>(includeInactive: true);
+		_gVRRigDatas[part.owner.rigIndex] = value;
+		CosmeticRefRegistry cosmeticReferences = value.vrRig.cosmeticReferences;
+		CosmeticRefTarget[] componentsInChildren = resultGObj.GetComponentsInChildren<CosmeticRefTarget>(includeInactive: true);
 		for (int i = 0; i < componentsInChildren.Length; i++)
 		{
 			cosmeticReferences.Register(componentsInChildren[i].id, componentsInChildren[i].gameObject);
+			part.refTargets.Add(componentsInChildren[i]);
 		}
-		_g_loadOpInfos[value] = loadOpInfo;
 	}
 
-	private static void _RetryDownload(int loadOpIndex)
+	private static void _FinalizeRecord(CosmeticRecord record)
 	{
-		if (loadOpIndex < 0 || loadOpIndex >= _g_loadOpInfos.Count)
+		if (record.state != 0)
 		{
-			UnityEngine.Debug.LogError("(should never happen) Unexpected! While trying to recover from a failed download, the value " + string.Format("{0}={1} was out of range of ", "loadOpIndex", loadOpIndex) + string.Format("{0}.Count={1}.", "_g_loadOpInfos", _g_loadOpInfos.Count));
 			return;
 		}
-		LoadOpInfo value = _g_loadOpInfos[loadOpIndex];
-		if (!_g_loadOp_to_index.Remove(value.loadOp))
+		record.state = ERecordState.Loaded;
+		CosmeticItemRegistry registry = record.registry;
+		for (int i = 0; i < 2; i++)
 		{
-			UnityEngine.Debug.LogWarning("(should never happen) Unexpected! Could not find the loadOp to remove it in the _g_loadOp_to_index. If you see this message then comparison does not work the way I thought and we need a different way to store/retrieve loadOpInfos. Happened while trying to retry failed download prefab part of cosmetic \"" + value.cosmeticInfoV2.displayName + "\" with guid \"" + value.part.prefabAssetRef.AssetGUID + "\".");
+			bool flag = i == 0;
+			foreach (SpawnedPart part in record.parts)
+			{
+				if (!(part.inner == null) && part.IsOverride == flag)
+				{
+					try
+					{
+						registry.InitializeCosmetic(part.inner, flag);
+					}
+					catch (Exception exception)
+					{
+						UnityEngine.Debug.LogError("CosmeticsV2Spawner_Dirty._FinalizeRecord: InitializeCosmetic" + (flag ? " (override)" : "") + " threw for \"" + part.inner.name + "\" on rig \"" + ((registry.Rig != null) ? registry.Rig.name : "<null rig>") + "\". Skipping this part so the rest still initialize. Exception follows:", part.inner);
+						UnityEngine.Debug.LogException(exception, part.inner);
+					}
+				}
+			}
 		}
-		UnityEngine.Debug.Log("Retrying prefab part of cosmetic \"" + value.cosmeticInfoV2.displayName + "\" with guid \"" + value.part.prefabAssetRef.AssetGUID + "\".");
-		value.loadOp = value.part.prefabAssetRef.InstantiateAsync(_gDeactivatedSpawnParent);
-		_g_loadOpInfos[loadOpIndex] = value;
-		_g_loadOp_to_index[value.loadOp] = loadOpIndex;
-		value.loadOp.Completed += _Step3_HandleLoadOpCompleted;
+		foreach (SpawnedPart part2 in record.parts)
+		{
+			if (part2.inner == null)
+			{
+				continue;
+			}
+			ISpawnable[] componentsInChildren = part2.inner.GetComponentsInChildren<ISpawnable>(includeInactive: true);
+			for (int j = 0; j < componentsInChildren.Length; j++)
+			{
+				if (!componentsInChildren[j].IsSpawned)
+				{
+					try
+					{
+						componentsInChildren[j].IsSpawned = true;
+						componentsInChildren[j].CosmeticSelectedSide = part2.info.attachInfo.selectSide;
+						componentsInChildren[j].OnSpawn(registry.Rig);
+					}
+					catch (Exception exception2)
+					{
+						UnityEngine.Debug.LogException(exception2);
+					}
+				}
+			}
+		}
+		if (_g_releaseWhenLoaded[record.rigIndex] && !record.rig.gameObject.activeInHierarchy)
+		{
+			_Release(record);
+			return;
+		}
+		registry.RefreshRig();
+		if (registry.Rig != null && registry.Rig.myBodyDockPositions != null)
+		{
+			registry.Rig.myBodyDockPositions.RefreshTransferrableItems();
+		}
 	}
 
-	private static void AddPartToThrowableLists(LoadOpInfo loadOpInfo, SnowballThrowable throwable)
+	public static void OnLocalPlayerLeftRoom()
 	{
-		VRRigData vRRigData = _gVRRigDatas[loadOpInfo.vrRigIndex];
+		if (_g_recordsByRig == null)
+		{
+			return;
+		}
+		_g_releaseScratch.Clear();
+		for (int i = 1; i < _g_recordsByRig.Length; i++)
+		{
+			_g_releaseWhenLoaded[i] = true;
+			Dictionary<string, CosmeticRecord> dictionary = _g_recordsByRig[i];
+			if (dictionary == null)
+			{
+				continue;
+			}
+			foreach (CosmeticRecord value in dictionary.Values)
+			{
+				if (value.state == ERecordState.Loaded && !value.pinned)
+				{
+					_g_releaseScratch.Add(value);
+				}
+			}
+		}
+		for (int j = 0; j < _g_releaseScratch.Count; j++)
+		{
+			try
+			{
+				_Release(_g_releaseScratch[j]);
+			}
+			catch (Exception exception)
+			{
+				UnityEngine.Debug.LogException(exception);
+			}
+		}
+		_g_releaseScratch.Clear();
+	}
+
+	private static void _Release(CosmeticRecord record)
+	{
+		if (record.state != ERecordState.Loaded || record.pinned)
+		{
+			return;
+		}
+		record.state = ERecordState.Releasing;
+		VRRigData vrRigData = _gVRRigDatas[record.rigIndex];
+		foreach (SpawnedPart part in record.parts)
+		{
+			if (part.inner == null)
+			{
+				continue;
+			}
+			ISpawnable[] componentsInChildren = part.inner.GetComponentsInChildren<ISpawnable>(includeInactive: true);
+			for (int i = 0; i < componentsInChildren.Length; i++)
+			{
+				if (componentsInChildren[i].IsSpawned)
+				{
+					try
+					{
+						componentsInChildren[i].IsSpawned = false;
+						componentsInChildren[i].OnDespawn();
+					}
+					catch (Exception exception)
+					{
+						UnityEngine.Debug.LogException(exception);
+					}
+				}
+			}
+		}
+		record.registry.ReleaseCosmetic(record.playFabId, record.parts.ConvertAll((SpawnedPart p) => p.inner));
+		foreach (SpawnedPart part2 in record.parts)
+		{
+			if (part2.inner != null)
+			{
+				vrRigData.vrRig_cosmetics.Remove(part2.inner);
+				vrRigData.vrRig_override.Remove(part2.inner);
+			}
+			if (part2.allObjectsIndex >= 0 && part2.allObjectsIndex < vrRigData.bdPositionsComp._allObjects.Length && vrRigData.bdPositionsComp._allObjects[part2.allObjectsIndex] == part2.transferrable)
+			{
+				vrRigData.bdPositionsComp._allObjects[part2.allObjectsIndex] = null;
+			}
+			if (part2.throwable != null)
+			{
+				RemovePartFromThrowableLists(vrRigData, part2.throwable, part2.throwableHand);
+			}
+			if (part2.transferrable is ProjectileWeapon projectileWeapon && vrRigData.vrRig.projectileWeapon == projectileWeapon)
+			{
+				vrRigData.vrRig.projectileWeapon = _FindRigSlingshot(record.rigIndex);
+			}
+			foreach (CosmeticRefTarget refTarget in part2.refTargets)
+			{
+				if (refTarget != null)
+				{
+					vrRigData.vrRig.cosmeticReferences.Unregister(refTarget.id, refTarget.gameObject);
+				}
+			}
+			if (part2.inner != null && part2.root != null && !part2.inner.transform.IsChildOf(part2.root.transform))
+			{
+				part2.inner.transform.SetParent(part2.root.transform, worldPositionStays: false);
+			}
+			if (!part2.failed && part2.handle.IsValid())
+			{
+				_g_partByHandle.Remove(part2.handle);
+				Addressables.ReleaseInstance(part2.handle);
+			}
+		}
+		_g_recordsByRig[record.rigIndex].Remove(record.playFabId);
+		_g_releasedSinceAssetGC++;
+	}
+
+	private static ProjectileWeapon _FindRigSlingshot(int rigIndex)
+	{
+		if (_g_recordsByRig[rigIndex] == null || !_g_recordsByRig[rigIndex].TryGetValue("Slingshot", out var value))
+		{
+			return null;
+		}
+		foreach (SpawnedPart part in value.parts)
+		{
+			if (part.transferrable is ProjectileWeapon projectileWeapon && projectileWeapon != null)
+			{
+				return projectileWeapon;
+			}
+		}
+		return null;
+	}
+
+	public static AsyncOperation UnloadReleasedCosmeticAssets()
+	{
+		if (_g_releasedSinceAssetGC == 0)
+		{
+			return null;
+		}
+		_g_releasedSinceAssetGC = 0;
+		return Resources.UnloadUnusedAssets();
+	}
+
+	public static string DebugDumpLoadedCosmetics()
+	{
+		if (_g_recordsByRig == null)
+		{
+			return "Cosmetics not prepared yet.";
+		}
+		StringBuilder stringBuilder = new StringBuilder();
+		for (int i = 0; i < _g_recordsByRig.Length; i++)
+		{
+			Dictionary<string, CosmeticRecord> dictionary = _g_recordsByRig[i];
+			if (dictionary == null || dictionary.Count == 0)
+			{
+				continue;
+			}
+			string text = ((i < _gVRRigDatas.Count) ? _gVRRigDatas[i].vrRig.name : "?");
+			stringBuilder.Append(string.Format("Rig {0} \"{1}\"{2}: {3} cosmetics\n", i, text, _g_releaseWhenLoaded[i] ? " (releasing)" : "", dictionary.Count));
+			foreach (CosmeticRecord value in dictionary.Values)
+			{
+				stringBuilder.Append(string.Format("    {0} {1}{2}, {3} parts\n", value.playFabId, value.state, value.pinned ? " pinned" : "", value.parts.Count));
+			}
+		}
+		stringBuilder.Append($"Releases since last asset GC: {_g_releasedSinceAssetGC}");
+		return stringBuilder.ToString();
+	}
+
+	private static EHandedness AddPartToThrowableLists(LoadOpInfo loadOpInfo, int rigIndex, SnowballThrowable throwable)
+	{
+		VRRigData vRRigData = _gVRRigDatas[rigIndex];
 		EHandedness handednessFromBone = GTHardCodedBones.GetHandednessFromBone(loadOpInfo.attachInfo.parentBone);
 		bool flag = vRRigData.vrRig == _gVRRigDatas[0].vrRig;
 		throwable.SpawnOffset = loadOpInfo.attachInfo.offset;
@@ -798,6 +930,25 @@ public class CosmeticsV2Spawner_Dirty : IDelayedExecListener
 			throw new ArgumentException("Encountered throwable cosmetic \"" + loadOpInfo.cosmeticInfoV2.displayName + "\" where handedness " + $"could not be determined from bone `{loadOpInfo.attachInfo.parentBone}`. " + "Path: \"" + throwable.transform.GetPath() + "\"");
 		default:
 			throw new ArgumentOutOfRangeException("Unexpected ECosmeticSelectSide value encountered: " + $"{handednessFromBone}, " + $"int: {(int)handednessFromBone}.");
+		}
+		return handednessFromBone;
+	}
+
+	private static void RemovePartFromThrowableLists(VRRigData vrRigData, SnowballThrowable throwable, EHandedness handedness)
+	{
+		List<GameObject> list = ((handedness == EHandedness.Left) ? vrRigData.bdPositions_leftHandThrowables : vrRigData.bdPositions_rightHandThrowables);
+		int throwableMakerIndex = throwable.throwableMakerIndex;
+		if (throwableMakerIndex >= 0 && throwableMakerIndex < list.Count && !(list[throwableMakerIndex] != throwable.gameObject))
+		{
+			list[throwableMakerIndex] = null;
+			if (handedness == EHandedness.Left)
+			{
+				vrRigData.bdPositionsComp.leftHandThrowables = list.ToArray();
+			}
+			else
+			{
+				vrRigData.bdPositionsComp.rightHandThrowables = list.ToArray();
+			}
 		}
 	}
 

@@ -37,7 +37,7 @@ public class GhostReactorLevelGenerator : MonoBehaviourTick
 	public List<GhostReactorLevelDepthConfig> depthConfigs;
 
 	[SerializeField]
-	private GhostReactorLevelSection mainHub = new GhostReactorLevelSection();
+	private GhostReactorLevelSection mainHub;
 
 	[SerializeField]
 	private List<GhostReactorSpawnConfig> mainHubSpawnConfigs;

@@ -82,6 +82,15 @@ public class CosmeticButton : GorillaPressableButton
 		}
 	}
 
+	protected override void OnTriggerEnter(Collider collider)
+	{
+		if (OnTriggerEnterChecks(collider, out var _))
+		{
+			base.OnTriggerEnter(collider);
+			ClearAllTemporaryCosmetics();
+		}
+	}
+
 	protected override bool AllowNonSubscribedPress()
 	{
 		if (CosmeticsController.instance == null || string.IsNullOrEmpty(SetCosmeticItemID) || !CosmeticsController.instance.currentWornSet.HasItem(SetCosmeticItemID))
@@ -89,5 +98,17 @@ public class CosmeticButton : GorillaPressableButton
 			return false;
 		}
 		return true;
+	}
+
+	private void ClearAllTemporaryCosmetics()
+	{
+		CosmeticsController instance = CosmeticsController.instance;
+		CosmeticsController.CosmeticItem[] items = instance.tempUnlockedSet.items;
+		for (int i = 0; i < items.Length; i++)
+		{
+			CosmeticsController.CosmeticItem cosmeticItem = items[i];
+			instance.RemoveCosmeticItemFromSet(instance.tempUnlockedSet, cosmeticItem.displayName, applyToPlayerPrefs: false);
+		}
+		instance.UpdateWornCosmetics(sync: true);
 	}
 }

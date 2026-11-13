@@ -18,8 +18,6 @@ public class StoreController : MonoBehaviour
 
 	public Dictionary<string, List<DynamicCosmeticStand>> StandsByPlayfabID;
 
-	public AllCosmeticsArraySO AllCosmeticsArraySO;
-
 	public bool cosmeticsInitialized;
 
 	public bool LoadFromTitleData;
@@ -233,11 +231,13 @@ public class StoreController : MonoBehaviour
 
 	public static CosmeticSO FindCosmeticInAllCosmeticsArraySO(string playfabId)
 	{
-		if (instance == null)
+		AllCosmeticsArraySO loadedAllCosmeticsSO = CosmeticsController.LoadedAllCosmeticsSO;
+		if (loadedAllCosmeticsSO == null)
 		{
-			instance = Object.FindAnyObjectByType<StoreController>();
+			Debug.LogError("[GT/StoreController]  FindCosmeticInAllCosmeticsArraySO(\"" + playfabId + "\"): the cosmetics list hasn't loaded yet.");
+			return null;
 		}
-		return instance.AllCosmeticsArraySO.SearchForCosmeticSO(playfabId);
+		return loadedAllCosmeticsSO.SearchForCosmeticSO(playfabId);
 	}
 
 	public DynamicCosmeticStand FindCosmeticStandByCosmeticName(string PlayFabID)

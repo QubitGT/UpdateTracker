@@ -166,6 +166,7 @@ public sealed class SuperInfectionGame : GorillaTagManager
 		if (VRRigCache.Instance.TryGetVrrig(taggedPlayer, out var _) && VRRigCache.Instance.TryGetVrrig(taggingPlayer, out var _) && taggingPlayer.ActorNumber == SIPlayer.LocalPlayer.ActorNr)
 		{
 			MedalClipRelay.Clip(MedalClipRelay.MedalClip.ClipType.Tag);
+			MedalClipRelay.Clip(MedalClipRelay.MedalClip.ClipType.TagStreak);
 			if (SIProgression.Instance.heldOrSnappedByGadgetPageType[SITechTreePageId.Dash] > 0)
 			{
 				PlayerGameEvents.MiscEvent("SIDashTag");

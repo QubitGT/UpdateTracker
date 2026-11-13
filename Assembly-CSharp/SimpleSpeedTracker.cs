@@ -18,6 +18,10 @@ public class SimpleSpeedTracker : MonoBehaviour, IGorillaSliceableSimple
 	[SerializeField]
 	private Transform target;
 
+	[Tooltip("If enabled, measured velocity is divided by this object's lossyScale, so speed is reported in scaled units.\nE.g. a player shrunk to half size moving at 1 m/s reads as 2 m/s, so thresholds and curves behave the same at any player scale.")]
+	[SerializeField]
+	private bool scaleAware;
+
 	[Tooltip("If enabled, speed and direction calculations use world (global) space, otherwise local space.\nUse Local Space when you want speed relative to the object’s facing direction (e.g., how fast a sword swings forward)")]
 	[SerializeField]
 	private bool useWorldAxes;
@@ -118,21 +122,29 @@ public class SimpleSpeedTracker : MonoBehaviour, IGorillaSliceableSimple
 		float num = Mathf.Max(1E-06f, Time.time - lastSliceTime);
 		Vector3 position = target.position;
 		Vector3 lhs = (position - lastPos) / num;
-		float num2 = trackAxis switch
+		if (scaleAware)
+		{
+			float num2 = Mathf.Abs(base.transform.lossyScale.x);
+			if (num2 > 1E-06f)
+			{
+				lhs /= num2;
+			}
+		}
+		float num3 = trackAxis switch
 		{
 			AxisFilter.X => Vector3.Dot(lhs, ResolveAxisRight()), 
 			AxisFilter.Y => Vector3.Dot(lhs, ResolveAxisUp()), 
 			AxisFilter.Z => Vector3.Dot(lhs, ResolveAxisForward()), 
 			_ => lhs.magnitude, 
 		};
-		lastSpeed = (useRawSpeed ? num2 : Mathf.Lerp(lastSpeed, num2, 1f - Mathf.Exp((0f - responsiveness) * num)));
+		lastSpeed = (useRawSpeed ? num3 : Mathf.Lerp(lastSpeed, num3, 1f - Mathf.Exp((0f - responsiveness) * num)));
 		float time = Mathf.Abs(lastSpeed);
 		float f = postprocessCurve.Evaluate(time);
 		continuousProperties.ApplyAll(f);
-		float num3 = (useRawSpeed ? num2 : lastSpeed);
-		onSpeedUpdated?.Invoke(num3);
-		debugCurrentSpeed = num3;
-		bool flag = Mathf.Abs(num3) >= eventThreshold;
+		float num4 = (useRawSpeed ? num3 : lastSpeed);
+		onSpeedUpdated?.Invoke(num4);
+		debugCurrentSpeed = num4;
+		bool flag = Mathf.Abs(num4) >= eventThreshold;
 		if (flag && !wasAboveThreshold)
 		{
 			onSpeedAboveThreshold?.Invoke();
@@ -144,7 +156,7 @@ public class SimpleSpeedTracker : MonoBehaviour, IGorillaSliceableSimple
 		wasAboveThreshold = flag;
 		if (HasAxisFilter)
 		{
-			bool flag2 = num3 >= positiveThreshold;
+			bool flag2 = num4 >= positiveThreshold;
 			if (flag2 && !wasMovingPositive)
 			{
 				onAbovePositiveThreshold?.Invoke();
@@ -154,7 +166,7 @@ public class SimpleSpeedTracker : MonoBehaviour, IGorillaSliceableSimple
 				onBelowPositiveThreshold?.Invoke();
 			}
 			wasMovingPositive = flag2;
-			bool flag3 = num3 <= negativeThreshold;
+			bool flag3 = num4 <= negativeThreshold;
 			if (flag3 && !wasMovingNegative)
 			{
 				onAboveNegativeThreshold?.Invoke();
@@ -166,7 +178,7 @@ public class SimpleSpeedTracker : MonoBehaviour, IGorillaSliceableSimple
 			wasMovingNegative = flag3;
 		}
 		lastVelocity = lhs;
-		lastRawSpeed = num2;
+		lastRawSpeed = num3;
 		lastPos = position;
 		lastSliceTime = Time.time;
 	}

@@ -83,10 +83,10 @@ public static class CustomMapDevWatchMode
 		}
 	}
 
-	public static void CapturePlayerPosition()
+	public static void CapturePlayerPosition(bool enabled)
 	{
 		hasSavedPosition = false;
-		if (returnToPosition)
+		if (enabled)
 		{
 			GTPlayer instance = GTPlayer.Instance;
 			if (!(instance == null))
@@ -98,9 +98,9 @@ public static class CustomMapDevWatchMode
 		}
 	}
 
-	public static bool RestorePlayerPosition()
+	public static bool RestorePlayerPosition(bool enabled)
 	{
-		if (!hasSavedPosition || !returnToPosition)
+		if (!hasSavedPosition || !enabled)
 		{
 			hasSavedPosition = false;
 			return false;

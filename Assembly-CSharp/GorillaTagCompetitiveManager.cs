@@ -290,6 +290,7 @@ public class GorillaTagCompetitiveManager : GorillaTagManager
 			if (rig == VRRig.LocalRig)
 			{
 				MedalClipRelay.Clip(MedalClipRelay.MedalClip.ClipType.Tag);
+				MedalClipRelay.Clip(MedalClipRelay.MedalClip.ClipType.TagStreak);
 			}
 			if (!NetworkSystem.Instance.IsMasterClient && gameState == GameState.Playing && !currentInfected.Contains(taggedPlayer))
 			{

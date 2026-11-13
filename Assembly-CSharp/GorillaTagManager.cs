@@ -393,6 +393,7 @@ public class GorillaTagManager : GorillaGameManager
 		if (VRRigCache.Instance.TryGetVrrig(taggingPlayer, out var playerRig) && playerRig.Rig == VRRig.LocalRig)
 		{
 			MedalClipRelay.Clip(MedalClipRelay.MedalClip.ClipType.Tag);
+			MedalClipRelay.Clip(MedalClipRelay.MedalClip.ClipType.TagStreak);
 		}
 	}
 

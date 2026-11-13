@@ -35,9 +35,28 @@ public class GTRecorder : Recorder, ITickSystemPost
 
 	protected override MicWrapper CreateMicWrapper(string micDev, int samplingRateInt, VoiceLogger logger)
 	{
+		micDev = GetPreferredUnityMicDevice(micDev);
 		samplingRateInt = ClampToDeviceCaps(micDev, samplingRateInt);
 		_micWrapper = new GTMicWrapper(micDev, samplingRateInt, AllowPitchAdjustment, PitchAdjustment, AllowVolumeAdjustment, VolumeAdjustment, logger);
 		return _micWrapper;
+	}
+
+	public static string GetPreferredUnityMicDevice(string fallback)
+	{
+		return fallback;
+	}
+
+	private static bool IsLinkHeadsetMic(string device)
+	{
+		if (string.IsNullOrEmpty(device) || device.IndexOf("Virtual Audio Device", StringComparison.OrdinalIgnoreCase) < 0)
+		{
+			return false;
+		}
+		if (device.IndexOf("Oculus", StringComparison.OrdinalIgnoreCase) < 0)
+		{
+			return device.IndexOf("Meta", StringComparison.OrdinalIgnoreCase) >= 0;
+		}
+		return true;
 	}
 
 	private static int ClampToDeviceCaps(string micDev, int suggestedFrequency)

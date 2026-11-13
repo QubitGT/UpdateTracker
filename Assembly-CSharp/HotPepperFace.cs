@@ -21,16 +21,22 @@ public class HotPepperFace : MonoBehaviour
 	[SerializeField]
 	private GameObject _thermalSourceVolume;
 
+	private bool _isPlaying;
+
 	public void PlayFX(float delay)
 	{
 		if (delay < 0f)
 		{
 			PlayFX();
+			return;
 		}
-		else
-		{
-			Invoke("PlayFX", delay);
-		}
+		CancelInvoke("PlayFXDelayed");
+		Invoke("PlayFXDelayed", delay);
+	}
+
+	private void PlayFXDelayed()
+	{
+		PlayFX();
 	}
 
 	public void PlayFX()
@@ -40,15 +46,43 @@ public class HotPepperFace : MonoBehaviour
 		_fireFX.Play();
 		_flameSpeaker.GTPlay();
 		_breathSpeaker.GTPlay();
+		_isPlaying = true;
+		CancelInvoke("StopFX");
 		Invoke("StopFX", _effectLength);
 	}
 
 	public void StopFX()
 	{
-		_faceMesh.SetActive(value: false);
-		_thermalSourceVolume.SetActive(value: false);
-		_fireFX.Stop();
-		_flameSpeaker.GTStop();
-		_breathSpeaker.GTStop();
+		CancelInvoke("StopFX");
+		_isPlaying = false;
+		if (_faceMesh != null)
+		{
+			_faceMesh.SetActive(value: false);
+		}
+		if (_thermalSourceVolume != null)
+		{
+			_thermalSourceVolume.SetActive(value: false);
+		}
+		if (_fireFX != null)
+		{
+			_fireFX.Stop();
+		}
+		if (_flameSpeaker != null)
+		{
+			_flameSpeaker.GTStop();
+		}
+		if (_breathSpeaker != null)
+		{
+			_breathSpeaker.GTStop();
+		}
+	}
+
+	protected void OnDisable()
+	{
+		CancelInvoke();
+		if (_isPlaying)
+		{
+			StopFX();
+		}
 	}
 }

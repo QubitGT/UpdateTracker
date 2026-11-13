@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 
 namespace Cysharp.Threading.Tasks.Linq;
@@ -42,22 +43,32 @@ internal sealed class QueueOperator<TSource> : IUniTaskAsyncEnumerable<TSource>
 
 		private static async UniTaskVoid ConsumeAll(_Queue self, IUniTaskAsyncEnumerator<TSource> enumerator, ChannelWriter<TSource> writer)
 		{
+			object obj = null;
 			try
 			{
-				while (await enumerator.MoveNextAsync())
+				try
 				{
-					writer.TryWrite(enumerator.Current);
+					while (await enumerator.MoveNextAsync())
+					{
+						writer.TryWrite(enumerator.Current);
+					}
+					writer.TryComplete();
 				}
-				writer.TryComplete();
+				catch (Exception error)
+				{
+					writer.TryComplete(error);
+				}
 			}
-			catch (Exception error)
+			catch (object obj2)
 			{
-				writer.TryComplete(error);
+				obj = obj2;
 			}
-			finally
+			self.channelClosed = true;
+			await enumerator.DisposeAsync();
+			object obj3 = obj;
+			if (obj3 != null)
 			{
-				self.channelClosed = true;
-				await enumerator.DisposeAsync();
+				ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 			}
 		}
 

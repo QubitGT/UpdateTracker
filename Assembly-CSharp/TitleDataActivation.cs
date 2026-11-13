@@ -220,6 +220,10 @@ public class TitleDataActivation : MonoBehaviour, IGorillaSliceableSimple
 
 	private bool onOffState;
 
+	public bool IsActive => onOffState;
+
+	public event Action<bool> OnActivationStateChanged;
+
 	[RuntimeInitializeOnLoadMethod]
 	private static async void RuntimeInit()
 	{
@@ -229,14 +233,14 @@ public class TitleDataActivation : MonoBehaviour, IGorillaSliceableSimple
 		{
 			await Task.Yield();
 		}
-		PlayFabTitleDataCache.Instance.GetTitleData("ActivationReferenceDate", onTDReferenceDate, onTDReferenceDateError);
+		PlayFabTitleDataCache.Instance.GetTitleData("ActivationReferenceDate", OnTDReferenceDate, OnTDReferenceDateError);
 	}
 
-	private static void onTDReferenceDate(string s)
+	private static void OnTDReferenceDate(string s)
 	{
 		if (!DateTime.TryParse(s, out ReferenceDate))
 		{
-			Debug.LogError("TitleDataActivation :: onTDReferenceDate :: No Reference Date Set!!");
+			Debug.LogError("TitleDataActivation :: OnTDReferenceDate :: No Reference Date Set!!");
 		}
 		else
 		{
@@ -244,9 +248,9 @@ public class TitleDataActivation : MonoBehaviour, IGorillaSliceableSimple
 		}
 	}
 
-	private static void onTDReferenceDateError(PlayFabError error)
+	private static void OnTDReferenceDateError(PlayFabError error)
 	{
-		Debug.LogError("TitleDataActivation :: onTDReferenceDateError :: No Reference Date Set!! :: " + error.ErrorMessage);
+		Debug.LogError("TitleDataActivation :: OnTDReferenceDateError :: No Reference Date Set!! :: " + error.ErrorMessage);
 	}
 
 	private async void Initialize()
@@ -270,11 +274,11 @@ public class TitleDataActivation : MonoBehaviour, IGorillaSliceableSimple
 			{
 				await Task.Yield();
 			}
-			PlayFabTitleDataCache.Instance.GetTitleData(titleDataKey, onTD, onTDError);
+			PlayFabTitleDataCache.Instance.GetTitleData(titleDataKey, OnTD, OnTDError);
 		}
 	}
 
-	private void onTD(string s)
+	private void OnTD(string s)
 	{
 		TitleDataActivationData titleDataActivationData = null;
 		try
@@ -283,22 +287,29 @@ public class TitleDataActivation : MonoBehaviour, IGorillaSliceableSimple
 		}
 		catch (Exception ex)
 		{
-			Debug.LogError("TitleDataActivation :: onTD ::" + ex.Message + " string was " + s);
+			Debug.LogError("TitleDataActivation :: OnTD ::" + ex.Message + " string was " + s);
 			return;
 		}
-		for (int i = 0; i < titleDataActivationData.Data.Length; i++)
+		if (titleDataActivationData?.Data != null)
 		{
-			if (titleDataActivationData.Data[i].TitleDataObjectID == titleDataObjectID)
+			for (int i = 0; i < titleDataActivationData.Data.Length; i++)
 			{
-				activationData = titleDataActivationData.Data[i];
-				break;
+				if (titleDataActivationData.Data[i].TitleDataObjectID == titleDataObjectID)
+				{
+					activationData = titleDataActivationData.Data[i];
+					break;
+				}
 			}
+		}
+		else
+		{
+			Debug.LogError("TitleDataActivation :: OnTD :: no Data in " + titleDataKey + ", string was " + s);
 		}
 	}
 
-	private void onTDError(PlayFabError error)
+	private void OnTDError(PlayFabError error)
 	{
-		Debug.LogError($"TitleDataActivation on {AssetUtils.GetGameObjectPath(base.gameObject)} :: onTDError :: {titleDataKey} :: {error}");
+		Debug.LogError($"TitleDataActivation on {AssetUtils.GetGameObjectPath(base.gameObject)} :: OnTDError :: {titleDataKey} :: {error}");
 	}
 
 	private void OnEnable()
@@ -339,6 +350,7 @@ public class TitleDataActivation : MonoBehaviour, IGorillaSliceableSimple
 			{
 				SetState(inRange, delay);
 				onOffState = inRange;
+				this.OnActivationStateChanged?.Invoke(inRange);
 			}
 		}
 	}

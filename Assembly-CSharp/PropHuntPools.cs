@@ -252,10 +252,14 @@ public static class PropHuntPools
 	internal static void StartCreatingPools()
 	{
 		_state = EState.SpawningProps;
+		if (_allCosmeticsArraySO == null)
+		{
+			_allCosmeticsArraySO = CosmeticsController.LoadedAllCosmeticsSO;
+		}
 		for (int i = 0; i < _propCosmeticIds_uniqueArray.Length; i++)
 		{
 			string cosmeticId = _propCosmeticIds_uniqueArray[i];
-			CosmeticSO cosmeticSO = _allCosmeticsArraySO.SearchForCosmeticSO(cosmeticId);
+			CosmeticSO cosmeticSO = ((_allCosmeticsArraySO != null) ? _allCosmeticsArraySO.SearchForCosmeticSO(cosmeticId) : null);
 			propCosmeticId_to_cosmeticSO[cosmeticId] = cosmeticSO;
 			if (cosmeticSO == null)
 			{

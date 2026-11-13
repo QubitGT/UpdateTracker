@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 
 namespace Cysharp.Threading.Tasks.Linq;
@@ -138,22 +139,32 @@ internal sealed class Publish<TSource> : IConnectableUniTaskAsyncEnumerable<TSou
 
 	private async UniTaskVoid ConsumeEnumerator()
 	{
+		object obj = null;
 		try
 		{
-			while (await enumerator.MoveNextAsync())
+			try
 			{
-				trigger.SetResult(enumerator.Current);
+				while (await enumerator.MoveNextAsync())
+				{
+					trigger.SetResult(enumerator.Current);
+				}
+				trigger.SetCompleted();
 			}
-			trigger.SetCompleted();
+			catch (Exception error)
+			{
+				trigger.SetError(error);
+			}
 		}
-		catch (Exception error)
+		catch (object obj2)
 		{
-			trigger.SetError(error);
+			obj = obj2;
 		}
-		finally
+		isCompleted = true;
+		await enumerator.DisposeAsync();
+		object obj3 = obj;
+		if (obj3 != null)
 		{
-			isCompleted = true;
-			await enumerator.DisposeAsync();
+			ExceptionDispatchInfo.Capture((obj3 as Exception) ?? throw obj3).Throw();
 		}
 	}
 

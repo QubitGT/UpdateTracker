@@ -8,7 +8,7 @@ using UnityEngine.Scripting;
 [assembly: AssemblyCompany("GT_CustomMapSupportRuntime")]
 [assembly: AssemblyConfiguration("Release")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: AssemblyInformationalVersion("1.0.0+48fea8d417ac80a30bc02956d23177b983a58087")]
+[assembly: AssemblyInformationalVersion("1.0.0+da85ed1212d5b7d5f7f34ba421621e88791f84aa")]
 [assembly: AssemblyProduct("GT_CustomMapSupportRuntime")]
 [assembly: AssemblyTitle("GT_CustomMapSupportRuntime")]
 [assembly: AssemblyVersion("1.0.0.0")]

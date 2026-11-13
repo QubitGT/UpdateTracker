@@ -118,6 +118,8 @@ public class MarkOneMitts : HandTapBehaviour, ITickSystemTick, IProximityEffectR
 
 	private ParticleSystem.MinMaxCurve emptyParticleCurve = new ParticleSystem.MinMaxCurve(0f);
 
+	private float maxTapStrength;
+
 	public bool TickRunning { get; set; }
 
 	private void Awake()
@@ -125,7 +127,9 @@ public class MarkOneMitts : HandTapBehaviour, ITickSystemTick, IProximityEffectR
 		leftMitt.Init();
 		rightMitt.Init();
 		rig = GetComponentInParent<VRRig>();
-		vibrateController = vibrateController && rig.isOfflineVRRig;
+		vibrateController = vibrateController && rig != null && rig.isOfflineVRRig;
+		int length = handSpeedToEffectStrength.length;
+		maxTapStrength = ((length > 0) ? handSpeedToEffectStrength[length - 1].value : 1f);
 		proximityEffect.AddReceiver(this);
 	}
 
@@ -137,6 +141,34 @@ public class MarkOneMitts : HandTapBehaviour, ITickSystemTick, IProximityEffectR
 	private void OnDisable()
 	{
 		TickSystem<object>.RemoveTickCallback(this);
+		StopMitt(leftMitt);
+		StopMitt(rightMitt);
+		if (proximityEffect != null)
+		{
+			proximityEffect.enabled = true;
+		}
+		if (proximityAudioSource != null && proximityAudioSource.isPlaying)
+		{
+			proximityAudioSource.Stop();
+		}
+	}
+
+	private float HeatToCelsius(float strength)
+	{
+		return 20f + heatMultiplier * strength;
+	}
+
+	private static void StopMitt(Mitt mitt)
+	{
+		mitt.timer = 0f;
+		if (mitt.flame != null)
+		{
+			mitt.flame.Stop();
+		}
+		if (mitt.thermalSource != null)
+		{
+			mitt.thermalSource.enabled = false;
+		}
 	}
 
 	public void OnProximityCalculated(float distance, float alignment, float parallel)
@@ -161,10 +193,8 @@ public class MarkOneMitts : HandTapBehaviour, ITickSystemTick, IProximityEffectR
 		}
 		else if (leftMitt.thermalSource.enabled || rightMitt.thermalSource.enabled)
 		{
-			leftMitt.flame.Stop();
-			leftMitt.thermalSource.enabled = false;
-			rightMitt.flame.Stop();
-			rightMitt.thermalSource.enabled = false;
+			StopMitt(leftMitt);
+			StopMitt(rightMitt);
 			SetInterferenceAudio(active: false);
 		}
 	}
@@ -180,7 +210,7 @@ public class MarkOneMitts : HandTapBehaviour, ITickSystemTick, IProximityEffectR
 		mitt.flameMain.startSpeed = speed;
 		mitt.flameForce.x = xy;
 		mitt.flameForce.y = xy;
-		mitt.thermalSource.celsius = heatMultiplier * scale;
+		mitt.thermalSource.celsius = HeatToCelsius(scale);
 	}
 
 	private void RunTimer(Mitt mitt, bool isLeftHand)
@@ -192,23 +222,19 @@ public class MarkOneMitts : HandTapBehaviour, ITickSystemTick, IProximityEffectR
 		mitt.timer -= Time.deltaTime;
 		if (mitt.timer <= 0f)
 		{
-			mitt.timer = 0f;
-			mitt.flame.Stop();
-			mitt.thermalSource.enabled = false;
+			StopMitt(mitt);
 			if (leftMitt.timer <= 0f && rightMitt.timer <= 0f)
 			{
 				proximityEffect.enabled = true;
 			}
+			return;
 		}
-		else
+		float num = mitt.lastTapStrength * mitt.timer;
+		mitt.flameTransform.localScale = flameScale * num * Vector3.one;
+		mitt.thermalSource.celsius = HeatToCelsius(num);
+		if (vibrateController)
 		{
-			float num = mitt.lastTapStrength * mitt.timer;
-			mitt.flameTransform.localScale = flameScale * num * Vector3.one;
-			mitt.thermalSource.celsius = heatMultiplier * num;
-			if (vibrateController)
-			{
-				GorillaTagger.Instance.StartVibration(isLeftHand, vibrationStrengthMult * num, 0.1f);
-			}
+			GorillaTagger.Instance.StartVibration(isLeftHand, vibrationStrengthMult * num, 0.1f);
 		}
 	}
 
@@ -263,10 +289,9 @@ public class MarkOneMitts : HandTapBehaviour, ITickSystemTick, IProximityEffectR
 			mitt.bursts[1].count = num * 5f;
 			mitt.burst.emission.SetBursts(mitt.bursts);
 			mitt.burstTransform.localScale = num * Vector3.one;
-			StartFlame(mitt, num * flameScale * flameTime, flameSpeed, emptyParticleCurve);
+			StartFlame(mitt, num * flameTime, flameSpeed, emptyParticleCurve);
 			mitt.burst.Play();
-			float value = handSpeedToEffectStrength.keys[^1].value;
-			handContext.soundPitch = Mathf.Clamp(value / num, 1f, 3f);
+			handContext.soundPitch = Mathf.Clamp(maxTapStrength / num, 1f, 3f);
 			proximityEffect.enabled = false;
 		}
 		else

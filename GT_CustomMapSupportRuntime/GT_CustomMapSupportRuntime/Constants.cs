@@ -31,6 +31,8 @@ public class Constants
 
 	public static readonly int geodeATMLimit = 1;
 
+	public static readonly int donationBoothLimit = 1;
+
 	public static readonly int atmCreatorCodeSizeLimit = 10;
 
 	public static readonly int storeDisplayStandLimit = 12;

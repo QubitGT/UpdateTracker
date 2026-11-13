@@ -44,6 +44,18 @@ public class FPSController : MonoBehaviour
 	[SerializeField]
 	private bool clampGrab;
 
+	[Tooltip("Sweep the head, hands and body along each move and slide along whatever they hit, instead of pushing into it. Not used in noclip.")]
+	[SerializeField]
+	private bool collideAndSlide = true;
+
+	[Tooltip("Tallest ledge (in m at player scale 1) that collide and slide steps up onto instead of sliding along.")]
+	[SerializeField]
+	private float stepHeight = 0.2f;
+
+	[Tooltip("Rough launch speed (m/s) when clicking to throw a held game entity. Far targets get the slowest arc that still reaches them. Hold Shift to lob instead.")]
+	[SerializeField]
+	private float clickThrowSpeed = 15f;
+
 	private bool controlRightHand;
 
 	public LayerMask HandMask;

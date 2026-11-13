@@ -84,7 +84,7 @@ public class BuilderTableNetworking : MonoBehaviourPunCallbacks, ITickSystemTick
 
 	public PhotonView tablePhotonView;
 
-	private const int MAX_TABLE_BYTES = 1048576;
+	public const int MAX_TABLE_BYTES = 1048576;
 
 	private const int MAX_TABLE_CHUNK_BYTES = 1000;
 

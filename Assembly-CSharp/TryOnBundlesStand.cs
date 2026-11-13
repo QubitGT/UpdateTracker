@@ -218,7 +218,7 @@ public class TryOnBundlesStand : MonoBehaviour, IBuildValidation
 			flag = false;
 			for (int i = 0; i < BundleToTry.bundledItems.Length; i++)
 			{
-				if (VRRig.LocalRig.cosmeticsObjectRegistry.Cosmetic(BundleToTry.bundledItems[i]) == null)
+				if (!CosmeticsController.instance.IsReadyForLocalTryOn(BundleToTry.bundledItems[i]))
 				{
 					flag = true;
 				}
@@ -243,7 +243,7 @@ public class TryOnBundlesStand : MonoBehaviour, IBuildValidation
 		bool flag = false;
 		for (int i = 0; i < itemFromDict.bundledItems.Length; i++)
 		{
-			if (VRRig.LocalRig.cosmeticsObjectRegistry.Cosmetic(itemFromDict.bundledItems[i]) == null)
+			if (!CosmeticsController.instance.IsReadyForLocalTryOn(itemFromDict.bundledItems[i]))
 			{
 				flag = true;
 			}

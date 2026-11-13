@@ -1,4 +1,5 @@
 using System.Collections;
+using GorillaNetworking;
 using GorillaTag.CosmeticSystem;
 using TMPro;
 using UnityEngine;
@@ -17,9 +18,6 @@ public class PropHuntDebugHelper : MonoBehaviour
 
 	[SerializeField]
 	private TextMeshPro _propsText;
-
-	[SerializeField]
-	private AllCosmeticsArraySO _allCosmetics;
 
 	private string[] _cachedAllPropIDs;
 
@@ -57,7 +55,8 @@ public class PropHuntDebugHelper : MonoBehaviour
 		string text = string.Empty;
 		if (_selectedPropIndex != -1)
 		{
-			CosmeticSO cosmeticSO = _allCosmetics.SearchForCosmeticSO(selectedPropID);
+			AllCosmeticsArraySO loadedAllCosmeticsSO = CosmeticsController.LoadedAllCosmeticsSO;
+			CosmeticSO cosmeticSO = ((loadedAllCosmeticsSO != null) ? loadedAllCosmeticsSO.SearchForCosmeticSO(selectedPropID) : null);
 			if (cosmeticSO != null)
 			{
 				text = cosmeticSO.info.displayName;

@@ -38,10 +38,6 @@ public sealed class GorillaPropHuntGameManager : GorillaTagManager
 
 	private const bool _k__GT_PROP_HUNT__USE_POOLING__ = true;
 
-	[FormerlySerializedAs("allCosmetics")]
-	[SerializeField]
-	private AllCosmeticsArraySO m_ph_allCosmetics;
-
 	[FormerlySerializedAs("backupCosmetic")]
 	[FormerlySerializedAs("m_ph_backupCosmetic")]
 	[SerializeField]
@@ -304,7 +300,7 @@ public sealed class GorillaPropHuntGameManager : GorillaTagManager
 
 	private void Start()
 	{
-		PropHuntPools.StartInitializingPropsList(m_ph_allCosmetics, m_ph_fallbackPropCosmeticSO);
+		PropHuntPools.StartInitializingPropsList(CosmeticsController.LoadedAllCosmeticsSO, m_ph_fallbackPropCosmeticSO);
 		if (_ph_gorillaGhostBodyMaterialIndex == -1)
 		{
 			_Initialize_gorillaGhostBodyMaterialIndex();
@@ -1037,7 +1033,8 @@ public sealed class GorillaPropHuntGameManager : GorillaTagManager
 
 	public GTAssetRef<GameObject> GetPropRefByCosmeticID_NoPool(string cosmeticID, out CosmeticSO out_debugCosmeticSO)
 	{
-		CosmeticSO cosmeticSO = m_ph_allCosmetics.SearchForCosmeticSO(cosmeticID);
+		AllCosmeticsArraySO loadedAllCosmeticsSO = CosmeticsController.LoadedAllCosmeticsSO;
+		CosmeticSO cosmeticSO = ((loadedAllCosmeticsSO != null) ? loadedAllCosmeticsSO.SearchForCosmeticSO(cosmeticID) : null);
 		if (cosmeticSO == null)
 		{
 			GTDev.LogError("ERROR!!!  GorillaPropHuntGameManager.GetPropRefByCosmeticID_NoPool: Got cosmetic id from title data, but could not find \"" + cosmeticID + "\".");

@@ -103,7 +103,7 @@ public class CustomMapsModTile : CustomMapsScreenTouchPoint
 		ResetLogo();
 	}
 
-	public override void PressButtonColourUpdate()
+	public override void PressButtonColorUpdate()
 	{
 	}
 

@@ -316,7 +316,7 @@ internal static class FormatParser
 			}
 			if (i > num3)
 			{
-				formatString = format.AsSpan(num3, i - num3);
+				formatString = MemoryExtensions.AsSpan(format, num3, i - num3);
 			}
 			break;
 		}

@@ -42,4 +42,21 @@ public static class GorillaKeyboardBindingExtensions
 		}
 		return true;
 	}
+
+	public static bool TryGetTypedText(this GorillaKeyboardBindings binding, out string text)
+	{
+		if (binding >= GorillaKeyboardBindings.zero && binding <= GorillaKeyboardBindings.nine)
+		{
+			int num = (int)binding;
+			text = num.ToString();
+			return true;
+		}
+		if (binding >= GorillaKeyboardBindings.A && binding <= GorillaKeyboardBindings.Z)
+		{
+			text = binding.ToString();
+			return true;
+		}
+		text = null;
+		return false;
+	}
 }

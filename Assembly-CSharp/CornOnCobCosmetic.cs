@@ -20,6 +20,8 @@ public class CornOnCobCosmetic : MonoBehaviour
 
 	private int previousParticleCount;
 
+	private float lastEmissionFactor = float.NaN;
+
 	protected void Awake()
 	{
 		emissionModule = particleSys.emission;
@@ -28,11 +30,17 @@ public class CornOnCobCosmetic : MonoBehaviour
 
 	protected void LateUpdate()
 	{
-		for (int i = 0; i < emissionModule.burstCount; i++)
+		float num = particleEmissionCurve.Evaluate(thermalReceiver.celsius);
+		if (num != lastEmissionFactor)
 		{
-			ParticleSystem.Burst burst = emissionModule.GetBurst(i);
-			burst.probability = maxBurstProbability * particleEmissionCurve.Evaluate(thermalReceiver.celsius);
-			emissionModule.SetBurst(i, burst);
+			lastEmissionFactor = num;
+			float probability = maxBurstProbability * num;
+			for (int i = 0; i < emissionModule.burstCount; i++)
+			{
+				ParticleSystem.Burst burst = emissionModule.GetBurst(i);
+				burst.probability = probability;
+				emissionModule.SetBurst(i, burst);
+			}
 		}
 		int particleCount = particleSys.particleCount;
 		if (particleCount > previousParticleCount)

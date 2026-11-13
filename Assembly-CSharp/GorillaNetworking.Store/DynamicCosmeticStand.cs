@@ -303,14 +303,23 @@ public class DynamicCosmeticStand : MonoBehaviour, iFlagForBaking
 	public void SpawnItemOntoStand(string PlayFabID)
 	{
 		ClearCosmetics();
-		if (PlayFabID.IsNullOrEmpty())
+		if (string.IsNullOrEmpty(PlayFabID))
 		{
 			GTDev.LogWarning("ManuallyInitialize: PlayFabID is null or empty for " + StandName);
 			return;
 		}
-		if (StoreController.instance.IsNotNull() && Application.isPlaying)
+		int num;
+		if (StoreController.instance.IsNotNull())
 		{
-			StoreController.instance.RemoveStandFromPlayFabIDDictionary(this);
+			num = (Application.isPlaying ? 1 : 0);
+			if (num != 0)
+			{
+				StoreController.instance.RemoveStandFromPlayFabIDDictionary(this);
+			}
+		}
+		else
+		{
+			num = 0;
 		}
 		thisCosmeticName = PlayFabID;
 		if (thisCosmeticName.Length == 5)
@@ -325,7 +334,7 @@ public class DynamicCosmeticStand : MonoBehaviour, iFlagForBaking
 		{
 			DisplayHeadModel.LoadCosmeticParts(StoreController.FindCosmeticInAllCosmeticsArraySO(thisCosmeticName));
 		}
-		if (StoreController.instance.IsNotNull() && Application.isPlaying)
+		if (num != 0)
 		{
 			StoreController.instance.AddStandToPlayfabIDDictionary(this);
 		}

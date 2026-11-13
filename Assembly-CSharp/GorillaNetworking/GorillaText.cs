@@ -30,6 +30,8 @@ public class GorillaText
 
 	private UnityEvent<Material[]> updateMaterialCallback;
 
+	public bool IsFailed => failedState;
+
 	public void Initialize(Material[] originalMaterials, Material failureMaterial, UnityEvent<string> callback = null, UnityEvent<Material[]> materialCallback = null)
 	{
 		this.failureMaterial = failureMaterial;
@@ -43,10 +45,10 @@ public class GorillaText
 
 	public void InvokeIfUpdated()
 	{
-		if (modified)
+		if (modified && !failedState)
 		{
 			modified = false;
-			if (currentText == null || !stringBuilder.Equals(currentText.AsSpan()))
+			if (currentText == null || !stringBuilder.Equals(MemoryExtensions.AsSpan(currentText)))
 			{
 				currentText = stringBuilder.ToString();
 				updateTextCallback?.Invoke(currentText);

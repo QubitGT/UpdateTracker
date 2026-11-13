@@ -170,6 +170,10 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 
 		private static char[] nameScratchSpace = new char[6];
 
+		public const int k_packedHeaderLength = 2;
+
+		public const int k_maxPackableSlots = 64;
+
 		public static CosmeticSet EmptySet
 		{
 			get
@@ -213,35 +217,51 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 			}
 		}
 
+		public static ulong ReadPackedUsageBits(int[] packed)
+		{
+			if (packed.Length < 2)
+			{
+				return 0uL;
+			}
+			return (uint)packed[0] | ((ulong)(uint)packed[1] << 32);
+		}
+
+		private static void WritePackedUsageBits(int[] packed, ulong usageBits)
+		{
+			packed[0] = (int)usageBits;
+			packed[1] = (int)(usageBits >> 32);
+		}
+
+		public static bool IsSlotUsed(ulong usageBits, int slotIndex)
+		{
+			return (usageBits & (ulong)(1L << slotIndex)) != 0;
+		}
+
 		public CosmeticSet(int[] itemNamesPacked, CosmeticsController controller)
 		{
 			items = new CosmeticItem[35];
-			int num = ((itemNamesPacked.Length != 0) ? itemNamesPacked[0] : 0);
-			int num2 = 1;
+			ulong usageBits = ReadPackedUsageBits(itemNamesPacked);
+			int num = 2;
 			for (int i = 0; i < items.Length; i++)
 			{
-				if (i > 31)
+				if (IsSlotUsed(usageBits, i))
 				{
-					continue;
-				}
-				if ((num & (1 << i)) != 0)
-				{
-					int num3 = itemNamesPacked[num2];
-					if (num3 == -55)
+					int num2 = itemNamesPacked[num];
+					if (num2 == -55)
 					{
 						items[i] = controller.GetItemFromDict("Slingshot");
 					}
 					else
 					{
-						nameScratchSpace[0] = (char)(65 + num3 % 26);
-						nameScratchSpace[1] = (char)(65 + num3 / 26 % 26);
-						nameScratchSpace[2] = (char)(65 + num3 / 676 % 26);
-						nameScratchSpace[3] = (char)(65 + num3 / 17576 % 26);
-						nameScratchSpace[4] = (char)(65 + num3 / 456976 % 26);
+						nameScratchSpace[0] = (char)(65 + num2 % 26);
+						nameScratchSpace[1] = (char)(65 + num2 / 26 % 26);
+						nameScratchSpace[2] = (char)(65 + num2 / 676 % 26);
+						nameScratchSpace[3] = (char)(65 + num2 / 17576 % 26);
+						nameScratchSpace[4] = (char)(65 + num2 / 456976 % 26);
 						nameScratchSpace[5] = '.';
 						items[i] = controller.GetItemFromDict(new string(nameScratchSpace));
 					}
-					num2++;
+					num++;
 				}
 				else
 				{
@@ -489,8 +509,10 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 					{
 						bDock.TransferrableItemDisableAtPosition(dropPositions);
 					}
-					cosmeticItemInstance2 = cosmeticsObjectRegistry.Cosmetic(cosmeticItem.displayName);
-					cosmeticItemInstance2?.DisableItem((CosmeticSlots)slotIndex);
+					if (cosmeticsObjectRegistry.TryGetLoaded(cosmeticItem.displayName, out cosmeticItemInstance2))
+					{
+						cosmeticItemInstance2.DisableItem((CosmeticSlots)slotIndex);
+					}
 				}
 				if (parentItem.isNullItem)
 				{
@@ -636,7 +658,10 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 				if (!cosmeticItem.isNullItem)
 				{
 					CosmeticSlots cosmeticSlot = (CosmeticSlots)i;
-					cosmeticObjectRegistry.Cosmetic(cosmeticItem.displayName)?.DisableItem(cosmeticSlot);
+					if (cosmeticObjectRegistry.TryGetLoaded(cosmeticItem.displayName, out var cosmeticItemInstance))
+					{
+						cosmeticItemInstance.DisableItem(cosmeticSlot);
+					}
 					items[i] = nullItem;
 				}
 			}
@@ -763,27 +788,27 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 
 		public int[] ToPackedIDArray()
 		{
-			int num = 0;
+			ulong num = 0uL;
 			int num2 = 0;
 			int num3 = 35;
-			for (int i = 0; i < num3; i++)
+			for (int i = 0; i < num3 && i < 64; i++)
 			{
-				if (i <= 31 && !items[i].isNullItem && (items[i].itemName.Length == 6 || items[i].itemName == "Slingshot"))
+				if (!items[i].isNullItem && (items[i].itemName.Length == 6 || items[i].itemName == "Slingshot"))
 				{
-					num |= 1 << i;
+					num |= (ulong)(1L << i);
 					num2++;
 				}
 			}
-			if (num == 0)
+			if (num == 0L)
 			{
 				return intArrays[0];
 			}
-			int[] array = intArrays[num2 + 1];
-			array[0] = num;
-			int num4 = 1;
-			for (int j = 0; j < num3; j++)
+			int[] array = intArrays[num2 + 2];
+			WritePackedUsageBits(array, num);
+			int num4 = 2;
+			for (int j = 0; j < num3 && j < 64; j++)
 			{
-				if (j <= 31 && (num & (1 << j)) != 0)
+				if (IsSlotUsed(num, j))
 				{
 					string itemName = items[j].itemName;
 					if (itemName == "Slingshot")
@@ -1379,6 +1404,18 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 
 	private StringBuilder sb = new StringBuilder(256);
 
+	public static AllCosmeticsArraySO LoadedAllCosmeticsSO
+	{
+		get
+		{
+			if (!hasInstance || !instance.v2_allCosmeticsInfoAssetRef_isLoaded)
+			{
+				return null;
+			}
+			return instance.v2_allCosmeticsInfoAssetRef.Asset as AllCosmeticsArraySO;
+		}
+	}
+
 	public CosmeticInfoV2[] v2_allCosmetics { get; private set; }
 
 	public bool v2_allCosmeticsInfoAssetRef_isLoaded { get; private set; }
@@ -1476,6 +1513,14 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 
 	private void V2_allCosmeticsInfoAssetRef_LoadSucceeded(AllCosmeticsArraySO allCosmeticsSO)
 	{
+		if (allCosmeticsSO.objectPools != null)
+		{
+			ObjectPools.AddPools(allCosmeticsSO.objectPools.pools);
+		}
+		else
+		{
+			Debug.LogError("AllCosmeticsArraySO has no objectPools, so cosmetic projectiles and effects have no pools.");
+		}
 		v2_allCosmetics = new CosmeticInfoV2[allCosmeticsSO.sturdyAssetRefs.Length];
 		for (int i = 0; i < allCosmeticsSO.sturdyAssetRefs.Length; i++)
 		{
@@ -1824,6 +1869,7 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 			nullItem.meshResourceString = "";
 			nullItem.materialResourceString = "";
 			nullItem.isNullItem = true;
+			itemToBuy = nullItem;
 			_allCosmeticsDict[nullItem.itemName] = nullItem;
 			_allCosmeticsItemIDsfromDisplayNamesDict[nullItem.displayName] = nullItem.itemName;
 			tryOnCollectableItem = nullItem;
@@ -1902,29 +1948,11 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 			else
 			{
 				UpdateMyCosmetics();
-				StartCoroutine(CheckIfMyCosmeticsUpdated(playFabID));
 			}
 		}, delegate(string error)
 		{
-			cosmeticAutoGrantClaimsRequested.Remove(playFabID);
 			Debug.LogError("CosmeticAutoGrant: ClaimItem failed for " + playFabID + ": " + error);
 		});
-	}
-
-	public bool IsGlobalCosmeticAutoGrant(string playFabID)
-	{
-		if (CosmeticAutoGrantTitleDataChecks == null || CosmeticAutoGrantTitleDataCheckCount > 0 || GorillaComputer.instance == null)
-		{
-			return false;
-		}
-		foreach (CosmeticAutoGrant cosmeticAutoGrant in cosmeticAutoGrants)
-		{
-			if (!(cosmeticAutoGrant.cosmeticItem == null) && !(cosmeticAutoGrant.cosmeticItem.info.playFabID != playFabID) && !cosmeticAutoGrant.titleDataCheck.key.IsNullOrEmpty() && cosmeticAutoGrant.reqAccountDays <= 0 && !(cosmeticAutoGrant.ReqAccountCreationDate < GorillaComputer.instance.GetServerTime()) && CosmeticAutoGrantTitleDataChecks.TryGetValue(cosmeticAutoGrant.titleDataCheck.key, out var value) && cosmeticAutoGrant.titleDataCheck.value <= value)
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 
 	public void Start()
@@ -2321,6 +2349,15 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 		set.ActivateCosmetics(cachedSet, offlineVRRig, component, offlineVRRig.cosmeticsObjectRegistry);
 	}
 
+	public bool IsReadyForLocalTryOn(string itemName)
+	{
+		if (allCosmeticsDict.TryGetValue(itemName, out var value) && value.itemCategory == CosmeticCategory.Hoverboard)
+		{
+			return true;
+		}
+		return VRRig.LocalRig.cosmeticsObjectRegistry.Cosmetic(itemName) != null;
+	}
+
 	private async void RepressButton(FittingRoomButton pressedButton, bool isLeftHand)
 	{
 		float timeEntered = Time.time;
@@ -2339,7 +2376,7 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 				flag = false;
 				for (int i = 0; i < itemSet.bundledItems.Length; i++)
 				{
-					if (VRRig.LocalRig.cosmeticsObjectRegistry.Cosmetic(itemSet.bundledItems[i]) == null)
+					if (!IsReadyForLocalTryOn(itemSet.bundledItems[i]))
 					{
 						flag = true;
 					}
@@ -2348,7 +2385,7 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 		}
 		else
 		{
-			while (VRRig.LocalRig.cosmeticsObjectRegistry.Cosmetic(pressedButton.currentCosmeticItem.itemName) == null)
+			while (!IsReadyForLocalTryOn(pressedButton.currentCosmeticItem.itemName))
 			{
 				if (Time.time > timeEntered + maxTime)
 				{
@@ -2372,7 +2409,7 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 			bool flag = false;
 			for (int i = 0; i < currentCosmeticItem.bundledItems.Length; i++)
 			{
-				if (VRRig.LocalRig.cosmeticsObjectRegistry.Cosmetic(currentCosmeticItem.bundledItems[i]) == null)
+				if (!IsReadyForLocalTryOn(currentCosmeticItem.bundledItems[i]))
 				{
 					flag = true;
 				}
@@ -2383,7 +2420,7 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 				return;
 			}
 		}
-		else if (VRRig.LocalRig.cosmeticsObjectRegistry.Cosmetic(pressedFittingRoomButton.currentCosmeticItem.itemName) == null)
+		else if (!IsReadyForLocalTryOn(pressedFittingRoomButton.currentCosmeticItem.itemName))
 		{
 			RepressButton(pressedFittingRoomButton, isLeftHand);
 			return;
@@ -2772,7 +2809,9 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 		{
 			return;
 		}
-		ccp.GetCreatorCode(out var code, out var groups);
+		string code = string.Empty;
+		NexusGroupId[] groups = null;
+		ccp?.GetCreatorCode(out code, out groups);
 		ATM_Manager.instance.SwitchToStage(ATM_Manager.ATMStages.Begin);
 		currentPurchaseItemStage = PurchaseItemStages.Start;
 		ProcessPurchaseItemState("left", isLeftHand: false);
@@ -2796,12 +2835,12 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 			return;
 		}
 		itemToPurchase = text;
-		NexusManager.MemberCode memberCode = await CreatorCodes.CheckValidationCoroutineJIT(ccp.TerminalId, code, groups);
+		NexusManager.MemberCode memberCode = await CreatorCodes.CheckValidationCoroutineJIT(ccp?.TerminalId ?? string.Empty, code, groups);
 		if (memberCode != null)
 		{
 			if (buyingBundle)
 			{
-				SetValidatedCreatorCode(memberCode.memberCode, memberCode.groupId.Code, ccp.TerminalId);
+				SetValidatedCreatorCode(memberCode.memberCode, memberCode.groupId.Code, ccp?.TerminalId ?? string.Empty);
 				SteamPurchase();
 			}
 		}
@@ -2997,7 +3036,7 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 		ModifyUnlockList(unlockedCosmetics, num, relock);
 		if (relock)
 		{
-			concatStringCosmeticsAllowed.Replace(allCosmetics[num].itemName, string.Empty);
+			concatStringCosmeticsAllowed = concatStringCosmeticsAllowed.Replace(allCosmetics[num].itemName, string.Empty);
 		}
 		else
 		{
@@ -3087,6 +3126,15 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 		case CosmeticCategory.Collectable:
 			break;
 		}
+	}
+
+	public void RefreshWardrobesAfterUnlockChange()
+	{
+		if (itemLists[0] != null)
+		{
+			UpdateWardrobeModelsAndButtons();
+		}
+		OnCosmeticsUpdated?.Invoke();
 	}
 
 	private void ModifyUnlockList(List<CosmeticItem> list, int index, bool relock)
@@ -4385,27 +4433,34 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 	{
 		UnlockItem(itemID);
 		GorillaTagger.Instance.offlineVRRig.AddCosmetic(itemID);
-		UpdateMyCosmetics();
-		if (!autoEquip)
-		{
-			return;
-		}
 		CosmeticItem itemFromDict = GetItemFromDict(itemID);
-		GorillaTelemetry.PostShopEvent(GorillaTagger.Instance.offlineVRRig, GTShopEventType.external_item_claim, itemFromDict);
-		List<CosmeticSlots> list = CollectionPool<List<CosmeticSlots>, CosmeticSlots>.Get();
-		if (list.Capacity < 16)
+		if (itemFromDict.bundledItems != null)
 		{
-			list.Capacity = 16;
+			string[] bundledItems = itemFromDict.bundledItems;
+			foreach (string cosmeticId in bundledItems)
+			{
+				GorillaTagger.Instance.offlineVRRig.AddCosmetic(cosmeticId);
+			}
 		}
-		ApplyCosmeticItemToSet(currentWornSet, itemFromDict, isLeftHand, applyToPlayerPrefs: true, list);
-		foreach (CosmeticSlots item in list)
+		UpdateMyCosmetics();
+		if (autoEquip)
 		{
-			tryOnSet.items[(int)item] = nullItem;
+			GorillaTelemetry.PostShopEvent(GorillaTagger.Instance.offlineVRRig, GTShopEventType.external_item_claim, itemFromDict);
+			List<CosmeticSlots> list = CollectionPool<List<CosmeticSlots>, CosmeticSlots>.Get();
+			if (list.Capacity < 16)
+			{
+				list.Capacity = 16;
+			}
+			ApplyCosmeticItemToSet(currentWornSet, itemFromDict, isLeftHand, applyToPlayerPrefs: true, list);
+			foreach (CosmeticSlots item in list)
+			{
+				tryOnSet.items[(int)item] = nullItem;
+			}
+			CollectionPool<List<CosmeticSlots>, CosmeticSlots>.Release(list);
+			UpdateShoppingCart();
+			UpdateWornCosmetics(sync: true);
 		}
-		CollectionPool<List<CosmeticSlots>, CosmeticSlots>.Release(list);
-		UpdateShoppingCart();
-		UpdateWornCosmetics(sync: true);
-		OnCosmeticsUpdated?.Invoke();
+		RefreshWardrobesAfterUnlockChange();
 	}
 
 	public void AddTempUnlockToWardrobe(string cosmeticID)
@@ -4622,16 +4677,25 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 		{
 			return true;
 		}
-		int num = 0;
-		int num2 = packed[0];
-		for (int i = 0; i <= 31; i++)
+		if (packed.Length < 2)
 		{
-			if ((num2 & (1 << i)) != 0)
+			return false;
+		}
+		ulong usageBits = CosmeticSet.ReadPackedUsageBits(packed);
+		int num = 35;
+		int num2 = 0;
+		for (int i = 0; i < 64; i++)
+		{
+			if (CosmeticSet.IsSlotUsed(usageBits, i))
 			{
-				num++;
+				if (i >= num)
+				{
+					return false;
+				}
+				num2++;
 			}
 		}
-		return packed.Length == num + 1;
+		return packed.Length == num2 + 2;
 	}
 
 	public static int[] PackCollectableItems(List<CosmeticItem> items)

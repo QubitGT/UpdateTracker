@@ -1660,7 +1660,7 @@ internal static class Number
 	{
 		Span<char> initialBuffer = stackalloc char[32];
 		System.Text.ValueStringBuilder sb = new System.Text.ValueStringBuilder(initialBuffer);
-		return FormatDouble(ref sb, value, format.AsSpan(), info) ?? sb.ToString();
+		return FormatDouble(ref sb, value, MemoryExtensions.AsSpan(format), info) ?? sb.ToString();
 	}
 
 	public static bool TryFormatDouble(double value, ReadOnlySpan<char> format, NumberFormatInfo info, Span<char> destination, out int charsWritten)
@@ -1788,7 +1788,7 @@ internal static class Number
 	{
 		Span<char> initialBuffer = stackalloc char[32];
 		System.Text.ValueStringBuilder sb = new System.Text.ValueStringBuilder(initialBuffer);
-		return FormatSingle(ref sb, value, format.AsSpan(), info) ?? sb.ToString();
+		return FormatSingle(ref sb, value, MemoryExtensions.AsSpan(format), info) ?? sb.ToString();
 	}
 
 	public static bool TryFormatSingle(float value, ReadOnlySpan<char> format, NumberFormatInfo info, Span<char> destination, out int charsWritten)
@@ -1849,7 +1849,7 @@ internal static class Number
 
 	private static bool TryCopyTo(string source, Span<char> destination, out int charsWritten)
 	{
-		if (source.AsSpan().TryCopyTo(destination))
+		if (MemoryExtensions.AsSpan(source).TryCopyTo(destination))
 		{
 			charsWritten = source.Length;
 			return true;
@@ -4276,7 +4276,7 @@ internal static class Number
 				i = 0;
 				string positiveSign = info.PositiveSign;
 				string negativeSign = info.NegativeSign;
-				if (!string.IsNullOrEmpty(positiveSign) && value.StartsWith(positiveSign.AsSpan()))
+				if (!string.IsNullOrEmpty(positiveSign) && value.StartsWith(MemoryExtensions.AsSpan(positiveSign)))
 				{
 					i += positiveSign.Length;
 					if ((uint)i >= (uint)value.Length)
@@ -4285,7 +4285,7 @@ internal static class Number
 					}
 					num = value[i];
 				}
-				else if (!string.IsNullOrEmpty(negativeSign) && value.StartsWith(negativeSign.AsSpan()))
+				else if (!string.IsNullOrEmpty(negativeSign) && value.StartsWith(MemoryExtensions.AsSpan(negativeSign)))
 				{
 					num3 = -1;
 					i += negativeSign.Length;
@@ -4477,7 +4477,7 @@ internal static class Number
 				i = 0;
 				string positiveSign = info.PositiveSign;
 				string negativeSign = info.NegativeSign;
-				if (!string.IsNullOrEmpty(positiveSign) && value.StartsWith(positiveSign.AsSpan()))
+				if (!string.IsNullOrEmpty(positiveSign) && value.StartsWith(MemoryExtensions.AsSpan(positiveSign)))
 				{
 					i += positiveSign.Length;
 					if ((uint)i >= (uint)value.Length)
@@ -4486,7 +4486,7 @@ internal static class Number
 					}
 					num = value[i];
 				}
-				else if (!string.IsNullOrEmpty(negativeSign) && value.StartsWith(negativeSign.AsSpan()))
+				else if (!string.IsNullOrEmpty(negativeSign) && value.StartsWith(MemoryExtensions.AsSpan(negativeSign)))
 				{
 					num3 = -1;
 					i += negativeSign.Length;
@@ -4754,7 +4754,7 @@ internal static class Number
 				i = 0;
 				string positiveSign = info.PositiveSign;
 				string negativeSign = info.NegativeSign;
-				if (!string.IsNullOrEmpty(positiveSign) && value.StartsWith(positiveSign.AsSpan()))
+				if (!string.IsNullOrEmpty(positiveSign) && value.StartsWith(MemoryExtensions.AsSpan(positiveSign)))
 				{
 					i += positiveSign.Length;
 					if ((uint)i >= (uint)value.Length)
@@ -4763,7 +4763,7 @@ internal static class Number
 					}
 					num = value[i];
 				}
-				else if (!string.IsNullOrEmpty(negativeSign) && value.StartsWith(negativeSign.AsSpan()))
+				else if (!string.IsNullOrEmpty(negativeSign) && value.StartsWith(MemoryExtensions.AsSpan(negativeSign)))
 				{
 					flag = true;
 					i += negativeSign.Length;
@@ -5130,7 +5130,7 @@ internal static class Number
 				i = 0;
 				string positiveSign = info.PositiveSign;
 				string negativeSign = info.NegativeSign;
-				if (!string.IsNullOrEmpty(positiveSign) && value.StartsWith(positiveSign.AsSpan()))
+				if (!string.IsNullOrEmpty(positiveSign) && value.StartsWith(MemoryExtensions.AsSpan(positiveSign)))
 				{
 					i += positiveSign.Length;
 					if ((uint)i >= (uint)value.Length)
@@ -5139,7 +5139,7 @@ internal static class Number
 					}
 					num = value[i];
 				}
-				else if (!string.IsNullOrEmpty(negativeSign) && value.StartsWith(negativeSign.AsSpan()))
+				else if (!string.IsNullOrEmpty(negativeSign) && value.StartsWith(MemoryExtensions.AsSpan(negativeSign)))
 				{
 					flag = true;
 					i += negativeSign.Length;
@@ -5486,28 +5486,28 @@ internal static class Number
 		if (!TryStringToNumber(value, styles, ref number, info))
 		{
 			ReadOnlySpan<char> span = value.Trim();
-			if (span.EqualsOrdinalIgnoreCase(info.PositiveInfinitySymbol.AsSpan()))
+			if (span.EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.PositiveInfinitySymbol)))
 			{
 				result = double.PositiveInfinity;
 			}
-			else if (span.EqualsOrdinalIgnoreCase(info.NegativeInfinitySymbol.AsSpan()))
+			else if (span.EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.NegativeInfinitySymbol)))
 			{
 				result = double.NegativeInfinity;
 			}
-			else if (span.EqualsOrdinalIgnoreCase(info.NaNSymbol.AsSpan()))
+			else if (span.EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.NaNSymbol)))
 			{
 				result = double.NaN;
 			}
-			else if (span.StartsWith(info.PositiveSign.AsSpan(), StringComparison.OrdinalIgnoreCase))
+			else if (span.StartsWith(MemoryExtensions.AsSpan(info.PositiveSign), StringComparison.OrdinalIgnoreCase))
 			{
 				span = span.Slice(info.PositiveSign.Length);
-				if (span.EqualsOrdinalIgnoreCase(info.PositiveInfinitySymbol.AsSpan()))
+				if (span.EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.PositiveInfinitySymbol)))
 				{
 					result = double.PositiveInfinity;
 				}
 				else
 				{
-					if (!span.EqualsOrdinalIgnoreCase(info.NaNSymbol.AsSpan()))
+					if (!span.EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.NaNSymbol)))
 					{
 						result = 0.0;
 						return false;
@@ -5517,7 +5517,7 @@ internal static class Number
 			}
 			else
 			{
-				if (!span.StartsWith(info.NegativeSign.AsSpan(), StringComparison.OrdinalIgnoreCase) || !span.Slice(info.NegativeSign.Length).EqualsOrdinalIgnoreCase(info.NaNSymbol.AsSpan()))
+				if (!span.StartsWith(MemoryExtensions.AsSpan(info.NegativeSign), StringComparison.OrdinalIgnoreCase) || !span.Slice(info.NegativeSign.Length).EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.NaNSymbol)))
 				{
 					result = 0.0;
 					return false;
@@ -5539,28 +5539,28 @@ internal static class Number
 		if (!TryStringToNumber(value, styles, ref number, info))
 		{
 			ReadOnlySpan<char> span = value.Trim();
-			if (span.EqualsOrdinalIgnoreCase(info.PositiveInfinitySymbol.AsSpan()))
+			if (span.EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.PositiveInfinitySymbol)))
 			{
 				result = float.PositiveInfinity;
 			}
-			else if (span.EqualsOrdinalIgnoreCase(info.NegativeInfinitySymbol.AsSpan()))
+			else if (span.EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.NegativeInfinitySymbol)))
 			{
 				result = float.NegativeInfinity;
 			}
-			else if (span.EqualsOrdinalIgnoreCase(info.NaNSymbol.AsSpan()))
+			else if (span.EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.NaNSymbol)))
 			{
 				result = float.NaN;
 			}
-			else if (span.StartsWith(info.PositiveSign.AsSpan(), StringComparison.OrdinalIgnoreCase))
+			else if (span.StartsWith(MemoryExtensions.AsSpan(info.PositiveSign), StringComparison.OrdinalIgnoreCase))
 			{
 				span = span.Slice(info.PositiveSign.Length);
-				if (!info.PositiveInfinitySymbol.StartsWith(info.PositiveSign, StringComparison.OrdinalIgnoreCase) && span.EqualsOrdinalIgnoreCase(info.PositiveInfinitySymbol.AsSpan()))
+				if (!info.PositiveInfinitySymbol.StartsWith(info.PositiveSign, StringComparison.OrdinalIgnoreCase) && span.EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.PositiveInfinitySymbol)))
 				{
 					result = float.PositiveInfinity;
 				}
 				else
 				{
-					if (info.NaNSymbol.StartsWith(info.PositiveSign, StringComparison.OrdinalIgnoreCase) || !span.EqualsOrdinalIgnoreCase(info.NaNSymbol.AsSpan()))
+					if (info.NaNSymbol.StartsWith(info.PositiveSign, StringComparison.OrdinalIgnoreCase) || !span.EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.NaNSymbol)))
 					{
 						result = 0f;
 						return false;
@@ -5570,7 +5570,7 @@ internal static class Number
 			}
 			else
 			{
-				if (!span.StartsWith(info.NegativeSign.AsSpan(), StringComparison.OrdinalIgnoreCase) || info.NaNSymbol.StartsWith(info.NegativeSign, StringComparison.OrdinalIgnoreCase) || !span.Slice(info.NegativeSign.Length).EqualsOrdinalIgnoreCase(info.NaNSymbol.AsSpan()))
+				if (!span.StartsWith(MemoryExtensions.AsSpan(info.NegativeSign), StringComparison.OrdinalIgnoreCase) || info.NaNSymbol.StartsWith(info.NegativeSign, StringComparison.OrdinalIgnoreCase) || !span.Slice(info.NegativeSign.Length).EqualsOrdinalIgnoreCase(MemoryExtensions.AsSpan(info.NaNSymbol)))
 				{
 					result = 0f;
 					return false;

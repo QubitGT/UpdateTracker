@@ -18,7 +18,7 @@ public class ZoneDependentObject : MonoBehaviour
 
 	private void OnPlayerZoneChange(VRRig rig, GTZone fromZone, GTZone toZone)
 	{
-		Debug.Log($"PlayerZoneChange: Player[{rig.Creator?.ActorNumber}] {fromZone}->{toZone}");
+		GTDev.LogNoStackTrace($"PlayerZoneChange: Player[{rig.Creator?.ActorNumber}] {fromZone}->{toZone}");
 		UpdateObjectState();
 	}
 

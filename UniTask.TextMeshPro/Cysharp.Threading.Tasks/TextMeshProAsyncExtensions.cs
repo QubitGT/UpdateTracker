@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using TMPro;
 using UnityEngine;
@@ -20,10 +21,12 @@ public static class TextMeshProAsyncExtensions
 	private static async UniTaskVoid BindToCore(IUniTaskAsyncEnumerable<string> source, TMP_Text text, CancellationToken cancellationToken, bool rebindOnError)
 	{
 		bool repeat = false;
+		object obj3;
 		while (true)
 		{
-			IL_0018:
 			IUniTaskAsyncEnumerator<string> e = source.GetAsyncEnumerator(cancellationToken);
+			object obj = null;
+			int num = 0;
 			try
 			{
 				while (true)
@@ -38,12 +41,12 @@ public static class TextMeshProAsyncExtensions
 					{
 						if (ex is OperationCanceledException)
 						{
-							break;
+							goto IL_00fc;
 						}
 						if (rebindOnError && !repeat)
 						{
 							repeat = true;
-							goto IL_0018;
+							goto IL_00f3;
 						}
 						throw;
 					}
@@ -52,23 +55,42 @@ public static class TextMeshProAsyncExtensions
 						text.text = e.Current;
 						continue;
 					}
+					goto IL_00fc;
+					IL_00f3:
+					num = 1;
+					break;
+					IL_00fc:
+					num = 2;
 					break;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
 			}
-			break;
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			obj3 = obj;
+			if (obj3 != null)
+			{
+				Exception obj4 = obj3 as Exception;
+				if (obj4 == null)
+				{
+					break;
+				}
+				ExceptionDispatchInfo.Capture(obj4).Throw();
+			}
+			switch (num)
+			{
+			case 1:
+				break;
+			default:
+				return;
+			}
 		}
-		int num;
-		if (num != 2)
-		{
-		}
+		throw obj3;
 	}
 
 	public static void BindTo<T>(this IUniTaskAsyncEnumerable<T> source, TMP_Text text, bool rebindOnError = true)
@@ -89,10 +111,12 @@ public static class TextMeshProAsyncExtensions
 	private static async UniTaskVoid BindToCore<T>(IUniTaskAsyncEnumerable<T> source, TMP_Text text, CancellationToken cancellationToken, bool rebindOnError)
 	{
 		bool repeat = false;
+		object obj3;
 		while (true)
 		{
-			IL_0018:
 			IUniTaskAsyncEnumerator<T> e = source.GetAsyncEnumerator(cancellationToken);
+			object obj = null;
+			int num = 0;
 			try
 			{
 				while (true)
@@ -107,12 +131,12 @@ public static class TextMeshProAsyncExtensions
 					{
 						if (ex is OperationCanceledException)
 						{
-							break;
+							goto IL_010b;
 						}
 						if (rebindOnError && !repeat)
 						{
 							repeat = true;
-							goto IL_0018;
+							goto IL_0102;
 						}
 						throw;
 					}
@@ -121,23 +145,42 @@ public static class TextMeshProAsyncExtensions
 						text.text = e.Current.ToString();
 						continue;
 					}
+					goto IL_010b;
+					IL_0102:
+					num = 1;
+					break;
+					IL_010b:
+					num = 2;
 					break;
 				}
 			}
-			finally
+			catch (object obj2)
 			{
-				IAsyncDisposable asyncDisposable = e as IAsyncDisposable;
-				if (asyncDisposable != null)
-				{
-					await asyncDisposable.DisposeAsync();
-				}
+				obj = obj2;
 			}
-			break;
+			if (e != null)
+			{
+				await e.DisposeAsync();
+			}
+			obj3 = obj;
+			if (obj3 != null)
+			{
+				Exception obj4 = obj3 as Exception;
+				if (obj4 == null)
+				{
+					break;
+				}
+				ExceptionDispatchInfo.Capture(obj4).Throw();
+			}
+			switch (num)
+			{
+			case 1:
+				break;
+			default:
+				return;
+			}
 		}
-		int num;
-		if (num != 2)
-		{
-		}
+		throw obj3;
 	}
 
 	public static IAsyncValueChangedEventHandler<string> GetAsyncValueChangedEventHandler(this TMP_InputField inputField)

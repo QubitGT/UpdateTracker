@@ -714,7 +714,7 @@ internal class BinaryStorageBuffer
 						DynamicString dynamicString = ReadValue<DynamicString>(num2 & 0x3FFFFFFFu, out size2);
 						uint size3;
 						string text = ReadAutoEncodedString(dynamicString.stringId, out size3, cacheValue: true);
-						text.AsSpan().CopyTo(chars.Slice(num - text.Length, text.Length));
+						MemoryExtensions.AsSpan(text).CopyTo(chars.Slice(num - text.Length, text.Length));
 						state.size += size2 + size3;
 						num -= text.Length;
 						num2 = dynamicString.nextId;
