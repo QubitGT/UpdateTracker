@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using GorillaExtensions;
 using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using TMPro;
@@ -46,6 +47,10 @@ public class RotatingQuestBadge : MonoBehaviour, ISpawnable
 
 	public void OnDespawn()
 	{
+		if (myRig.IsNotNull())
+		{
+			myRig.OnQuestScoreChanged -= OnProgressScoreChanged;
+		}
 	}
 
 	private void OnEnable()

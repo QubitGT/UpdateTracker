@@ -266,7 +266,7 @@ public class FreeHoverboardManager : NetworkSceneObject
 		if (info.Sender == PhotonNetwork.LocalPlayer || orCreatePlayerData.spamCheck.CheckCallTime(Time.unscaledTime))
 		{
 			FreeHoverboardInstance board = orCreatePlayerData.GetBoard(boardIndex2);
-			if (!board.IsNull() && (info.Sender.ActorNumber == ownerActorNumber || (VRRigCache.Instance.TryGetVrrig(info.Sender, out var playerRig) && playerRig.Rig.IsPositionInRange(board.transform.position, 5f))))
+			if (!board.IsNull() && (info.Sender.ActorNumber == ownerActorNumber || (VRRigCache.Instance.TryGetVrrig(info.Sender, out var playerRig) && playerRig.Rig.IsPositionInRange(board.transform.position, 5f) && board.IsGrabbableAtScale(playerRig.Rig.transform.lossyScale.x))))
 			{
 				board.gameObject.SetActive(value: false);
 			}

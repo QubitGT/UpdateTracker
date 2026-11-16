@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using GorillaExtensions;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
@@ -145,12 +144,30 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 
 	private const float navMeshSampleRange = 5f;
 
+	[Tooltip("The body is shown when the local player comes within this distance of the chaser")]
+	public float bodyShowDistance = 80f;
+
+	[Tooltip("The body is hidden again when the local player is further than this. Keep it above bodyShowDistance.")]
+	public float bodyHideDistance = 90f;
+
+	private const float BodyRangeCheckInterval = 0.25f;
+
+	private float nextBodyRangeCheck;
+
+	private bool bodyWanted;
+
+	private bool bodyInRange;
+
 	[Tooltip("Haptic vibration when chased by lucy")]
 	public float hapticStrength = 1f;
 
 	public float hapticDuration = 1.5f;
 
 	private NavMeshPath path;
+
+	private bool needsNewPath = true;
+
+	private readonly Vector3[] pathCorners = new Vector3[64];
 
 	public List<Vector3> points;
 
@@ -176,6 +193,11 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 		RoomSystem.JoinedRoomEvent += new Action(OnJoinedRoom);
 	}
 
+	private void OnDestroy()
+	{
+		RoomSystem.JoinedRoomEvent -= new Action(OnJoinedRoom);
+	}
+
 	private void InitializeGhost()
 	{
 		if (NetworkSystem.Instance.InRoom && base.IsMine)
@@ -195,10 +217,8 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 		if (!NetworkSystem.Instance.InRoom)
 		{
 			currentState = ChaseState.Dormant;
-			UpdateState();
-			return;
 		}
-		if (base.IsMine)
+		else if (base.IsMine)
 		{
 			switch (currentState)
 			{
@@ -215,22 +235,25 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 				lastSummonCheck = Time.time;
 				possibleTarget.Clear();
 				int num = 0;
+				float num2 = summonDistance * summonDistance;
 				for (int i = 0; i < spawnTransforms.Length; i++)
 				{
-					int num2 = 0;
+					possibleTarget.Clear();
+					int num3 = 0;
+					Vector3 position = spawnTransforms[i].position;
 					for (int j = 0; j < VRRigCache.ActiveRigContainers.Count; j++)
 					{
-						if ((VRRigCache.ActiveRigContainers[j].transform.position - spawnTransforms[i].position).magnitude < summonDistance)
+						if ((VRRigCache.ActiveRigContainers[j].transform.position - position).sqrMagnitude < num2)
 						{
 							possibleTarget.Add(VRRigCache.ActiveRigContainers[j].Creator);
-							num2++;
-							if (num2 >= summonCount)
+							num3++;
+							if (num3 >= summonCount)
 							{
 								break;
 							}
 						}
 					}
-					if (num2 >= summonCount)
+					if (num3 >= summonCount)
 					{
 						if (!wasSurroundedLastCheck)
 						{
@@ -247,6 +270,7 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 				if (num == spawnTransforms.Length)
 				{
 					wasSurroundedLastCheck = false;
+					possibleTarget.Clear();
 				}
 				break;
 			}
@@ -267,7 +291,7 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 				{
 					ChooseRandomTarget();
 				}
-				if (!(followTarget == null) && (followTarget.position - ghostBody.transform.position).magnitude < catchDistance)
+				if (!(followTarget == null) && (followTarget.position - ghostBody.transform.position).sqrMagnitude < catchDistance * catchDistance)
 				{
 					currentState = ChaseState.Grabbing;
 				}
@@ -289,20 +313,50 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 			OnChangeState(currentState);
 			lastState = currentState;
 		}
+		UpdateBodyRange(force: false);
 		UpdateState();
+	}
+
+	private void SetBodyWanted(bool wanted)
+	{
+		bodyWanted = wanted;
+		UpdateBodyRange(force: true);
+	}
+
+	private void UpdateBodyRange(bool force)
+	{
+		if (!bodyWanted)
+		{
+			bodyInRange = false;
+			if (ghostBody.activeSelf)
+			{
+				ghostBody.SetActive(value: false);
+			}
+		}
+		else if (force || !(Time.time < nextBodyRangeCheck))
+		{
+			nextBodyRangeCheck = Time.time + 0.25f;
+			VRRig vRRig = ((VRRigCache.Instance != null && VRRigCache.Instance.localRig != null) ? VRRigCache.Instance.localRig.Rig : null);
+			if (vRRig == null)
+			{
+				bodyInRange = true;
+			}
+			else
+			{
+				float num = (bodyInRange ? bodyHideDistance : bodyShowDistance);
+				bodyInRange = (vRRig.transform.position - base.transform.position).sqrMagnitude < num * num;
+			}
+			if (ghostBody.activeSelf != bodyInRange)
+			{
+				ghostBody.SetActive(bodyInRange);
+			}
+		}
 	}
 
 	public void UpdateState()
 	{
 		switch (currentState)
 		{
-		case ChaseState.Dormant:
-			isSummoned = false;
-			if (ghostMaterial.color == summonedColor)
-			{
-				ghostMaterial.color = defaultColor;
-			}
-			break;
 		case ChaseState.InitialRise:
 			if (NetworkSystem.Instance.InRoom)
 			{
@@ -310,7 +364,10 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 				{
 					RiseHost();
 				}
-				MoveHead();
+				if (ghostBody.activeSelf)
+				{
+					MoveHead();
+				}
 			}
 			break;
 		case ChaseState.Chasing:
@@ -320,8 +377,11 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 				{
 					ChaseHost();
 				}
-				MoveBodyShared();
-				MoveHead();
+				if (ghostBody.activeSelf)
+				{
+					MoveBodyShared();
+					MoveHead();
+				}
 			}
 			break;
 		case ChaseState.Grabbing:
@@ -332,7 +392,10 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 					RiseGrabbedLocalPlayer();
 				}
 				GrabBodyShared();
-				MoveHead();
+				if (ghostBody.activeSelf)
+				{
+					MoveHead();
+				}
 			}
 			break;
 		}
@@ -343,10 +406,9 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 		switch (newState)
 		{
 		case ChaseState.Dormant:
-			if (ghostBody.activeSelf)
-			{
-				ghostBody.SetActive(value: false);
-			}
+			SetBodyWanted(wanted: false);
+			isSummoned = false;
+			SetGhostColor(defaultColor);
 			if (base.IsMine)
 			{
 				targetPlayer = null;
@@ -359,10 +421,7 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 			SetInitialRotations();
 			break;
 		case ChaseState.Gong:
-			if (!ghostBody.activeSelf)
-			{
-				ghostBody.SetActive(value: true);
-			}
+			SetBodyWanted(wanted: true);
 			if (base.IsMine)
 			{
 				ChooseRandomTarget();
@@ -371,15 +430,15 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 			}
 			timeGongStarted = Time.time;
 			laugh.volume = 1f;
-			laugh.GTPlayOneShot(gong);
+			if (laugh.isActiveAndEnabled)
+			{
+				laugh.GTPlayOneShot(gong);
+			}
 			isSummoned = true;
 			break;
 		case ChaseState.InitialRise:
 			timeRiseStarted = Time.time;
-			if (!ghostBody.activeSelf)
-			{
-				ghostBody.SetActive(value: true);
-			}
+			SetBodyWanted(wanted: true);
 			if (base.IsMine)
 			{
 				if (!isSummoned)
@@ -396,33 +455,42 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 			if (isSummoned)
 			{
 				laugh.volume = 0.25f;
-				laugh.GTPlayOneShot(deepLaugh);
-				ghostMaterial.color = summonedColor;
+				if (laugh.isActiveAndEnabled)
+				{
+					laugh.GTPlayOneShot(deepLaugh);
+				}
+				SetGhostColor(summonedColor);
 			}
 			else
 			{
 				laugh.volume = 0.25f;
-				laugh.GTPlay();
-				ghostMaterial.color = defaultColor;
+				if (laugh.isActiveAndEnabled)
+				{
+					laugh.GTPlay();
+				}
+				SetGhostColor(defaultColor);
 			}
 			SetInitialRotations();
 			break;
 		case ChaseState.Grabbing:
 		{
-			if (!ghostBody.activeSelf)
-			{
-				ghostBody.SetActive(value: true);
-			}
+			SetBodyWanted(wanted: true);
 			grabTime = Time.time;
 			if (isSummoned)
 			{
 				laugh.volume = 0.25f;
-				laugh.GTPlayOneShot(deepLaugh);
+				if (laugh.isActiveAndEnabled)
+				{
+					laugh.GTPlayOneShot(deepLaugh);
+				}
 			}
 			else
 			{
 				laugh.volume = 0.25f;
-				laugh.GTPlay();
+				if (laugh.isActiveAndEnabled)
+				{
+					laugh.GTPlay();
+				}
 			}
 			leftArm.localEulerAngles = leftArmGrabbingLocal;
 			rightArm.localEulerAngles = rightArmGrabbingLocal;
@@ -438,12 +506,17 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 			break;
 		}
 		case ChaseState.Chasing:
-			if (!ghostBody.activeSelf)
-			{
-				ghostBody.SetActive(value: true);
-			}
+			SetBodyWanted(wanted: true);
 			ResetPath();
 			break;
+		}
+	}
+
+	private void SetGhostColor(Color color)
+	{
+		if (ghostMaterial.color != color)
+		{
+			ghostMaterial.color = color;
 		}
 	}
 
@@ -471,8 +544,17 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 		int num = -1;
 		if (possibleTarget.Count >= summonCount)
 		{
-			int randomTarget = UnityEngine.Random.Range(0, possibleTarget.Count);
-			num = VRRigCache.ActiveRigContainers.FindIndex((RigContainer x) => x.Creator != null && x.Creator == possibleTarget[randomTarget]);
+			int index = UnityEngine.Random.Range(0, possibleTarget.Count);
+			NetPlayer netPlayer = possibleTarget[index];
+			for (int i = 0; i < VRRigCache.ActiveRigContainers.Count; i++)
+			{
+				NetPlayer creator = VRRigCache.ActiveRigContainers[i].Creator;
+				if (creator != null && creator == netPlayer)
+				{
+					num = i;
+					break;
+				}
+			}
 			currentSpeed = 3f;
 		}
 		if (num == -1)
@@ -549,7 +631,7 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 
 	public void UpdateFollowPath(Vector3 destination, float currentSpeed)
 	{
-		if (path == null)
+		if (needsNewPath)
 		{
 			GetNewPath(destination);
 		}
@@ -577,15 +659,24 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 
 	private void GetNewPath(Vector3 destination)
 	{
-		path = new NavMeshPath();
+		if (path == null)
+		{
+			path = new NavMeshPath();
+		}
+		if (points == null)
+		{
+			points = new List<Vector3>();
+		}
+		needsNewPath = false;
 		NavMesh.SamplePosition(base.transform.position, out var hit, 5f, 1);
 		targetIsOnNavMesh = NavMesh.SamplePosition(destination, out var hit2, 5f, 1);
 		NavMesh.CalculatePath(hit.position, hit2.position, -1, path);
-		points = new List<Vector3>();
-		Vector3[] corners = path.corners;
-		foreach (Vector3 vector in corners)
+		points.Clear();
+		int cornersNonAlloc = path.GetCornersNonAlloc(pathCorners);
+		Vector3 vector = Vector3.up * heightAboveNavmesh;
+		for (int i = 0; i < cornersNonAlloc; i++)
 		{
-			points.Add(vector + Vector3.up * heightAboveNavmesh);
+			points.Add(pathCorners[i] + vector);
 		}
 		points.Add(destination);
 		currentTargetIdx = 0;
@@ -594,7 +685,7 @@ public class HalloweenGhostChaser : AnnoyingNetworkComponent
 
 	public void ResetPath()
 	{
-		path = null;
+		needsNewPath = true;
 	}
 
 	private void ChaseHost()

@@ -13,8 +13,23 @@ public class GRElevatorButton : MonoBehaviour
 
 	public bool tempLight;
 
+	private GorillaPressableButton pressable;
+
+	public float LastTouchTime
+	{
+		get
+		{
+			if (!(pressable != null))
+			{
+				return -1f;
+			}
+			return pressable.touchTime;
+		}
+	}
+
 	private void Awake()
 	{
+		pressable = GetComponent<GorillaPressableButton>();
 		if (disableDelayed == null)
 		{
 			disableDelayed = buttonLit.GetComponent<DisableGameObjectDelayed>();

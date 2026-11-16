@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 namespace GorillaNetworking;
@@ -25,6 +26,14 @@ public class GorillaKeyboardButton : GorillaKeyButton<GorillaKeyboardBindings>
 	private void UpdateOptionColor()
 	{
 		GorillaComputer instance = GorillaComputer.instance;
-		SetUnpressedColorOverride((instance != null && instance.TryGetKeyLabelColor(Binding, out var color)) ? new Color?(color) : null);
+		SetUnpressedColorOverride((instance != null && instance.TryGetKeyLabelColor(Binding, out var color)) ? new Color?(color) : GorillaComputer.GetFunctionKeyColor(Binding));
+		if (GorillaComputer.GetFunctionKeyColor(Binding).HasValue)
+		{
+			TextMeshPro textMeshPro = ((ButtonText != null) ? ButtonText : GetComponentInChildren<TextMeshPro>(includeInactive: true));
+			if (textMeshPro != null)
+			{
+				textMeshPro.color = GorillaComputer.FunctionKeyTextColor;
+			}
+		}
 	}
 }

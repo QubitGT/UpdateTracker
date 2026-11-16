@@ -1948,11 +1948,29 @@ public class CosmeticsController : MonoBehaviour, IGorillaSliceableSimple, IBuil
 			else
 			{
 				UpdateMyCosmetics();
+				StartCoroutine(CheckIfMyCosmeticsUpdated(playFabID));
 			}
 		}, delegate(string error)
 		{
+			cosmeticAutoGrantClaimsRequested.Remove(playFabID);
 			Debug.LogError("CosmeticAutoGrant: ClaimItem failed for " + playFabID + ": " + error);
 		});
+	}
+
+	public bool IsGlobalCosmeticAutoGrant(string playFabID)
+	{
+		if (CosmeticAutoGrantTitleDataChecks == null || CosmeticAutoGrantTitleDataCheckCount > 0 || GorillaComputer.instance == null)
+		{
+			return false;
+		}
+		foreach (CosmeticAutoGrant cosmeticAutoGrant in cosmeticAutoGrants)
+		{
+			if (!(cosmeticAutoGrant.cosmeticItem == null) && !(cosmeticAutoGrant.cosmeticItem.info.playFabID != playFabID) && !cosmeticAutoGrant.titleDataCheck.key.IsNullOrEmpty() && cosmeticAutoGrant.reqAccountDays <= 0 && !(cosmeticAutoGrant.ReqAccountCreationDate < GorillaComputer.instance.GetServerTime()) && CosmeticAutoGrantTitleDataChecks.TryGetValue(cosmeticAutoGrant.titleDataCheck.key, out var value) && cosmeticAutoGrant.titleDataCheck.value <= value)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void Start()

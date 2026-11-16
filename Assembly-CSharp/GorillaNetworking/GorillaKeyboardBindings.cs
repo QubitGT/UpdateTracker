@@ -46,5 +46,6 @@ public enum GorillaKeyboardBindings
 	Y,
 	Z,
 	option4,
-	none
+	none,
+	messages
 }

@@ -23,10 +23,10 @@ public class WanderingGhost : NetworkComponent
 		}
 	}
 
-	private enum ghostState
+	private enum GhostState
 	{
-		patrol,
-		idle
+		Patrol,
+		Idle
 	}
 
 	public float patrolSpeed = 3f;
@@ -55,6 +55,8 @@ public class WanderingGhost : NetworkComponent
 
 	private ZoneBasedObject[] waypointRegions;
 
+	private readonly Dictionary<ZoneBasedObject, Waypoint[]> regionWaypoints = new Dictionary<ZoneBasedObject, Waypoint[]>();
+
 	private ZoneBasedObject lastWaypointRegion;
 
 	private List<Waypoint> waypoints = new List<Waypoint>();
@@ -76,7 +78,7 @@ public class WanderingGhost : NetworkComponent
 
 	public float patrolVolume;
 
-	private ghostState currentState;
+	private GhostState currentState;
 
 	private float idlePassedTime;
 
@@ -90,28 +92,56 @@ public class WanderingGhost : NetworkComponent
 
 	public float hoverDrag;
 
-	private const int maxColliders = 10;
+	private Transform hoverTransform;
 
-	private Collider[] hitColliders = new Collider[10];
+	private const float WaypointRetryInterval = 0.5f;
+
+	private float nextWaypointRetryTime;
+
+	private const float WaypointArriveDistanceSqr = 0.040000003f;
+
+	private static readonly int PlayerLayerMask = UnityLayer.GorillaHand.ToLayerMask() | UnityLayer.GorillaBodyCollider.ToLayerMask();
+
+	private readonly Collider[] hitColliders = new Collider[1];
 
 	protected override void Start()
 	{
 		base.Start();
 		waypointRegions = waypointsContainer.GetComponentsInChildren<ZoneBasedObject>();
-		idlePassedTime = 0f;
-		ThrowableSetDressing[] array = allFlowers;
-		for (int i = 0; i < array.Length; i++)
+		ZoneBasedObject[] array = waypointRegions;
+		foreach (ZoneBasedObject zoneBasedObject in array)
 		{
-			array[i].anchor.position = flowerDisabledPosition;
+			Transform transform = zoneBasedObject.transform;
+			Waypoint[] array2 = new Waypoint[transform.childCount];
+			for (int j = 0; j < array2.Length; j++)
+			{
+				Transform child = transform.GetChild(j);
+				array2[j] = new Waypoint(child.name.Contains("_v_"), child);
+			}
+			regionWaypoints[zoneBasedObject] = array2;
+		}
+		idlePassedTime = 0f;
+		ThrowableSetDressing[] array3 = allFlowers;
+		for (int i = 0; i < array3.Length; i++)
+		{
+			array3[i].anchor.position = flowerDisabledPosition;
 		}
 		Invoke("DelayedStart", 0.5f);
 	}
 
 	private void DelayedStart()
 	{
-		needsStartSnap = true;
-		TrySnapToStartWaypoint();
-		ChangeState(ghostState.patrol);
+		if (NetworkSystem.Instance.IsMasterClient || !NetworkSystem.Instance.InRoom)
+		{
+			needsStartSnap = true;
+			TrySnapToStartWaypoint();
+		}
+		else
+		{
+			needsStartSnap = false;
+			currentWaypoint = default(Waypoint);
+		}
+		ChangeState(GhostState.Patrol);
 	}
 
 	private void TrySnapToStartWaypoint()
@@ -125,13 +155,24 @@ public class WanderingGhost : NetworkComponent
 		}
 	}
 
+	protected override void Awake()
+	{
+		base.Awake();
+		hoverTransform = mrenderer.transform;
+	}
+
 	private void LateUpdate()
 	{
 		UpdateState();
-		hoverVelocity -= mrenderer.transform.localPosition * hoverRectifyForce * Time.deltaTime;
-		hoverVelocity += UnityEngine.Random.insideUnitSphere * hoverRandomForce * Time.deltaTime;
-		hoverVelocity = Vector3.MoveTowards(hoverVelocity, Vector3.zero, hoverDrag * Time.deltaTime);
-		mrenderer.transform.localPosition += hoverVelocity * Time.deltaTime;
+		if (mrenderer.isVisible)
+		{
+			float deltaTime = Time.deltaTime;
+			Vector3 localPosition = hoverTransform.localPosition;
+			hoverVelocity -= localPosition * (hoverRectifyForce * deltaTime);
+			hoverVelocity += UnityEngine.Random.insideUnitSphere * (hoverRandomForce * deltaTime);
+			hoverVelocity = Vector3.MoveTowards(hoverVelocity, Vector3.zero, hoverDrag * deltaTime);
+			hoverTransform.localPosition = localPosition + hoverVelocity * deltaTime;
+		}
 	}
 
 	private void PickNextWaypoint()
@@ -145,59 +186,64 @@ public class WanderingGhost : NetworkComponent
 			}
 			if (zoneBasedObject == null)
 			{
+				currentWaypoint = default(Waypoint);
 				return;
 			}
-			lastWaypointRegion = zoneBasedObject;
-			waypoints.Clear();
-			foreach (Transform item in zoneBasedObject.transform)
+			if (zoneBasedObject != lastWaypointRegion || waypoints.Count == 0)
 			{
-				waypoints.Add(new Waypoint(item.name.Contains("_v_"), item));
+				lastWaypointRegion = zoneBasedObject;
+				waypoints.Clear();
+				if (regionWaypoints.TryGetValue(zoneBasedObject, out var value))
+				{
+					waypoints.AddRange(value);
+				}
 			}
 		}
-		if (waypoints.Count != 0)
+		if (waypoints.Count == 0)
 		{
-			int index = UnityEngine.Random.Range(0, waypoints.Count);
-			currentWaypoint = waypoints[index];
-			waypoints.RemoveAt(index);
+			currentWaypoint = default(Waypoint);
+			return;
 		}
+		int index = UnityEngine.Random.Range(0, waypoints.Count);
+		currentWaypoint = waypoints[index];
+		waypoints.RemoveAt(index);
 	}
 
-	private void Patrol()
+	private bool Patrol()
 	{
-		idlePassedTime = 0f;
-		mrenderer.sharedMaterial = scryableMaterial;
-		Transform transform = currentWaypoint._transform;
-		base.transform.position = Vector3.MoveTowards(base.transform.position, transform.position, patrolSpeed * Time.deltaTime);
-		base.transform.rotation = Quaternion.RotateTowards(base.transform.rotation, Quaternion.LookRotation(transform.position - base.transform.position), 360f * Time.deltaTime);
+		float deltaTime = Time.deltaTime;
+		Vector3 position = currentWaypoint._transform.position;
+		base.transform.GetPositionAndRotation(out var position2, out var rotation);
+		position2 = Vector3.MoveTowards(position2, position, patrolSpeed * deltaTime);
+		Vector3 forward = position - position2;
+		float sqrMagnitude = forward.sqrMagnitude;
+		if (sqrMagnitude > 0.0001f)
+		{
+			rotation = Quaternion.RotateTowards(rotation, Quaternion.LookRotation(forward), 360f * deltaTime);
+		}
+		base.transform.SetPositionAndRotation(position2, rotation);
+		return sqrMagnitude < 0.040000003f;
 	}
 
 	private bool MaybeHideGhost()
 	{
-		int num = Physics.OverlapSphereNonAlloc(base.transform.position, sphereColliderRadius, hitColliders);
-		for (int i = 0; i < num; i++)
-		{
-			if (hitColliders[i].gameObject.IsOnLayer(UnityLayer.GorillaHand) || hitColliders[i].gameObject.IsOnLayer(UnityLayer.GorillaBodyCollider))
-			{
-				ChangeState(ghostState.patrol);
-				return true;
-			}
-		}
-		return false;
+		return Physics.OverlapSphereNonAlloc(base.transform.position, sphereColliderRadius, hitColliders, PlayerLayerMask) > 0;
 	}
 
-	private void ChangeState(ghostState newState)
+	private void ChangeState(GhostState newState)
 	{
 		currentState = newState;
-		mrenderer.sharedMaterial = ((newState == ghostState.idle) ? visibleMaterial : scryableMaterial);
+		mrenderer.sharedMaterial = ((newState == GhostState.Idle) ? visibleMaterial : scryableMaterial);
 		switch (newState)
 		{
-		case ghostState.patrol:
+		case GhostState.Patrol:
 			audioSource.GTStop();
 			audioSource.volume = patrolVolume;
 			audioSource.clip = patrolAudio;
 			audioSource.GTPlay();
 			break;
-		case ghostState.idle:
+		case GhostState.Idle:
+			idlePassedTime = 0f;
 			audioSource.GTStop();
 			audioSource.volume = idleVolume;
 			audioSource.GTPlayOneShot(appearAudio.GetRandomItem());
@@ -217,25 +263,27 @@ public class WanderingGhost : NetworkComponent
 		}
 		switch (currentState)
 		{
-		case ghostState.patrol:
+		case GhostState.Patrol:
 			if (currentWaypoint._transform == null)
 			{
-				if (needsStartSnap)
+				if (!(Time.time < nextWaypointRetryTime))
 				{
-					TrySnapToStartWaypoint();
+					nextWaypointRetryTime = Time.time + 0.5f;
+					if (needsStartSnap)
+					{
+						TrySnapToStartWaypoint();
+					}
+					else
+					{
+						PickNextWaypoint();
+					}
 				}
-				else
-				{
-					PickNextWaypoint();
-				}
-				break;
 			}
-			Patrol();
-			if (Vector3.Distance(base.transform.position, currentWaypoint._transform.position) < 0.2f)
+			else if (Patrol())
 			{
 				if (currentWaypoint._visible)
 				{
-					ChangeState(ghostState.idle);
+					ChangeState(GhostState.Idle);
 				}
 				else
 				{
@@ -243,12 +291,12 @@ public class WanderingGhost : NetworkComponent
 				}
 			}
 			break;
-		case ghostState.idle:
+		case GhostState.Idle:
 			idlePassedTime += Time.deltaTime;
 			if (idlePassedTime >= idleStayDuration || MaybeHideGhost())
 			{
 				PickNextWaypoint();
-				ChangeState(ghostState.patrol);
+				ChangeState(GhostState.Patrol);
 			}
 			break;
 		}
@@ -271,7 +319,7 @@ public class WanderingGhost : NetworkComponent
 	{
 		if (info.Sender == PhotonNetwork.MasterClient)
 		{
-			stream.SendNext(currentState);
+			stream.SendNext((byte)currentState);
 		}
 	}
 
@@ -279,14 +327,14 @@ public class WanderingGhost : NetworkComponent
 	{
 		if (info.Sender == PhotonNetwork.MasterClient)
 		{
-			ghostState state = (ghostState)stream.ReceiveNext();
+			GhostState state = (GhostState)Convert.ToByte(stream.ReceiveNext());
 			ReadDataShared(state);
 		}
 	}
 
-	private void ReadDataShared(ghostState state)
+	private void ReadDataShared(GhostState state)
 	{
-		ghostState num = currentState;
+		GhostState num = currentState;
 		currentState = state;
 		if (num != currentState)
 		{

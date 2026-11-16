@@ -29,9 +29,22 @@ public class FreeHoverboardHandle : HoldableObject
 		hasParentBoard = parentFreeBoard != null;
 	}
 
+	private bool CanLocalPlayerGrab()
+	{
+		if (!GTPlayer.Instance.isHoverAllowed)
+		{
+			return false;
+		}
+		if (hasParentBoard)
+		{
+			return parentFreeBoard.IsGrabbableAtScale(VRRig.LocalRig.transform.lossyScale.x);
+		}
+		return true;
+	}
+
 	public override void OnHover(InteractionPoint pointHovered, GameObject hoveringHand)
 	{
-		if (GTPlayer.Instance.isHoverAllowed)
+		if (CanLocalPlayerGrab())
 		{
 			if (Time.frameCount > noHapticsUntilFrame)
 			{
@@ -43,7 +56,7 @@ public class FreeHoverboardHandle : HoldableObject
 
 	public override void OnGrab(InteractionPoint pointGrabbed, GameObject grabbingHand)
 	{
-		if (GTPlayer.Instance.isHoverAllowed)
+		if (CanLocalPlayerGrab())
 		{
 			bool flag = grabbingHand == EquipmentInteractor.instance.leftHand;
 			if (hasParentBoard)

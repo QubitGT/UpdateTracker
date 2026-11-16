@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Globalization;
 using GorillaExtensions;
 using GorillaTag;
 using Photon.Pun;
@@ -228,6 +229,20 @@ public abstract class GorillaKeyButton<TBinding> : MonoBehaviour where TBinding 
 			{
 				SetButtonColor(pressed: false);
 			}
+		}
+	}
+
+	public void SetColorHex(string color)
+	{
+		SetUnpressedColorOverride(new Color((float)int.Parse(color.Substring(0, 2), NumberStyles.HexNumber) / 255f, (float)int.Parse(color.Substring(2, 2), NumberStyles.HexNumber) / 255f, (float)int.Parse(color.Substring(4, 2), NumberStyles.HexNumber) / 255f));
+	}
+
+	public void UnsetColor()
+	{
+		unpressedColorOverride = null;
+		if (pressColorRoutine == null)
+		{
+			SetButtonColor(pressed: false);
 		}
 	}
 

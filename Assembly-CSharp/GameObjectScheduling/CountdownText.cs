@@ -19,6 +19,8 @@ public class CountdownText : MonoBehaviour
 		SECOND
 	}
 
+	private const string InvalidCountdownNote = " (BLANK IN RELEASE)";
+
 	[SerializeField]
 	private CountdownTextDate CountdownTo;
 
@@ -52,6 +54,8 @@ public class CountdownText : MonoBehaviour
 	private IntVariable _timescaleCountdownVar;
 
 	private BoolVariable _isValidVar;
+
+	private bool _locTextPausedForInvalid;
 
 	private bool ShouldLocalize
 	{
@@ -93,6 +97,7 @@ public class CountdownText : MonoBehaviour
 	private void Awake()
 	{
 		displayText = GetComponent<TMP_Text>();
+		displayText.enabled = false;
 		displayTextFormat = string.Empty;
 		displayText.text = string.Empty;
 		if (CountdownTo == null)
@@ -195,7 +200,13 @@ public class CountdownText : MonoBehaviour
 	{
 		StopMonitorTime();
 		StopDisplayRefresh();
+		SetValid(valid: true);
 		displayText.text = text;
+	}
+
+	private void SetValid(bool valid)
+	{
+		displayText.enabled = valid;
 	}
 
 	private void StartDisplayRefresh()
@@ -246,15 +257,17 @@ public class CountdownText : MonoBehaviour
 	private void RefreshDisplay()
 	{
 		countdownTime = targetTime.Subtract(GorillaComputer.instance.GetServerTime());
-		var (text, value, value2, value3) = GetTimeDisplay(countdownTime, displayTextFormat, CountdownTo.DaysThreshold, string.Empty, CountdownTo.DefaultString);
+		var (text, value, value2, flag) = GetTimeDisplay(countdownTime, displayTextFormat, CountdownTo.DaysThreshold, string.Empty, CountdownTo.DefaultString);
 		if (!ShouldLocalize)
 		{
+			SetValid(flag || !string.IsNullOrEmpty(text));
 			displayText.text = text;
 			return;
 		}
 		_timescaleCountdownVar.Value = value;
 		_timeCountdownVar.Value = value2;
-		_isValidVar.Value = value3;
+		_isValidVar.Value = flag;
+		SetValid(flag);
 	}
 
 	public static string GetTimeDisplay(TimeSpan ts, string format)

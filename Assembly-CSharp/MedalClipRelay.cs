@@ -203,7 +203,7 @@ public class MedalClipRelay : MonoBehaviour, IGorillaSliceableSimple
 		}
 		foreach (MedalClip.ClipType clipsType in _clipsTypes)
 		{
-			_clipsTypes.Remove(clipsType);
+			_clipStreaks.Remove(clipsType);
 		}
 	}
 }

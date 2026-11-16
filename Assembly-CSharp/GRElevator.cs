@@ -145,10 +145,21 @@ public class GRElevator : MonoBehaviour
 
 	public void PressButtonVisuals(ButtonType type)
 	{
-		if (typeButtonDict.TryGetValue(type, out var value))
+		if (!typeButtonDict.TryGetValue(type, out var value))
 		{
-			value.Pressed();
+			return;
 		}
+		float lastTouchTime = value.LastTouchTime;
+		for (int i = 0; i < elevatorButtons.Count; i++)
+		{
+			GRElevatorButton gRElevatorButton = elevatorButtons[i];
+			if (gRElevatorButton != null && gRElevatorButton.buttonType == type && gRElevatorButton.LastTouchTime > lastTouchTime)
+			{
+				value = gRElevatorButton;
+				lastTouchTime = gRElevatorButton.LastTouchTime;
+			}
+		}
+		value.Pressed();
 	}
 
 	private static void PlayIfActive(AudioSource source)

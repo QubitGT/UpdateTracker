@@ -41,6 +41,8 @@ public class FreeHoverboardInstance : MonoBehaviour
 
 	private Vector3 hoverNormal;
 
+	private const float MaxGrabScaleRatio = 1.1f;
+
 	public Rigidbody Rigidbody { get; private set; }
 
 	private float AdjustedSphereCastRadius => sphereCastRadius * base.transform.lossyScale.y;
@@ -72,6 +74,21 @@ public class FreeHoverboardInstance : MonoBehaviour
 	public void SetColor(Color col)
 	{
 		GetOrCreateSkinVisual().SetColor(col);
+	}
+
+	public bool IsGrabbableAtScale(float playerScale)
+	{
+		float x = base.transform.lossyScale.x;
+		if (x <= 0f || playerScale <= 0f)
+		{
+			return false;
+		}
+		float num = x / playerScale;
+		if (num <= 1.1f)
+		{
+			return num >= 0.9090909f;
+		}
+		return false;
 	}
 
 	public void SetSkinActorNumber(int actorNumber)

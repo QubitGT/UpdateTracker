@@ -1,4 +1,5 @@
 using System.Collections;
+using GorillaExtensions;
 using GorillaTag;
 using GorillaTag.CosmeticSystem;
 using UnityEngine;
@@ -36,6 +37,10 @@ public class GorillaTagCompetitiveRankCosmetic : MonoBehaviour, ISpawnable
 
 	public void OnDespawn()
 	{
+		if (myRig.IsNotNull())
+		{
+			myRig.OnRankedSubtierChanged -= OnRankedScoreChanged;
+		}
 	}
 
 	private void OnEnable()

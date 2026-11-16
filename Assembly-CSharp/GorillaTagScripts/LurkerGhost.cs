@@ -66,11 +66,19 @@ public class LurkerGhost : AnnoyingNetworkComponent
 
 	private ZoneBasedObject[] waypointRegions;
 
+	private readonly Dictionary<ZoneBasedObject, Transform[]> regionWaypoints = new Dictionary<ZoneBasedObject, Transform[]>();
+
 	private ZoneBasedObject lastWaypointRegion;
 
 	private List<Transform> waypoints = new List<Transform>();
 
 	private Transform currentWaypoint;
+
+	private const float WaypointRetryInterval = 0.5f;
+
+	private float nextWaypointRetryTime;
+
+	private const float WaypointArriveDistanceSqr = 0.040000003f;
 
 	public Material visibleMaterial;
 
@@ -155,6 +163,17 @@ public class LurkerGhost : AnnoyingNetworkComponent
 	{
 		base.Start();
 		waypointRegions = waypointsContainer.GetComponentsInChildren<ZoneBasedObject>();
+		ZoneBasedObject[] array = waypointRegions;
+		foreach (ZoneBasedObject zoneBasedObject in array)
+		{
+			Transform transform = zoneBasedObject.transform;
+			Transform[] array2 = new Transform[transform.childCount];
+			for (int j = 0; j < array2.Length; j++)
+			{
+				array2[j] = transform.GetChild(j);
+			}
+			regionWaypoints[zoneBasedObject] = array2;
+		}
 		PickNextWaypoint();
 		ChangeState(ghostState.patrol);
 	}
@@ -162,7 +181,6 @@ public class LurkerGhost : AnnoyingNetworkComponent
 	private void LateUpdate()
 	{
 		UpdateState();
-		UpdateGhostVisibility();
 	}
 
 	private void PickNextWaypoint()
@@ -176,14 +194,23 @@ public class LurkerGhost : AnnoyingNetworkComponent
 			}
 			if (zoneBasedObject == null)
 			{
+				currentWaypoint = null;
 				return;
 			}
-			lastWaypointRegion = zoneBasedObject;
-			waypoints.Clear();
-			foreach (Transform item in zoneBasedObject.transform)
+			if (zoneBasedObject != lastWaypointRegion || waypoints.Count == 0)
 			{
-				waypoints.Add(item);
+				lastWaypointRegion = zoneBasedObject;
+				waypoints.Clear();
+				if (regionWaypoints.TryGetValue(zoneBasedObject, out var value))
+				{
+					waypoints.AddRange(value);
+				}
 			}
+		}
+		if (waypoints.Count == 0)
+		{
+			currentWaypoint = null;
+			return;
 		}
 		int index = UnityEngine.Random.Range(0, waypoints.Count);
 		currentWaypoint = waypoints[index];
@@ -220,9 +247,11 @@ public class LurkerGhost : AnnoyingNetworkComponent
 		if (base.IsMine)
 		{
 			possibleTargets.Clear();
+			Vector3 position = base.transform.position;
+			float num = maxDistance * maxDistance;
 			for (int i = 0; i < VRRigCache.ActiveRigContainers.Count; i++)
 			{
-				if ((VRRigCache.ActiveRigContainers[i].transform.position - base.transform.position).magnitude < maxDistance && VRRigCache.ActiveRigContainers[i].Creator != targetPlayer)
+				if ((VRRigCache.ActiveRigContainers[i].transform.position - position).sqrMagnitude < num && VRRigCache.ActiveRigContainers[i].Creator != targetPlayer)
 				{
 					possibleTargets.Add(VRRigCache.ActiveRigContainers[i].Creator);
 				}
@@ -251,14 +280,22 @@ public class LurkerGhost : AnnoyingNetworkComponent
 
 	private void PickPlayer(NetPlayer player)
 	{
-		int num = VRRigCache.ActiveRigContainers.FindIndex((RigContainer x) => x.Creator != null && x.Creator == player);
-		if (num > -1 && num < VRRigCache.ActiveRigContainers.Count)
+		if (player != null)
 		{
-			VRRig rig = VRRigCache.ActiveRigContainers[num].Rig;
-			targetPlayer = rig.creator;
-			targetTransform = rig.head.rigTarget;
-			targetVRRig = rig;
+			for (int i = 0; i < VRRigCache.ActiveRigContainers.Count; i++)
+			{
+				if (VRRigCache.ActiveRigContainers[i].Creator == player)
+				{
+					VRRig rig = VRRigCache.ActiveRigContainers[i].Rig;
+					targetPlayer = rig.creator;
+					targetTransform = rig.head.rigTarget;
+					targetVRRig = rig;
+					return;
+				}
+			}
 		}
+		targetTransform = null;
+		targetVRRig = null;
 	}
 
 	private void SeekPlayer()
@@ -346,10 +383,19 @@ public class LurkerGhost : AnnoyingNetworkComponent
 			currentRepeatHuntTimes = 0;
 			break;
 		case ghostState.charge:
+		{
 			PlaySound(huntAudio, loop: false);
-			targetPosition = targetTransform.position;
-			targetRotation = Quaternion.LookRotation(targetTransform.position - base.transform.position);
+			if (targetTransform != null)
+			{
+				targetPosition = targetTransform.position;
+			}
+			Vector3 forward = targetPosition - base.transform.position;
+			if (forward.sqrMagnitude > 0.0001f)
+			{
+				targetRotation = Quaternion.LookRotation(forward);
+			}
 			break;
+		}
 		case ghostState.possess:
 			if (targetPlayer == NetworkSystem.Instance.LocalPlayer)
 			{
@@ -388,7 +434,15 @@ public class LurkerGhost : AnnoyingNetworkComponent
 			{
 				break;
 			}
-			if (currentWaypoint == null || Vector3.Distance(base.transform.position, currentWaypoint.position) < 0.2f)
+			if (currentWaypoint == null)
+			{
+				if (Time.time >= nextWaypointRetryTime)
+				{
+					nextWaypointRetryTime = Time.time + 0.5f;
+					PickNextWaypoint();
+				}
+			}
+			else if ((base.transform.position - currentWaypoint.position).sqrMagnitude < 0.040000003f)
 			{
 				PickNextWaypoint();
 			}
@@ -411,7 +465,16 @@ public class LurkerGhost : AnnoyingNetworkComponent
 			break;
 		case ghostState.charge:
 			ChargeAtPlayer();
-			if (base.IsMine && (targetPosition - base.transform.position).sqrMagnitude < 0.25f)
+			if (!base.IsMine)
+			{
+				break;
+			}
+			if (targetTransform == null)
+			{
+				huntedPassedTime = 0f;
+				ChangeState(ghostState.patrol);
+			}
+			else if ((targetPosition - base.transform.position).sqrMagnitude < 0.25f)
 			{
 				if ((targetTransform.position - targetPosition).magnitude < minCatchDistance)
 				{

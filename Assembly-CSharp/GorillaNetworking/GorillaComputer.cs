@@ -50,7 +50,9 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 		KID,
 		Redemption,
 		Language,
-		Snake
+		Snake,
+		None,
+		Messages
 	}
 
 	private enum NameCheckResult
@@ -136,6 +138,7 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private enum SnakeGameState
 	{
+		Title,
 		Waiting,
 		Playing,
 		GameOver
@@ -728,6 +731,8 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private List<string> topVstumpMaps = new List<string>();
 
+	private int mailIndex;
+
 	private float lastCheckedWifi;
 
 	private float checkIfDisconnectedSeconds = 10f;
@@ -764,7 +769,13 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private static readonly Color OptionTextHighlightColor = Color.yellow;
 
-	private static readonly bool s_optionKeyColorsEnabled = false;
+	private static readonly bool optionKeyBodyColorsEnabled = false;
+
+	private static readonly bool functionKeyColorsEnabled = false;
+
+	public static readonly Color FunctionKeyColor = new Color(0.45f, 0.44f, 0.42f, 1f);
+
+	public static readonly Color FunctionKeyTextColor = Color.white;
 
 	private static readonly Color Option1Color = Color.green;
 
@@ -822,7 +833,7 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private static readonly Color TroopLeaveColor = Option4Color;
 
-	private static readonly Dictionary<ComputerState, Dictionary<GorillaKeyboardBindings, Color>> s_pageKeyLabelColors = new Dictionary<ComputerState, Dictionary<GorillaKeyboardBindings, Color>>
+	private static readonly Dictionary<ComputerState, Dictionary<GorillaKeyboardBindings, Color>> pageKeyLabelColors = new Dictionary<ComputerState, Dictionary<GorillaKeyboardBindings, Color>>
 	{
 		{
 			ComputerState.Turn,
@@ -975,7 +986,7 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 	[OnEnterPlay_SetNull]
 	private static Action onKeyLabelColorsChanged;
 
-	private static bool s_optionColorsEnabled = true;
+	private static bool optionTextAndKeyColorsEnabled = true;
 
 	private ComputerState? keyLabelColorsState;
 
@@ -983,23 +994,23 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private ulong keyLabelColorsActiveKeys;
 
-	private static readonly Regex s_sentenceEnd = new Regex("(?<=[.!?。！？])\\s*", RegexOptions.Compiled);
+	private static readonly Regex sentenceEnd = new Regex("(?<=[.!?。！？])\\s*", RegexOptions.Compiled);
 
-	private static readonly Regex s_optionNumber = new Regex("((?:(?![\u3040-ゟ一-鿿])\\p{L})+)[\\s\u00a0]?(\\d+)", RegexOptions.Compiled);
+	private static readonly Regex optionNumber = new Regex("((?:(?![\u3040-ゟ一-鿿])\\p{L})+)[\\s\u00a0]?(\\d+)", RegexOptions.Compiled);
 
-	private static readonly string[] s_numberKeysPhrases = new string[6] { "NUMBER KEYS", "ZIFFERNTASTEN", "NUMMERNTASTEN", "TECLAS NUMÉRICAS", "TOUCHES NUMÉRIQUES", "数字キー" };
+	private static readonly string[] numberKeysPhrases = new string[6] { "NUMBER KEYS", "ZIFFERNTASTEN", "NUMMERNTASTEN", "TECLAS NUMÉRICAS", "TOUCHES NUMÉRIQUES", "数字キー" };
 
-	private static readonly string[] s_enterKeyPhrases = new string[4] { "ENTER", "EINGABE", "ENTRAR", "ENTRÉE" };
+	private static readonly string[] enterKeyPhrases = new string[4] { "ENTER", "EINGABE", "ENTRAR", "ENTRÉE" };
 
-	private static readonly string[] s_volumeRangePhrases = new string[3] { "1-10", "1 BIS 10", "1～10" };
+	private static readonly string[] volumeRangePhrases = new string[3] { "1-10", "1 BIS 10", "1～10" };
 
-	private static readonly string[] s_calibrateKeyPhrase = new string[1] { "Q" };
+	private static readonly string[] calibrateKeyPhrase = new string[1] { "Q" };
 
-	private static readonly string[] s_resetKeyPhrase = new string[1] { "DELETE" };
+	private static readonly string[] resetKeyPhrase = new string[1] { "DELETE" };
 
-	private static readonly Regex s_numberedEntry = new Regex("(?<![\\w])(\\d+)\\s?[:)]", RegexOptions.Compiled);
+	private static readonly Regex numberedEntry = new Regex("(?<![\\w])(\\d+)\\s?[:)]", RegexOptions.Compiled);
 
-	private static readonly Dictionary<string, string> s_coloredSentencesCache = new Dictionary<string, string>();
+	private static readonly Dictionary<string, string> coloredSentencesCache = new Dictionary<string, string>();
 
 	private const bool AllowRoomInRankedOnBeta = false;
 
@@ -1018,99 +1029,161 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private const string SnakePelletString = "O";
 
+	private const char SnakeWallChar = 'X';
+
 	private static readonly Color SnakePelletColor = Color.yellow;
 
-	private const string SnakeBestScorePref = "snakeBestScore";
+	private static readonly Color SnakeWallColor = Color.red;
+
+	private static readonly string SnakeWallString = "<color=#" + ColorUtility.ToHtmlStringRGB(SnakeWallColor) + ">X</color>";
+
+	private static readonly Color SnakeDeadColor = Color.red;
+
+	private static readonly string SnakeDeadColorTag = "<color=#" + ColorUtility.ToHtmlStringRGB(SnakeDeadColor) + ">";
+
+	private static readonly string[] SnakeBestScorePrefs = new string[2] { "snakeBestScore", "snakeHardBestScore" };
+
+	private static readonly string[] SnakeDifficultyNames = new string[2] { "NORMAL", "HARD" };
+
+	private const int SnakeHardPelletsPerWall = 2;
+
+	private const int SnakeHardDoubleWallScore = 50;
+
+	private const int SnakeWallClearSteps = 5;
+
+	private const float SnakeRestartDelay = 0.5f;
 
 	private const int SnakeColumns = 42;
 
 	[Header("Snake")]
 	[Tooltip("Seconds per snake step at the start of a game")]
-	public float snakeStartStepTime = 0.35f;
+	public float SnakeStartStepTime = 0.35f;
 
 	[Tooltip("Each pellet eaten multiplies the step time by this, so the snake speeds up")]
-	public float snakeStepTimeMultiplier = 0.93f;
+	public float SnakeStepTimeMultiplier = 0.93f;
 
 	[Tooltip("Fastest the snake gets, in seconds per step")]
-	public float snakeMinStepTime = 0.07f;
+	public float SnakeMinStepTime = 0.07f;
+
+	[Tooltip("Hard mode starts this many times faster than normal (the start step time is divided by this)")]
+	public float SnakeHardStartSpeedMultiplier = 1.5f;
+
+	[Tooltip("Hard mode's step time multiplier per pellet eaten. Lower than the normal one, so it speeds up faster")]
+	public float SnakeHardStepTimeMultiplier = 0.91f;
+
+	[Tooltip("Fastest the snake gets in hard mode, in seconds per step. Lower than the normal one, so hard mode's top speed is higher")]
+	public float SnakeHardMinStepTime = 0.06f;
+
+	private static readonly int[] SnakeWinScores = new int[2] { 400, 200 };
+
+	private const string SnakeGameOverText = "GAME OVER";
+
+	private const string SnakeWinText = "CONGRATULATIONS, YOU WIN!";
 
 	[Tooltip("Line height of the Snake screen, as a percent of the font's normal line height. Lower packs the rows closer together, so the snake's cells look more square")]
 	[Range(10f, 100f)]
-	public int snakeLineHeightPercent = 70;
+	public int SnakeLineHeightPercent = 70;
 
 	[Tooltip("The computer screen text's Line Spacing (TextMeshPro), which is added to every line on top of the line height. Used to work out how tall the Snake rows are, so vertical moves match horizontal ones")]
-	public float snakeScreenLineSpacing = 39.5f;
+	public float SnakeScreenLineSpacing = 39.5f;
 
-	private int snakeSecretCodeProgress;
+	private int _snakeSecretCodeProgress;
 
-	private SnakeGameState snakeGameState;
+	private SnakeGameState _snakeGameState;
 
-	private readonly List<Vector2Int> snakeBody = new List<Vector2Int>();
+	private bool _snakeHardMode;
 
-	private Vector2Int snakePellet;
+	private readonly List<Vector2Int> _snakeBody = new List<Vector2Int>();
 
-	private Vector2Int snakeDirection;
+	private Vector2Int _snakePellet;
 
-	private Vector2Int snakeLastStepDirection;
+	private Vector2Int _snakeDirection;
 
-	private int snakeScore;
+	private bool _snakePelletShown;
 
-	private int snakeBestScore = -1;
+	private readonly HashSet<Vector2Int> _snakeWalls = new HashSet<Vector2Int>();
 
-	private int snakeLastScore;
+	private Vector2Int _snakeLastStepDirection;
 
-	private bool snakeNewBestScore;
+	private int _snakeScore;
+
+	private readonly int[] _snakeBestScores = new int[2] { -1, -1 };
+
+	private readonly int[] _snakeLastScores = new int[2];
+
+	private bool _snakeNewBestScore;
 
 	[Header("Snake Sounds")]
 	[Tooltip("Snake opens (the secret code is entered)")]
-	public AudioClip snakeOpenClip;
+	public AudioClip SnakeOpenClip;
 
 	[Tooltip("The snake starts moving")]
-	public AudioClip snakeStartClip;
+	public AudioClip SnakeStartClip;
 
 	[Tooltip("The snake eats a pellet")]
-	public AudioClip snakeEatClip;
+	public AudioClip SnakeEatClip;
 
 	[Tooltip("The snake hits a wall or itself")]
-	public AudioClip snakeCrashClip;
+	public AudioClip SnakeCrashClip;
 
 	[Tooltip("Game over, played after the crash sound")]
-	public AudioClip snakeGameOverClip;
+	public AudioClip SnakeGameOverClip;
 
 	[Tooltip("Game over with a new best score, played after the crash sound instead of the game over sound")]
-	public AudioClip snakeNewBestClip;
+	public AudioClip SnakeNewBestClip;
 
 	[Range(0f, 1f)]
-	public float snakeSoundVolume = 0.5f;
+	public float SnakeSoundVolume = 0.5f;
 
-	private AudioSource snakeAudioSource;
+	private AudioSource _snakeAudioSource;
 
-	private Coroutine snakeGameOverSoundRoutine;
+	private Coroutine _snakeGameOverSoundRoutine;
+
+	private static readonly string[] SnakeTitle = new string[5] { " ____  _   _ _____ _  __", "/ ___|| \\ | | ____| |/ /", "\\___ \\|  \\| |  _| | ' / ", " ___) | |\\  | |___| . \\ ", "|____/|_| \\_|_____|_|\\_\\" };
+
+	private const string SnakeVersionText = "V1.1";
+
+	private static readonly string[] SnakeDifficultyLines = new string[2] { "PRESS 1 FOR NORMAL", "PRESS 2 FOR HARD  " };
+
+	private const int SnakeDifficultyNumberIndex = 6;
+
+	private const string SnakeStartText = "PRESS WASD TO START";
 
 	private const string SnakeNewBestText = "NEW HIGH SCORE";
 
 	[Tooltip("Seconds NEW HIGH SCORE shows for, then hides for, while it blinks on the game over screen")]
-	public float snakeNewBestBlinkTime = 0.5f;
+	public float SnakeNewBestBlinkTime = 0.5f;
 
-	private bool shownSnakeNewBest;
+	private bool _shownSnakeNewBest;
 
-	private int snakeHighlightRow = -1;
+	[Tooltip("Seconds the dead snake shows red for, then its normal color for, while it blinks on the game over screen")]
+	public float SnakeDeadBlinkTime = 0.5f;
 
-	private int snakeHighlightStart;
+	private float _snakeGameOverTime;
 
-	private int snakeHighlightLength;
+	private bool _shownSnakeDeadRed;
 
-	private float snakeStepTime;
+	private bool _snakeCrashed;
 
-	private float snakeLastStepTime;
+	private bool _snakeWon;
 
-	private readonly StringBuilder snakeScreen = new StringBuilder();
+	private float _snakeGameStartTime;
 
-	private char[,] snakeGrid;
+	private float _snakeGameDuration;
 
-	private int snakeRows = 13;
+	private readonly List<(int row, int start, int length)> _snakeHighlights = new List<(int, int, int)>();
 
-	private float snakeVerticalStepScale = 1f;
+	private float _snakeStepTime;
+
+	private float _snakeLastStepTime;
+
+	private readonly StringBuilder _snakeScreen = new StringBuilder();
+
+	private char[,] _snakeGrid;
+
+	private int _snakeRows = 13;
+
+	private float _snakeVerticalStepScale = 1f;
 
 	private static readonly string[] StartupFace = new string[8] { "           _______            ", "          /       \\           ", "         /  _____  \\          ", "        / / _   _ \\ \\         ", "       [ | (O) (O) | ]        ", "        | \\  . .  / |         ", " _______|  | _._ |  |_______  ", "/        \\  \\___/  /        \\ " };
 
@@ -1164,6 +1237,12 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private const string StartupPlayersSeparator = " ";
 
+	private const string STARTUP_ROOM_IN_PUBLIC_KEY = "STARTUP_ROOM_IN_PUBLIC";
+
+	private const string STARTUP_ROOM_IN_PRIVATE_KEY = "STARTUP_ROOM_IN_PRIVATE";
+
+	private bool startupShowRoomCode;
+
 	private readonly StringBuilder borderedScreen = new StringBuilder();
 
 	private int borderedLineCount;
@@ -1207,10 +1286,10 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private Locale _previousLocalisationSetting;
 
-	private static readonly Dictionary<string, string> s_localisedTextCache = new Dictionary<string, string>();
+	private static readonly Dictionary<string, string> localisedTextCache = new Dictionary<string, string>();
 
 	[OnEnterPlay_SetNull]
-	private static Locale s_localisedTextCacheLocale;
+	private static Locale localisedTextCacheLocale;
 
 	public string versionMismatch => _versionMismatchText.Value;
 
@@ -1275,17 +1354,17 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	public DateTimeOffset? RedemptionRestrictionTime { get; set; }
 
-	public static bool OptionColorsEnabled
+	public static bool OptionTextAndKeyColorsEnabled
 	{
 		get
 		{
-			return s_optionColorsEnabled;
+			return optionTextAndKeyColorsEnabled;
 		}
 		set
 		{
-			if (s_optionColorsEnabled != value)
+			if (optionTextAndKeyColorsEnabled != value)
 			{
-				s_optionColorsEnabled = value;
+				optionTextAndKeyColorsEnabled = value;
 				onKeyLabelColorsChanged?.Invoke();
 			}
 		}
@@ -1293,11 +1372,23 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private bool IsRoomLimitedInRanked => limitOnlineScreens;
 
+	private int SnakeDifficulty
+	{
+		get
+		{
+			if (!_snakeHardMode)
+			{
+				return 0;
+			}
+			return 1;
+		}
+	}
+
 	public bool IsScreenTextFullScreen
 	{
 		get
 		{
-			if (currentState != 0 && currentState != ComputerState.Snake)
+			if (currentState != 0 && currentState != ComputerState.Snake && currentState != ComputerState.Messages)
 			{
 				return screenText.IsFailed;
 			}
@@ -1842,16 +1933,37 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	public void PressButton(GorillaKeyboardBindings buttonPressed)
 	{
-		if (buttonPressed == GorillaKeyboardBindings.none || screenText.IsFailed)
+		if (screenText.IsFailed)
 		{
 			return;
 		}
 		lastKeyPressTime = Time.time;
+		if (buttonPressed == GorillaKeyboardBindings.none)
+		{
+			SwitchState(ComputerState.None);
+			return;
+		}
 		nameCheckRateLimited = false;
+		if (buttonPressed == GorillaKeyboardBindings.messages)
+		{
+			if (currentState != ComputerState.Messages)
+			{
+				mailIndex = 0;
+				SwitchState(ComputerState.Messages);
+			}
+			(int, string) tuple = BananaMail.DisplayMessage(mailIndex);
+			(mailIndex, _) = tuple;
+			screenText.Set(tuple.Item2);
+			UpdateScreen();
+			return;
+		}
 		if (currentState == ComputerState.Startup)
 		{
-			ProcessStartupState(buttonPressed);
-			UpdateScreen();
+			if (buttonPressed != GorillaKeyboardBindings.delete || !TryToggleStartupRoomCode())
+			{
+				ProcessStartupState(buttonPressed);
+				UpdateScreen();
+			}
 			return;
 		}
 		if (currentState == ComputerState.Snake)
@@ -1929,6 +2041,9 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 			case ComputerState.Redemption:
 				ProcessRedemptionState(buttonPressed);
 				break;
+			case ComputerState.Messages:
+				ProcessStartupState(buttonPressed);
+				break;
 			}
 		}
 		UpdateScreen();
@@ -1988,6 +2103,7 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 			previousComputerState = currentComputerState;
 		}
 		currentComputerState = newState;
+		startupShowRoomCode = false;
 		if (LoadingRoutine != null)
 		{
 			StopCoroutine(LoadingRoutine);
@@ -2003,6 +2119,7 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 	private void PopState()
 	{
 		currentComputerState = previousComputerState;
+		startupShowRoomCode = false;
 		if (stateStack.Count <= 1)
 		{
 			Debug.LogError("Can't pop into an empty stack");
@@ -3032,6 +3149,19 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 		}
 	}
 
+	public static Color? GetFunctionKeyColor(GorillaKeyboardBindings binding)
+	{
+		if (!functionKeyColorsEnabled)
+		{
+			return null;
+		}
+		if ((uint)(binding - 10) <= 6u || (uint)(binding - 43) <= 1u)
+		{
+			return FunctionKeyColor;
+		}
+		return null;
+	}
+
 	private bool IsKeyLabelColorActive(GorillaKeyboardBindings binding)
 	{
 		switch (currentState)
@@ -3083,15 +3213,15 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 	public bool TryGetKeyLabelColor(GorillaKeyboardBindings binding, out Color color)
 	{
 		color = default(Color);
-		if (!s_optionColorsEnabled || screenText.IsFailed)
+		if (!optionTextAndKeyColorsEnabled || screenText.IsFailed)
 		{
 			return false;
 		}
-		if (!s_optionKeyColorsEnabled)
+		if (!optionKeyBodyColorsEnabled)
 		{
 			return false;
 		}
-		if (s_pageKeyLabelColors.TryGetValue(currentState, out var value) && value.TryGetValue(binding, out color))
+		if (pageKeyLabelColors.TryGetValue(currentState, out var value) && value.TryGetValue(binding, out color))
 		{
 			return IsKeyLabelColorActive(binding);
 		}
@@ -3113,7 +3243,7 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private ulong GetColoredKeys()
 	{
-		if (!s_pageKeyLabelColors.TryGetValue(currentState, out var value))
+		if (!pageKeyLabelColors.TryGetValue(currentState, out var value))
 		{
 			return 0uL;
 		}
@@ -3130,17 +3260,17 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private static bool TryColorSentences(string text, out string colored, params Color[] colors)
 	{
-		if (!s_optionColorsEnabled)
+		if (!optionTextAndKeyColorsEnabled)
 		{
 			colored = text;
 			return false;
 		}
-		if (s_coloredSentencesCache.TryGetValue(text, out colored))
+		if (coloredSentencesCache.TryGetValue(text, out colored))
 		{
 			return colored != text;
 		}
 		colored = text;
-		s_coloredSentencesCache[text] = text;
+		coloredSentencesCache[text] = text;
 		string text2 = text.Trim();
 		if (text2.Length == 0)
 		{
@@ -3149,13 +3279,13 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 		List<string> list = SplitNonEmpty(text2.Split('\n'));
 		if (list.Count != colors.Length)
 		{
-			list = SplitNonEmpty(s_sentenceEnd.Split(text2));
+			list = SplitNonEmpty(sentenceEnd.Split(text2));
 		}
 		if (list.Count != colors.Length)
 		{
 			return false;
 		}
-		string optionWord = FindOptionWord(s_optionNumber.Matches(text2));
+		string optionWord = FindOptionWord(optionNumber.Matches(text2));
 		int num = text.IndexOf(text2, StringComparison.Ordinal);
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.Append(text, 0, num);
@@ -3169,24 +3299,24 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 		}
 		stringBuilder.Append(text, num + text2.Length, text.Length - num - text2.Length);
 		colored = stringBuilder.ToString();
-		s_coloredSentencesCache[text] = colored;
+		coloredSentencesCache[text] = colored;
 		return true;
 	}
 
 	private static bool TryColorOptionNumbers(string text, out string colored, params (int number, Color color)[] options)
 	{
-		if (!s_optionColorsEnabled)
+		if (!optionTextAndKeyColorsEnabled)
 		{
 			colored = text;
 			return false;
 		}
-		if (s_coloredSentencesCache.TryGetValue(text, out colored))
+		if (coloredSentencesCache.TryGetValue(text, out colored))
 		{
 			return colored != text;
 		}
 		colored = text;
-		s_coloredSentencesCache[text] = text;
-		MatchCollection matchCollection = s_optionNumber.Matches(text);
+		coloredSentencesCache[text] = text;
+		MatchCollection matchCollection = optionNumber.Matches(text);
 		string text2 = FindOptionWord(matchCollection);
 		if (text2 == null)
 		{
@@ -3224,7 +3354,7 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 		}
 		stringBuilder.Append(text, num2, text.Length - num2);
 		colored = stringBuilder.ToString();
-		s_coloredSentencesCache[text] = colored;
+		coloredSentencesCache[text] = colored;
 		return true;
 	}
 
@@ -3249,7 +3379,7 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 	{
 		if (optionWord != null && color.a > 0f)
 		{
-			foreach (Match item in s_optionNumber.Matches(line))
+			foreach (Match item in optionNumber.Matches(line))
 			{
 				if (!(item.Groups[1].Value != optionWord))
 				{
@@ -3265,7 +3395,7 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private static string HighlightPhrase(string text, string[] phrases)
 	{
-		if (!s_optionColorsEnabled || string.IsNullOrEmpty(text))
+		if (!optionTextAndKeyColorsEnabled || string.IsNullOrEmpty(text))
 		{
 			return text;
 		}
@@ -3286,17 +3416,17 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private static string HighlightNumberKeys(string text)
 	{
-		return HighlightPhrase(text, s_numberKeysPhrases);
+		return HighlightPhrase(text, numberKeysPhrases);
 	}
 
 	public static string HighlightEnterKey(string text)
 	{
-		return HighlightPhrase(text, s_enterKeyPhrases);
+		return HighlightPhrase(text, enterKeyPhrases);
 	}
 
 	private static string HighlightVolumeRange(string text)
 	{
-		return HighlightPhrase(text, s_volumeRangePhrases);
+		return HighlightPhrase(text, volumeRangePhrases);
 	}
 
 	private static string HighlightNumberedEntries(string text)
@@ -3305,12 +3435,12 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 		{
 			return text;
 		}
-		return s_numberedEntry.Replace(text, (Match match) => HighlightNumber(match.Groups[1].Value));
+		return numberedEntry.Replace(text, (Match match) => HighlightNumber(match.Groups[1].Value));
 	}
 
 	private static string HighlightNumber(string number)
 	{
-		if (!s_optionColorsEnabled)
+		if (!optionTextAndKeyColorsEnabled)
 		{
 			return number + ")";
 		}
@@ -4066,15 +4196,15 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 				b = value.glyph.metrics.horizontalAdvance / tMP_FontAsset.faceInfo.pointSize;
 			}
 		}
-		float num2 = snakeScreenLineSpacing / 100f;
+		float num2 = SnakeScreenLineSpacing / 100f;
 		float num3 = num + num2;
-		float num4 = num * (float)snakeLineHeightPercent / 100f + num2;
+		float num4 = num * (float)SnakeLineHeightPercent / 100f + num2;
 		int num5 = Mathf.FloorToInt(15f * num3 / Mathf.Max(0.01f, num4) + 0.001f);
-		snakeRows = Mathf.Max(5, num5 - 2);
-		snakeVerticalStepScale = Mathf.Max(0.1f, num4 / Mathf.Max(0.01f, b));
-		if (snakeGrid == null || snakeGrid.GetLength(0) != snakeRows)
+		_snakeRows = Mathf.Max(5, num5 - 2);
+		_snakeVerticalStepScale = Mathf.Max(0.1f, num4 / Mathf.Max(0.01f, b));
+		if (_snakeGrid == null || _snakeGrid.GetLength(0) != _snakeRows)
 		{
-			snakeGrid = new char[snakeRows, 42];
+			_snakeGrid = new char[_snakeRows, 42];
 		}
 	}
 
@@ -4082,45 +4212,50 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 	{
 		if (direction.y == 0)
 		{
-			return snakeStepTime;
+			return _snakeStepTime;
 		}
-		return snakeStepTime * snakeVerticalStepScale;
+		return _snakeStepTime * _snakeVerticalStepScale;
 	}
 
 	private bool TryEnterSnakeSecretCode(GorillaKeyboardBindings buttonPressed)
 	{
-		if (buttonPressed != SnakeSecretCode[snakeSecretCodeProgress])
+		if (buttonPressed != SnakeSecretCode[_snakeSecretCodeProgress])
 		{
-			snakeSecretCodeProgress = ((buttonPressed == SnakeSecretCode[0]) ? 1 : 0);
+			_snakeSecretCodeProgress = ((buttonPressed == SnakeSecretCode[0]) ? 1 : 0);
 			return false;
 		}
-		snakeSecretCodeProgress++;
-		if (snakeSecretCodeProgress < SnakeSecretCode.Length)
+		_snakeSecretCodeProgress++;
+		if (_snakeSecretCodeProgress < SnakeSecretCode.Length)
 		{
 			return false;
 		}
-		snakeSecretCodeProgress = 0;
+		_snakeSecretCodeProgress = 0;
 		SwitchState(ComputerState.Snake);
-		ResetSnakeGame();
-		PlaySnakeSound(snakeOpenClip);
+		ShowSnakeTitle();
+		PlaySnakeSound(SnakeOpenClip);
 		return true;
 	}
 
 	private void ResetSnakeSecretCode()
 	{
-		snakeSecretCodeProgress = 0;
+		_snakeSecretCodeProgress = 0;
 	}
 
-	private void EndSnakeGame(bool crashed)
+	private void EndSnakeGame(bool crashed, bool won = false)
 	{
-		snakeGameState = SnakeGameState.GameOver;
-		snakeLastScore = snakeScore;
-		LoadSnakeBestScore();
-		snakeNewBestScore = snakeScore > snakeBestScore;
-		if (snakeNewBestScore)
+		_snakeGameState = SnakeGameState.GameOver;
+		_snakeGameOverTime = Time.time;
+		_snakeGameDuration = Time.time - _snakeGameStartTime;
+		_snakeCrashed = crashed;
+		_snakeWon = won;
+		int snakeDifficulty = SnakeDifficulty;
+		LoadSnakeBestScores();
+		_snakeLastScores[snakeDifficulty] = _snakeScore;
+		_snakeNewBestScore = _snakeScore > _snakeBestScores[snakeDifficulty];
+		if (_snakeNewBestScore)
 		{
-			snakeBestScore = snakeScore;
-			PlayerPrefs.SetInt("snakeBestScore", snakeBestScore);
+			_snakeBestScores[snakeDifficulty] = _snakeScore;
+			PlayerPrefs.SetInt(SnakeBestScorePrefs[snakeDifficulty], _snakeScore);
 			PlayerPrefs.Save();
 		}
 		PlaySnakeGameOverSounds(crashed);
@@ -4130,34 +4265,34 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 	{
 		if (!(clip == null))
 		{
-			if (snakeAudioSource == null)
+			if (_snakeAudioSource == null)
 			{
-				snakeAudioSource = base.gameObject.AddComponent<AudioSource>();
-				snakeAudioSource.playOnAwake = false;
-				snakeAudioSource.spatialBlend = 0f;
+				_snakeAudioSource = base.gameObject.AddComponent<AudioSource>();
+				_snakeAudioSource.playOnAwake = false;
+				_snakeAudioSource.spatialBlend = 0f;
 			}
-			snakeAudioSource.GTPlayOneShot(clip, snakeSoundVolume);
+			_snakeAudioSource.GTPlayOneShot(clip, SnakeSoundVolume);
 		}
 	}
 
 	private void PlaySnakeGameOverSounds(bool crashed)
 	{
 		StopSnakeGameOverSound();
-		AudioClip clip = (snakeNewBestScore ? snakeNewBestClip : snakeGameOverClip);
-		if (!crashed || snakeCrashClip == null)
+		AudioClip clip = ((_snakeNewBestScore || _snakeWon) ? SnakeNewBestClip : SnakeGameOverClip);
+		if (!crashed || SnakeCrashClip == null)
 		{
 			PlaySnakeSound(clip);
 			return;
 		}
-		PlaySnakeSound(snakeCrashClip);
-		snakeGameOverSoundRoutine = StartCoroutine(PlaySnakeSoundAfter(clip, snakeCrashClip.length));
+		PlaySnakeSound(SnakeCrashClip);
+		_snakeGameOverSoundRoutine = StartCoroutine(PlaySnakeSoundAfter(clip, SnakeCrashClip.length));
 	}
 
 	private IEnumerator PlaySnakeSoundAfter(AudioClip clip, float delay)
 	{
 		yield return new WaitForSeconds(delay);
-		snakeGameOverSoundRoutine = null;
-		if (currentState == ComputerState.Snake && snakeGameState == SnakeGameState.GameOver)
+		_snakeGameOverSoundRoutine = null;
+		if (currentState == ComputerState.Snake && _snakeGameState == SnakeGameState.GameOver)
 		{
 			PlaySnakeSound(clip);
 		}
@@ -4165,33 +4300,53 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private void StopSnakeGameOverSound()
 	{
-		if (snakeGameOverSoundRoutine != null)
+		if (_snakeGameOverSoundRoutine != null)
 		{
-			StopCoroutine(snakeGameOverSoundRoutine);
-			snakeGameOverSoundRoutine = null;
+			StopCoroutine(_snakeGameOverSoundRoutine);
+			_snakeGameOverSoundRoutine = null;
 		}
 	}
 
-	private void LoadSnakeBestScore()
+	private void LoadSnakeBestScores()
 	{
-		if (snakeBestScore < 0)
+		for (int i = 0; i < _snakeBestScores.Length; i++)
 		{
-			snakeBestScore = PlayerPrefs.GetInt("snakeBestScore", 0);
+			if (_snakeBestScores[i] < 0)
+			{
+				_snakeBestScores[i] = Mathf.Max(0, PlayerPrefs.GetInt(SnakeBestScorePrefs[i], 0));
+			}
 		}
 	}
 
-	private void ResetSnakeGame()
+	private void ShowSnakeTitle()
 	{
-		LoadSnakeBestScore();
+		StopSnakeGameOverSound();
+		LoadSnakeBestScores();
 		UpdateSnakeLayout();
-		snakeBody.Clear();
-		snakeBody.Add(new Vector2Int(21, snakeRows / 2));
-		snakeDirection = Vector2Int.zero;
-		snakeLastStepDirection = Vector2Int.zero;
-		snakeScore = 0;
-		snakeNewBestScore = false;
-		snakeStepTime = snakeStartStepTime;
-		snakeGameState = SnakeGameState.Waiting;
+		_snakeBody.Clear();
+		_snakeWalls.Clear();
+		_snakeDirection = Vector2Int.zero;
+		_snakeLastStepDirection = Vector2Int.zero;
+		_snakeScore = 0;
+		_snakeNewBestScore = false;
+		_snakeGameState = SnakeGameState.Title;
+	}
+
+	private void ResetSnakeGame(bool hardMode)
+	{
+		StopSnakeGameOverSound();
+		_snakeHardMode = hardMode;
+		LoadSnakeBestScores();
+		UpdateSnakeLayout();
+		_snakeBody.Clear();
+		_snakeBody.Add(new Vector2Int(21, _snakeRows / 2));
+		_snakeWalls.Clear();
+		_snakeDirection = Vector2Int.zero;
+		_snakeLastStepDirection = Vector2Int.zero;
+		_snakeScore = 0;
+		_snakeNewBestScore = false;
+		_snakeStepTime = (hardMode ? (SnakeStartStepTime / Mathf.Max(0.01f, SnakeHardStartSpeedMultiplier)) : SnakeStartStepTime);
+		_snakeGameState = SnakeGameState.Waiting;
 		SpawnSnakePellet();
 	}
 
@@ -4203,9 +4358,21 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 			ExitSnake();
 			break;
 		case GorillaKeyboardBindings.enter:
-			if (snakeGameState == SnakeGameState.GameOver)
+			if (_snakeGameState == SnakeGameState.GameOver)
 			{
-				ResetSnakeGame();
+				ShowSnakeTitle();
+			}
+			break;
+		case GorillaKeyboardBindings.one:
+			if (_snakeGameState == SnakeGameState.Title || _snakeGameState == SnakeGameState.Waiting)
+			{
+				ResetSnakeGame(hardMode: false);
+			}
+			break;
+		case GorillaKeyboardBindings.two:
+			if (_snakeGameState == SnakeGameState.Title || _snakeGameState == SnakeGameState.Waiting)
+			{
+				ResetSnakeGame(hardMode: true);
 			}
 			break;
 		case GorillaKeyboardBindings.W:
@@ -4226,25 +4393,31 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 	private void ExitSnake()
 	{
 		StopSnakeGameOverSound();
-		snakeGameState = SnakeGameState.Waiting;
-		snakeBody.Clear();
+		_snakeGameState = SnakeGameState.Title;
+		_snakeBody.Clear();
+		_snakeWalls.Clear();
 		SwitchState(GetState(currentStateIndex));
 	}
 
 	private void TurnSnake(Vector2Int direction)
 	{
-		if (snakeGameState != SnakeGameState.GameOver && !(direction == -snakeLastStepDirection))
+		if (_snakeGameState == SnakeGameState.Title || (_snakeGameState == SnakeGameState.GameOver && Time.time >= _snakeGameOverTime + 0.5f))
 		{
-			if (snakeGameState == SnakeGameState.Waiting)
+			ResetSnakeGame(_snakeHardMode);
+		}
+		if (_snakeGameState != SnakeGameState.GameOver && !(direction == -_snakeLastStepDirection))
+		{
+			if (_snakeGameState == SnakeGameState.Waiting)
 			{
-				snakeDirection = direction;
-				snakeGameState = SnakeGameState.Playing;
-				snakeLastStepTime = Time.time;
-				PlaySnakeSound(snakeStartClip);
+				_snakeDirection = direction;
+				_snakeGameState = SnakeGameState.Playing;
+				_snakeLastStepTime = Time.time;
+				_snakeGameStartTime = Time.time;
+				PlaySnakeSound(SnakeStartClip);
 			}
 			else
 			{
-				snakeDirection = direction;
+				_snakeDirection = direction;
 			}
 		}
 	}
@@ -4253,13 +4426,13 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 	{
 		if (currentState == ComputerState.Snake)
 		{
-			if (snakeGameState == SnakeGameState.GameOver && snakeNewBestScore && IsSnakeNewBestVisible() != shownSnakeNewBest)
+			if (_snakeGameState == SnakeGameState.GameOver && ((_snakeNewBestScore && IsSnakeNewBestVisible() != _shownSnakeNewBest) || (_snakeCrashed && IsSnakeDeadRedVisible() != _shownSnakeDeadRed)))
 			{
 				UpdateScreen();
 			}
-			else if (snakeGameState == SnakeGameState.Playing && !(Time.time < snakeLastStepTime + GetSnakeStepTime(snakeDirection)))
+			else if (_snakeGameState == SnakeGameState.Playing && !(Time.time < _snakeLastStepTime + GetSnakeStepTime(_snakeDirection)))
 			{
-				snakeLastStepTime = Time.time;
+				_snakeLastStepTime = Time.time;
 				StepSnake();
 				UpdateScreen();
 			}
@@ -4268,15 +4441,15 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private void StepSnake()
 	{
-		Vector2Int vector2Int = snakeBody[0] + snakeDirection;
-		snakeLastStepDirection = snakeDirection;
-		bool flag = vector2Int.x < 0 || vector2Int.x >= 42 || vector2Int.y < 0 || vector2Int.y >= snakeRows;
-		bool flag2 = vector2Int == snakePellet;
-		int num = (flag2 ? snakeBody.Count : (snakeBody.Count - 1));
+		Vector2Int vector2Int = _snakeBody[0] + _snakeDirection;
+		_snakeLastStepDirection = _snakeDirection;
+		bool flag = vector2Int.x < 0 || vector2Int.x >= 42 || vector2Int.y < 0 || vector2Int.y >= _snakeRows || _snakeWalls.Contains(vector2Int);
+		bool flag2 = vector2Int == _snakePellet;
+		int num = (flag2 ? _snakeBody.Count : (_snakeBody.Count - 1));
 		bool flag3 = false;
 		for (int i = 0; i < num; i++)
 		{
-			if (snakeBody[i] == vector2Int)
+			if (_snakeBody[i] == vector2Int)
 			{
 				flag3 = true;
 				break;
@@ -4287,37 +4460,115 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 			EndSnakeGame(crashed: true);
 			return;
 		}
-		snakeBody.Insert(0, vector2Int);
+		_snakeBody.Insert(0, vector2Int);
 		if (!flag2)
 		{
-			snakeBody.RemoveAt(snakeBody.Count - 1);
+			_snakeBody.RemoveAt(_snakeBody.Count - 1);
 			return;
 		}
-		snakeScore++;
-		PlaySnakeSound(snakeEatClip);
-		snakeStepTime = Mathf.Max(snakeMinStepTime, snakeStepTime * snakeStepTimeMultiplier);
-		if (!SpawnSnakePellet())
+		_snakeScore++;
+		PlaySnakeSound(SnakeEatClip);
+		float num2 = (_snakeHardMode ? SnakeHardStepTimeMultiplier : SnakeStepTimeMultiplier);
+		float a = (_snakeHardMode ? SnakeHardMinStepTime : SnakeMinStepTime);
+		_snakeStepTime = Mathf.Max(a, _snakeStepTime * num2);
+		if (_snakeScore >= SnakeWinScores[SnakeDifficulty])
+		{
+			EndSnakeGame(crashed: false, won: true);
+		}
+		else if (!SpawnSnakePellet())
 		{
 			EndSnakeGame(crashed: false);
+		}
+		else if (_snakeHardMode && _snakeScore % 2 == 0)
+		{
+			int num3 = ((_snakeScore <= 50) ? 1 : 2);
+			for (int j = 0; j < num3; j++)
+			{
+				SpawnSnakeWall();
+			}
 		}
 	}
 
 	private bool SpawnSnakePellet()
 	{
-		int num = 42 * snakeRows - snakeBody.Count;
+		if (!TryPickFreeSnakeCell(avoidPellet: false, out var picked))
+		{
+			return false;
+		}
+		_snakePellet = picked;
+		return true;
+	}
+
+	private void SpawnSnakeWall()
+	{
+		if (TryPickFreeSnakeCell(avoidPellet: true, out var picked))
+		{
+			_snakeWalls.Add(picked);
+		}
+	}
+
+	private bool IsInFrontOfSnake(Vector2Int cell)
+	{
+		if (_snakeBody.Count == 0 || _snakeDirection == Vector2Int.zero)
+		{
+			return false;
+		}
+		Vector2Int vector2Int = _snakeBody[0];
+		for (int i = 0; i < 5; i++)
+		{
+			vector2Int += _snakeDirection;
+			if (cell == vector2Int)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private bool IsSnakeCellFree(Vector2Int cell, bool avoidPellet)
+	{
+		if (_snakeBody.Contains(cell) || _snakeWalls.Contains(cell))
+		{
+			return false;
+		}
+		if (!avoidPellet)
+		{
+			return true;
+		}
+		if (cell != _snakePellet)
+		{
+			return !IsInFrontOfSnake(cell);
+		}
+		return false;
+	}
+
+	private bool TryPickFreeSnakeCell(bool avoidPellet, out Vector2Int picked)
+	{
+		picked = default(Vector2Int);
+		int num = 0;
+		for (int i = 0; i < _snakeRows; i++)
+		{
+			for (int j = 0; j < 42; j++)
+			{
+				if (IsSnakeCellFree(new Vector2Int(j, i), avoidPellet))
+				{
+					num++;
+				}
+			}
+		}
 		if (num <= 0)
 		{
 			return false;
 		}
 		int num2 = UnityEngine.Random.Range(0, num);
-		for (int i = 0; i < snakeRows; i++)
+		for (int k = 0; k < _snakeRows; k++)
 		{
-			for (int j = 0; j < 42; j++)
+			for (int l = 0; l < 42; l++)
 			{
-				Vector2Int item = new Vector2Int(j, i);
-				if (!snakeBody.Contains(item) && num2-- == 0)
+				Vector2Int vector2Int = new Vector2Int(l, k);
+				if (IsSnakeCellFree(vector2Int, avoidPellet) && num2-- == 0)
 				{
-					snakePellet = item;
+					picked = vector2Int;
 					return true;
 				}
 			}
@@ -4327,112 +4578,255 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 
 	private void SnakeScreen()
 	{
-		if (snakeBody.Count == 0)
+		if (_snakeGrid == null || (_snakeGameState != 0 && _snakeBody.Count == 0))
 		{
-			ResetSnakeGame();
+			ShowSnakeTitle();
 		}
-		for (int i = 0; i < snakeRows; i++)
+		for (int i = 0; i < _snakeRows; i++)
 		{
 			for (int j = 0; j < 42; j++)
 			{
-				snakeGrid[i, j] = ' ';
+				_snakeGrid[i, j] = ' ';
 			}
 		}
-		snakeGrid[snakePellet.y, snakePellet.x] = 'O';
-		foreach (Vector2Int item in snakeBody)
+		_snakeHighlights.Clear();
+		_shownSnakeDeadRed = _snakeGameState == SnakeGameState.GameOver && _snakeCrashed && IsSnakeDeadRedVisible();
+		_snakePelletShown = false;
+		if (_snakeGameState != 0)
 		{
-			if (item.x >= 0 && item.x < 42 && item.y >= 0 && item.y < snakeRows)
+			foreach (Vector2Int snakeWall in _snakeWalls)
 			{
-				snakeGrid[item.y, item.x] = '■';
+				_snakeGrid[snakeWall.y, snakeWall.x] = 'X';
 			}
-		}
-		snakeHighlightRow = -1;
-		if (snakeGameState == SnakeGameState.GameOver)
-		{
-			WriteSnakeGridCentred(snakeRows / 2 - 2, "GAME OVER");
-			if (snakeNewBestScore)
+			_snakeGrid[_snakePellet.y, _snakePellet.x] = 'O';
+			_snakePelletShown = true;
+			for (int k = 0; k < _snakeBody.Count; k++)
 			{
-				shownSnakeNewBest = IsSnakeNewBestVisible();
-				int row = snakeRows / 2 - 1;
-				if (shownSnakeNewBest)
+				Vector2Int vector2Int = _snakeBody[k];
+				if (vector2Int.x >= 0 && vector2Int.x < 42 && vector2Int.y >= 0 && vector2Int.y < _snakeRows)
 				{
-					snakeHighlightRow = row;
-					snakeHighlightStart = WriteSnakeGridCentred(row, "NEW HIGH SCORE");
-					snakeHighlightLength = "NEW HIGH SCORE".Length;
+					_snakeGrid[vector2Int.y, vector2Int.x] = ((k == 0) ? GetSnakeHeadChar() : '■');
+				}
+			}
+		}
+		if (_snakeGameState == SnakeGameState.Title || _snakeGameState == SnakeGameState.Waiting)
+		{
+			DrawSnakeTitle();
+		}
+		if (_snakeGameState == SnakeGameState.GameOver)
+		{
+			WriteSnakeGridCentered(_snakeRows / 2 - 2, _snakeWon ? "CONGRATULATIONS, YOU WIN!" : "GAME OVER");
+			WriteSnakeGridCentered(_snakeRows / 2, "TIME: " + _snakeGameDuration.ToString("0.00", CultureInfo.InvariantCulture) + " SECS");
+			if (_snakeNewBestScore)
+			{
+				_shownSnakeNewBest = IsSnakeNewBestVisible();
+				int num = _snakeRows / 2 - 1;
+				if (_shownSnakeNewBest)
+				{
+					int item = WriteSnakeGridCentered(num, "NEW HIGH SCORE");
+					_snakeHighlights.Add((num, item, "NEW HIGH SCORE".Length));
 				}
 				else
 				{
-					WriteSnakeGridCentred(row, new string(' ', "NEW HIGH SCORE".Length));
+					WriteSnakeGridCentered(num, new string(' ', "NEW HIGH SCORE".Length));
 				}
 			}
-			WriteSnakeGridCentred(snakeRows / 2 + 1, "ENTER: RESTART");
-			WriteSnakeGridCentred(snakeRows / 2 + 2, "DELETE: EXIT");
+			WriteSnakeGridCentered(_snakeRows / 2 + 2, "WASD: RESTART");
+			WriteSnakeGridCentered(_snakeRows / 2 + 3, "ENTER: RETURN TO TITLE");
 		}
-		string text = " " + snakeScore + " ";
-		snakeScreen.Clear();
-		snakeScreen.Append("<line-height=").Append(snakeLineHeightPercent).Append("%>");
-		string text2 = " BEST: " + snakeBestScore + "  LAST: " + snakeLastScore + " ";
-		snakeScreen.Append('#');
-		snakeScreen.Append(text2);
-		snakeScreen.Append('#', Mathf.Max(1, 44 - text2.Length - text.Length - 2));
-		snakeScreen.Append(text);
-		snakeScreen.Append('#');
-		for (int k = 0; k < snakeRows; k++)
+		string text = " " + _snakeScore + " ";
+		_snakeScreen.Clear();
+		_snakeScreen.Append("<line-height=").Append(SnakeLineHeightPercent).Append("%>");
+		int snakeDifficulty = SnakeDifficulty;
+		string text2 = " BEST: " + _snakeBestScores[snakeDifficulty] + "  LAST: " + _snakeLastScores[snakeDifficulty] + " ";
+		_snakeScreen.Append('#');
+		_snakeScreen.Append(text2);
+		_snakeScreen.Append('#', Mathf.Max(1, 44 - text2.Length - text.Length - 2));
+		_snakeScreen.Append(text);
+		_snakeScreen.Append('#');
+		for (int l = 0; l < _snakeRows; l++)
 		{
-			snakeScreen.Append('\n');
-			snakeScreen.Append('#');
-			for (int l = 0; l < 42; l++)
+			_snakeScreen.Append('\n');
+			_snakeScreen.Append('#');
+			bool flag = false;
+			for (int m = 0; m < 42; m++)
 			{
-				if (k == snakeHighlightRow && l == snakeHighlightStart)
+				bool flag2 = _shownSnakeDeadRed && IsSnakeCell(l, m);
+				if (flag2 != flag)
 				{
-					snakeScreen.Append("<color=#").Append(ColorUtility.ToHtmlStringRGB(SnakePelletColor)).Append('>');
-					int num = 0;
-					while (num < snakeHighlightLength && l < 42)
+					_snakeScreen.Append(flag2 ? SnakeDeadColorTag : "</color>");
+					flag = flag2;
+				}
+				int snakeHighlightLength = GetSnakeHighlightLength(l, m);
+				if (snakeHighlightLength > 0)
+				{
+					if (flag)
 					{
-						snakeScreen.Append(snakeGrid[k, l]);
-						num++;
-						l++;
+						_snakeScreen.Append("</color>");
+						flag = false;
 					}
-					snakeScreen.Append("</color>");
-					l--;
+					_snakeScreen.Append("<color=#").Append(ColorUtility.ToHtmlStringRGB(SnakePelletColor)).Append('>');
+					int num2 = 0;
+					while (num2 < snakeHighlightLength && m < 42)
+					{
+						_snakeScreen.Append(_snakeGrid[l, m]);
+						num2++;
+						m++;
+					}
+					_snakeScreen.Append("</color>");
+					m--;
 				}
 				else
 				{
-					char c = snakeGrid[k, l];
-					if (c == 'O' && k == snakePellet.y && l == snakePellet.x)
+					char c = _snakeGrid[l, m];
+					if (_snakePelletShown && l == _snakePellet.y && m == _snakePellet.x)
 					{
-						AppendColored(snakeScreen, "O", SnakePelletColor);
+						AppendColored(_snakeScreen, "O", SnakePelletColor);
+					}
+					else if (c == 'X' && _snakeWalls.Contains(new Vector2Int(m, l)))
+					{
+						_snakeScreen.Append(SnakeWallString);
 					}
 					else
 					{
-						snakeScreen.Append(c);
+						_snakeScreen.Append(c);
 					}
 				}
 			}
-			snakeScreen.Append('#');
+			if (flag)
+			{
+				_snakeScreen.Append("</color>");
+			}
+			_snakeScreen.Append('#');
 		}
-		snakeScreen.Append('\n');
-		string text3 = ((snakeGameState == SnakeGameState.Waiting) ? " WASD: MOVE  DELETE: EXIT " : " DELETE: EXIT ");
-		int num2 = (44 - text3.Length) / 2;
-		snakeScreen.Append('#', num2);
-		snakeScreen.Append(text3);
-		snakeScreen.Append('#', 44 - num2 - text3.Length);
-		screenText.Set(snakeScreen.ToString());
+		_snakeScreen.Append('\n');
+		string text3 = " " + SnakeDifficultyNames[snakeDifficulty] + " ";
+		string text4 = ((_snakeGameState == SnakeGameState.Title || _snakeGameState == SnakeGameState.Waiting) ? " WASD: MOVE  DELETE: EXIT " : " DELETE: EXIT ");
+		int num3 = 0;
+		string[] snakeDifficultyNames = SnakeDifficultyNames;
+		foreach (string text5 in snakeDifficultyNames)
+		{
+			num3 = Mathf.Max(num3, text5.Length + 2);
+		}
+		int num4 = Mathf.Max((44 - text4.Length) / 2, 1 + num3 + 1);
+		_snakeScreen.Append('#');
+		_snakeScreen.Append("<color=#").Append(ColorUtility.ToHtmlStringRGB(SnakePelletColor)).Append('>')
+			.Append(text3)
+			.Append("</color>");
+		_snakeScreen.Append('#', num4 - 1 - text3.Length);
+		_snakeScreen.Append(text4);
+		_snakeScreen.Append('#', Mathf.Max(1, 44 - num4 - text4.Length));
+		screenText.Set(_snakeScreen.ToString());
 	}
 
-	private int WriteSnakeGridCentred(int row, string text)
+	private void DrawSnakeTitle()
+	{
+		int num = _snakeRows / 2;
+		int num2 = Mathf.Max(0, num - 2 - SnakeTitle.Length);
+		int num3 = 0;
+		while (num3 < SnakeTitle.Length && num2 < num - 1)
+		{
+			int item = WriteSnakeGridCentered(num2, SnakeTitle[num3]);
+			_snakeHighlights.Add((num2, item, SnakeTitle[num3].Length));
+			num3++;
+			num2++;
+		}
+		if (num2 < num - 1)
+		{
+			WriteSnakeGridCentered(num2, "V1.1");
+		}
+		num2 = num + 2;
+		int num4 = 0;
+		while (num4 < SnakeDifficultyLines.Length && num2 < _snakeRows)
+		{
+			int num5 = WriteSnakeGridCentered(num2, SnakeDifficultyLines[num4]);
+			_snakeHighlights.Add((num2, num5 + 6, 1));
+			num4++;
+			num2++;
+		}
+		num2++;
+		if (num2 < _snakeRows)
+		{
+			int num6 = WriteSnakeGridCentered(num2, "PRESS WASD TO START");
+			_snakeHighlights.Add((num2, num6 + "PRESS WASD TO START".IndexOf("WASD", StringComparison.Ordinal), 4));
+		}
+	}
+
+	private int GetSnakeHighlightLength(int row, int column)
+	{
+		foreach (var (num, num2, result) in _snakeHighlights)
+		{
+			if (num == row && num2 == column)
+			{
+				return result;
+			}
+		}
+		return 0;
+	}
+
+	private char GetSnakeHeadChar()
+	{
+		Vector2Int vector2Int = ((_snakeGameState == SnakeGameState.Playing || _snakeLastStepDirection == Vector2Int.zero) ? _snakeDirection : _snakeLastStepDirection);
+		if (vector2Int == Vector2Int.left)
+		{
+			return '◄';
+		}
+		if (vector2Int == Vector2Int.right)
+		{
+			return '►';
+		}
+		if (vector2Int == Vector2Int.down)
+		{
+			return '▲';
+		}
+		if (vector2Int == Vector2Int.up)
+		{
+			return '▼';
+		}
+		return '■';
+	}
+
+	private bool IsSnakeDeadRedVisible()
+	{
+		float num = Mathf.Max(0.1f, SnakeDeadBlinkTime);
+		return (Time.time - _snakeGameOverTime) % (num * 2f) < num;
+	}
+
+	private bool IsSnakeCell(int row, int column)
+	{
+		char c = _snakeGrid[row, column];
+		if (c == '■')
+		{
+			return true;
+		}
+		if (_snakeBody.Count > 0 && _snakeBody[0].x == column && _snakeBody[0].y == row)
+		{
+			return c == GetSnakeHeadChar();
+		}
+		return false;
+	}
+
+	private int WriteSnakeGridCentered(int row, string text)
 	{
 		int num = Mathf.Max(0, (42 - text.Length) / 2);
+		if (row < 0 || row >= _snakeRows)
+		{
+			return num;
+		}
 		for (int i = 0; i < text.Length && num + i < 42; i++)
 		{
-			snakeGrid[row, num + i] = text[i];
+			_snakeGrid[row, num + i] = text[i];
+			if (row == _snakePellet.y && num + i == _snakePellet.x)
+			{
+				_snakePelletShown = false;
+			}
 		}
 		return num;
 	}
 
 	private bool IsSnakeNewBestVisible()
 	{
-		float num = Mathf.Max(0.1f, snakeNewBestBlinkTime);
+		float num = Mathf.Max(0.1f, SnakeNewBestBlinkTime);
 		return Time.time % (num * 2f) < num;
 	}
 
@@ -4522,25 +4916,20 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 		return players.PadRight(width);
 	}
 
+	private bool TryToggleStartupRoomCode()
+	{
+		if (currentState != 0 || screenText.IsFailed || NetworkSystem.Instance == null || !NetworkSystem.Instance.InRoom || NetworkSystem.Instance.SessionIsPrivate)
+		{
+			return false;
+		}
+		startupShowRoomCode = !startupShowRoomCode;
+		UpdateScreen();
+		return true;
+	}
+
 	private string GetStartupRoomLine(int width)
 	{
-		string text;
-		if (NetworkSystem.Instance != null && NetworkSystem.Instance.InRoom)
-		{
-			text = GetLocalisedText("ROOM_TEXT_CURRENT_ROOM", "CURRENT ROOM:", "Start Up").Trim().TrailingSpace() + GetVStumpRoomDisplayName(NetworkSystem.Instance.RoomName);
-			if (NetworkSystem.Instance.SessionIsPrivate)
-			{
-				string text2 = GameMode.ActiveGameMode?.GameModeNameRoomLabel();
-				if (!string.IsNullOrEmpty(text2))
-				{
-					text = text + " " + text2;
-				}
-			}
-		}
-		else
-		{
-			text = GetLocalisedText("NOT_IN_ROOM", "-NOT IN ROOM-", "Start Up").Trim();
-		}
+		string text = ((!(NetworkSystem.Instance != null) || !NetworkSystem.Instance.InRoom) ? GetLocalisedText("NOT_IN_ROOM", "-NOT IN ROOM-", "Start Up").Trim() : (NetworkSystem.Instance.SessionIsPrivate ? GetLocalisedText("STARTUP_ROOM_IN_PRIVATE", "IN A PRIVATE ROOM", "Start Up").Trim() : ((!startupShowRoomCode) ? GetLocalisedText("STARTUP_ROOM_IN_PUBLIC", "IN A PUBLIC ROOM", "Start Up").Trim() : (GetLocalisedText("ROOM_TEXT_CURRENT_ROOM", "CURRENT ROOM:", "Start Up").Trim().TrailingSpace() + GetVStumpRoomDisplayName(NetworkSystem.Instance.RoomName)))));
 		if (text.Length <= width)
 		{
 			return text.PadRight(width);
@@ -5257,7 +5646,7 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 		string obj = (iobtMode ? "TRUE" : "FALSE");
 		colored = GetLocalisedText(obj, obj, "Visuals Screen");
 		screenText.Append(colored);
-		colored = HighlightPhrase(HighlightPhrase("\n-PRESS Q TO CALIBRATE / DELETE TO RESET", s_calibrateKeyPhrase), s_resetKeyPhrase);
+		colored = HighlightPhrase(HighlightPhrase("\n-PRESS Q TO CALIBRATE / DELETE TO RESET", calibrateKeyPhrase), resetKeyPhrase);
 		screenText.Append(colored);
 	}
 
@@ -5702,12 +6091,12 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 	private static string GetLocalisedText(string key, string fallback, string context)
 	{
 		Locale currentLanguage = LocalisationManager.CurrentLanguage;
-		if (s_localisedTextCacheLocale != currentLanguage)
+		if (localisedTextCacheLocale != currentLanguage)
 		{
-			s_localisedTextCache.Clear();
-			s_localisedTextCacheLocale = currentLanguage;
+			localisedTextCache.Clear();
+			localisedTextCacheLocale = currentLanguage;
 		}
-		if (key != null && s_localisedTextCache.TryGetValue(key, out var value))
+		if (key != null && localisedTextCache.TryGetValue(key, out var value))
 		{
 			return value;
 		}
@@ -5717,7 +6106,7 @@ public class GorillaComputer : MonoBehaviour, IGorillaSliceableSimple
 		}
 		if (key != null)
 		{
-			s_localisedTextCache[key] = result;
+			localisedTextCache[key] = result;
 		}
 		return result;
 	}
